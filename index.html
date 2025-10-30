@@ -326,61 +326,73 @@
   });
 
   document.getElementById('start-button').addEventListener('click', () => {
-    const idInput = document.getElementById('participant-id').value.trim();
-    if (!idInput) {
-      alert('Bitte Teilnehmer-ID eingeben');
-      return;
+  const idInput = document.getElementById('participant-id').value.trim();
+  if (!idInput) {
+    alert('Bitte Teilnehmer-ID eingeben');
+    return;
+  }
+  participantId = idInput;
+  startScreen.style.display = 'none';
+  shopEl.style.display = 'block';
+  finishBtn.style.display = 'none';
+  timeStart = Date.now();
+
+  renderProducts();
+  updateCartCounter();
+
+  // Banner nach 20 Sekunden anzeigen und Augen-/Soundeffekte ggf. aktivieren
+  setTimeout(() => {
+    cookieBanner.style.display = 'block';
+    bannerShown = true;
+
+    if(condition === 'geraeusch' || condition === 'beides') {
+      playCreepySound();
     }
-    participantId = idInput;
-    startScreen.style.display = 'none';
-    shopEl.style.display = 'block';
-    finishBtn.style.display = 'none';
-    timeStart = Date.now();
 
-    renderProducts();
-    updateCartCounter();
+    if(condition === 'augen' || condition === 'beides') {
+      // Ausgangsposition der Pupillen setzen
+      pupilLeft.style.left = "10px";
+      pupilLeft.style.top = "10px";
+      pupilRight.style.left = "10px";
+      pupilRight.style.top = "10px";
 
-    // Banner nach 20 Sekunden anzeigen und Augenanimation ggf. aktivieren
-    setTimeout(() => {
-      cookieBanner.style.display = 'block';
-      bannerShown = true;
-
-      if(condition === 'geraeusch' || condition === 'beides') {
-        playCreepySound();
-      }
-
-      if(condition === 'augen' || condition === 'beides') {
-        // Augenbewegung aktivieren
-        document.addEventListener("mousemove", (event) => {
-          const eyes = [{el: pupilLeft}, {el: pupilRight}];
-          eyes.forEach(({el}) => {
-            const rect = el.parentElement.getBoundingClientRect();
-            const eyeCenterX = rect.left + rect.width / 2;
-            const eyeCenterY = rect.top + rect.height / 2;
-            const dx = event.clientX - eyeCenterX;
-            const dy = event.clientY - eyeCenterY;
-            const angle = Math.atan2(dy, dx);
-            const maxOffset = 8;
-            const offsetX = Math.cos(angle) * maxOffset;
-            const offsetY = Math.sin(angle) * maxOffset;
-            el.style.left = 10 + offsetX + "px";
-            el.style.top = 10 + offsetY + "px";
-          });
+      // Mausbewegung für Augen (Listener nur einmal hinzufügen)
+      function onMouseMove(event) {
+        const eyes = [{el: pupilLeft}, {el: pupilRight}];
+        eyes.forEach(({el}) => {
+          const rect = el.parentElement.getBoundingClientRect();
+          const eyeCenterX = rect.left + rect.width / 2;
+          const eyeCenterY = rect.top + rect.height / 2;
+          const dx = event.clientX - eyeCenterX;
+          const dy = event.clientY - eyeCenterY;
+          const angle = Math.atan2(dy, dx);
+          const maxOffset = 8;
+          const offsetX = Math.cos(angle) * maxOffset;
+          const offsetY = Math.sin(angle) * maxOffset;
+          el.style.left = 10 + offsetX + "px";
+          el.style.top = 10 + offsetY + "px";
         });
-
-        // Augenzwinkern alle 3 Sekunden
-        setInterval(() => {
-          if(!bannerShown) return;
-          [pupilLeft, pupilRight].forEach(pupil => {
-            pupil.style.height = "5px";
-            setTimeout(() => {
-              pupil.style.height = "18px";
-            }, 200);
-          });
-        }, 3000);
       }
-    }, 20000);
-  });
+
+      // Eventlistener nur einmal hinzufügen
+      window.removeEventListener('mousemove', onMouseMove);
+      window.addEventListener('mousemove', onMouseMove);
+
+      // Augenzwinkern alle 3 Sekunden
+      setInterval(() => {
+        if(!bannerShown) return;
+        [pupilLeft, pupilRight].forEach(pupil => {
+          pupil.style.height = "5px";
+          setTimeout(() => {
+            pupil.style.height = "18px";
+          }, 200);
+        });
+      }, 3000);
+    }
+  }, 20000);
+});
+
+
 </script>
 </body>
 </html>
