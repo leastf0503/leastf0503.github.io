@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Cookie Banner mit Augen</title>
+<title>Shop-Studie mit Cookie-Banner und Augen</title>
 <style>
   body {
     font-family: Arial, sans-serif;
@@ -65,6 +65,11 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    transition: transform 0.2s ease;
+  }
+  .product:hover {
+    transform: scale(1.02);
+    box-shadow: 0 6px 10px rgba(0,0,0,0.15);
   }
   .product .emoji {
     font-size: 3em;
@@ -92,60 +97,113 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 350px;
+    width: 360px;
     background: white;
-    border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    padding: 25px;
     display: none;
-    z-index: 1000;
+    z-index: 1100;
     text-align: center;
   }
   #cookie-banner .eyes {
     display: flex;
     justify-content: center;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
   }
   .eye {
-    width: 40px;
-    height: 40px;
+    width: 45px;
+    height: 45px;
     background: white;
-    border: 3px solid #2e76cc;
+    border: 4px solid #2e76cc;
     border-radius: 50%;
-    margin: 0 10px;
+    margin: 0 12px;
     position: relative;
     overflow: hidden;
   }
   .pupil {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     background: #2e76cc;
     border-radius: 50%;
     position: absolute;
-    top: 10px;
-    left: 10px;
+    top: 12px;
+    left: 12px;
     transition: all 0.1s linear;
   }
   #cookie-banner p {
-    font-size: 1em;
-    margin-bottom: 20px;
+    font-size: 1.1em;
+    margin-bottom: 25px;
   }
   #cookie-banner button {
-    padding: 10px 25px;
+    padding: 12px 30px;
     font-weight: bold;
     font-size: 1em;
-    margin: 0 10px;
-    border-radius: 5px;
+    margin: 0 12px;
+    border-radius: 6px;
     border: none;
     cursor: pointer;
+    box-shadow: 0 2px 10px rgba(46,118,204,0.3);
+    transition: background-color 0.3s ease;
   }
   #accept-btn {
     background-color: #28a745;
     color: white;
   }
+  #accept-btn:hover {
+    background-color: #218838;
+  }
   #reject-btn {
     background-color: #dc3545;
     color: white;
+  }
+  #reject-btn:hover {
+    background-color: #c82333;
+  }
+  #cart-counter {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #2e76cc;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    z-index: 1200;
+    user-select: none;
+  }
+  #summary {
+    max-width: 600px;
+    margin: 30px auto;
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    font-family: monospace;
+    white-space: pre-wrap;
+    display: none;
+  }
+  #finish-button {
+    display: none;
+    margin: 25px auto 50px;
+    padding: 12px 40px;
+    background: #2e76cc;
+    color: white;
+    font-size: 1.1em;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: block;
+  }
+  #finish-button:hover {
+    background: #1b4f99;
   }
 </style>
 </head>
@@ -172,6 +230,11 @@
   <button id="reject-btn">Alle ablehnen</button>
 </div>
 
+<div id="cart-counter">0</div>
+<button id="finish-button">Studie beenden</button>
+
+<div id="summary"></div>
+
 <script>
   const products = [
     { name: "Laptop", price: 899, emoji: "💻" },
@@ -179,7 +242,7 @@
     { name: "Smartphone", price: 699, emoji: "📱" },
     { name: "Tablet", price: 449, emoji: "📱" },
     { name: "Smartwatch", price: 299, emoji: "⌚" },
-    { name: "Kamera", price: 599, emoji: "📷" },
+    { name: "Kamera", price: 599, emoji: "📷" }
   ];
 
   const startScreen = document.getElementById('start-screen');
@@ -188,8 +251,15 @@
   const cookieBanner = document.getElementById('cookie-banner');
   const acceptBtn = document.getElementById('accept-btn');
   const rejectBtn = document.getElementById('reject-btn');
+  const cartCounter = document.getElementById('cart-counter');
+  const finishBtn = document.getElementById('finish-button');
+  const summaryEl = document.getElementById('summary');
 
-  // Augen und Pupillen erzeugen
+  let participantId = "";
+  let bannerChoice = null;
+  let cart = [];
+
+  // Augen als Pupillen hinzufügen
   const eyes = cookieBanner.querySelectorAll('.eye');
   const leftEye = eyes[0];
   const rightEye = eyes[1];
@@ -202,14 +272,14 @@
   leftEye.appendChild(leftPupil);
   rightEye.appendChild(rightPupil);
 
-  // Funktion Augenbewegung
+  // Augenbewegung bei Maus
   function bewegenDerAugen(event) {
     [ {eye: leftEye, pupil: leftPupil}, {eye: rightEye, pupil: rightPupil} ].forEach(({eye, pupil}) => {
       const rect = eye.getBoundingClientRect();
-      const eyeX = rect.left + rect.width / 2;
-      const eyeY = rect.top + rect.height / 2;
-      const dx = event.clientX - eyeX;
-      const dy = event.clientY - eyeY;
+      const eyeCenterX = rect.left + rect.width / 2;
+      const eyeCenterY = rect.top + rect.height / 2;
+      const dx = event.clientX - eyeCenterX;
+      const dy = event.clientY - eyeCenterY;
       const angle = Math.atan2(dy, dx);
       const maxOffset = 8;
       const offsetX = Math.cos(angle) * maxOffset;
@@ -218,54 +288,96 @@
       pupil.style.top = 10 + offsetY + 'px';
     });
   }
-
-  document.addEventListener('mousemove', (event) => {
+  document.addEventListener('mousemove', event => {
     if(cookieBanner.style.display === 'block') {
       bewegenDerAugen(event);
     }
   });
 
+  // Produkte anzeigen
   function renderProducts() {
     productsEl.innerHTML = '';
-    products.forEach(({name, emoji, price}, index) => {
+    products.forEach((product, index) => {
       const p = document.createElement('div');
       p.classList.add('product');
       p.innerHTML = `
-      <div class="emoji">${emoji}</div>
-      <div class="name">${name}</div>
-      <div class="price">€${price}</div>
-      <button data-index="${index}">In den Warenkorb</button>
+        <div class="emoji">${product.emoji}</div>
+        <div class="name">${product.name}</div>
+        <div class="price">€${product.price}</div>
+        <button data-index="${index}">In den Warenkorb</button>
       `;
       productsEl.appendChild(p);
     });
   }
 
+  // Warenkorb aktualisieren
+  function updateCartCounter() {
+    cartCounter.textContent = cart.length;
+    cartCounter.style.display = cart.length > 0 ? 'flex' : 'none';
+  }
+
+  // Event: Produkt dem Warenkorb hinzufügen
+  productsEl.addEventListener('click', (e) => {
+    if(e.target.tagName === 'BUTTON') {
+      const index = e.target.getAttribute('data-index');
+      if(index !== null) {
+        cart.push(products[index]);
+        updateCartCounter();
+      }
+    }
+  });
+
+  // Event: Studie starten
   document.getElementById('start-button').addEventListener('click', () => {
-    const id = document.getElementById('participant-id').value.trim();
-    if(!id) {
+    participantId = document.getElementById('participant-id').value.trim();
+    if(!participantId) {
       alert('Bitte Teilnehmer-ID eingeben');
       return;
     }
-
     startScreen.style.display = 'none';
     shopEl.style.display = 'block';
+    summaryEl.style.display = 'none';
+    finishBtn.style.display = 'none';
 
     renderProducts();
+    updateCartCounter();
 
+    // Banner nach 5 Sekunden anzeigen
     setTimeout(() => {
       cookieBanner.style.display = 'block';
-    }, 5000); // Banner nach 5 Sekunden
+    }, 5000);
   });
 
+  // Banner akzeptieren
   acceptBtn.addEventListener('click', () => {
+    bannerChoice = 'akzeptiert';
     cookieBanner.style.display = 'none';
-    alert('Cookies akzeptiert');
+    finishBtn.style.display = 'block';
   });
 
+  // Banner ablehnen
   rejectBtn.addEventListener('click', () => {
+    bannerChoice = 'abgelehnt';
     cookieBanner.style.display = 'none';
-    alert('Cookies abgelehnt');
+    finishBtn.style.display = 'block';
   });
+
+  // Studie beenden
+  finishBtn.addEventListener('click', () => {
+    shopEl.style.display = 'none';
+    finishBtn.style.display = 'none';
+    cartCounter.style.display = 'none';
+
+    const summary = {
+      participantId,
+      bannerChoice,
+      productsImWarenkorb: cart.length
+    };
+
+    summaryEl.textContent = JSON.stringify(summary, null, 2);
+    summaryEl.style.display = 'block';
+  });
+
 </script>
 </body>
 </html>
