@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Shop mit Cookie-Banner & Augen</title>
+<title>Cookie Banner mit Augen</title>
 <style>
   body {
     font-family: Arial, sans-serif;
@@ -164,8 +164,8 @@
 
 <div id="cookie-banner">
   <div class="eyes">
-    <div class="eye"><div class="pupil" id="pupil-left"></div></div>
-    <div class="eye"><div class="pupil" id="pupil-right"></div></div>
+    <div class="eye"></div>
+    <div class="eye"></div>
   </div>
   <p>Diese Website verwendet Cookies für Analyse und Personalisierung.</p>
   <button id="accept-btn">Alle akzeptieren</button>
@@ -186,70 +186,75 @@
   const shopEl = document.getElementById('shop');
   const productsEl = document.getElementById('products');
   const cookieBanner = document.getElementById('cookie-banner');
-  const pupilLeft = document.getElementById('pupil-left');
-  const pupilRight = document.getElementById('pupil-right');
   const acceptBtn = document.getElementById('accept-btn');
   const rejectBtn = document.getElementById('reject-btn');
-  let bannerShown = false;
+
+  // Augen und Pupillen erzeugen
+  const eyes = cookieBanner.querySelectorAll('.eye');
+  const leftEye = eyes[0];
+  const rightEye = eyes[1];
+
+  const leftPupil = document.createElement('div');
+  leftPupil.classList.add('pupil');
+  const rightPupil = document.createElement('div');
+  rightPupil.classList.add('pupil');
+
+  leftEye.appendChild(leftPupil);
+  rightEye.appendChild(rightPupil);
+
+  // Funktion Augenbewegung
+  function bewegenDerAugen(event) {
+    [ {eye: leftEye, pupil: leftPupil}, {eye: rightEye, pupil: rightPupil} ].forEach(({eye, pupil}) => {
+      const rect = eye.getBoundingClientRect();
+      const eyeX = rect.left + rect.width / 2;
+      const eyeY = rect.top + rect.height / 2;
+      const dx = event.clientX - eyeX;
+      const dy = event.clientY - eyeY;
+      const angle = Math.atan2(dy, dx);
+      const maxOffset = 8;
+      const offsetX = Math.cos(angle) * maxOffset;
+      const offsetY = Math.sin(angle) * maxOffset;
+      pupil.style.left = 10 + offsetX + 'px';
+      pupil.style.top = 10 + offsetY + 'px';
+    });
+  }
+
+  document.addEventListener('mousemove', (event) => {
+    if(cookieBanner.style.display === 'block') {
+      bewegenDerAugen(event);
+    }
+  });
 
   function renderProducts() {
     productsEl.innerHTML = '';
-    products.forEach((product, index) => {
+    products.forEach(({name, emoji, price}, index) => {
       const p = document.createElement('div');
       p.classList.add('product');
       p.innerHTML = `
-        <div class="emoji">${product.emoji}</div>
-        <div class="name">${product.name}</div>
-        <div class="price">€${product.price}</div>
-        <button data-index="${index}">In den Warenkorb</button>
+      <div class="emoji">${emoji}</div>
+      <div class="name">${name}</div>
+      <div class="price">€${price}</div>
+      <button data-index="${index}">In den Warenkorb</button>
       `;
       productsEl.appendChild(p);
     });
   }
 
-  function startEyeAnimation() {
-    document.addEventListener('mousemove', (event) => {
-      const eyes = [{el: pupilLeft}, {el: pupilRight}];
-      eyes.forEach(({el}) => {
-        const rect = el.parentElement.getBoundingClientRect();
-        const eyeCenterX = rect.left + rect.width / 2;
-        const eyeCenterY = rect.top + rect.height / 2;
-        const dx = event.clientX - eyeCenterX;
-        const dy = event.clientY - eyeCenterY;
-        const angle = Math.atan2(dy, dx);
-        const maxOffset = 8;
-        const offsetX = Math.cos(angle) * maxOffset;
-        const offsetY = Math.sin(angle) * maxOffset;
-        el.style.left = 10 + offsetX + 'px';
-        el.style.top = 10 + offsetY + 'px';
-      });
-    });
-
-    setInterval(() => {
-      [pupilLeft, pupilRight].forEach(pupil => {
-        pupil.style.height = '5px';
-        setTimeout(() => {
-          pupil.style.height = '18px';
-        }, 200);
-      });
-    }, 3000);
-  }
-
   document.getElementById('start-button').addEventListener('click', () => {
-    const idInput = document.getElementById('participant-id').value.trim();
-    if(!idInput) {
+    const id = document.getElementById('participant-id').value.trim();
+    if(!id) {
       alert('Bitte Teilnehmer-ID eingeben');
       return;
     }
+
     startScreen.style.display = 'none';
     shopEl.style.display = 'block';
+
     renderProducts();
 
     setTimeout(() => {
       cookieBanner.style.display = 'block';
-      bannerShown = true;
-      startEyeAnimation();
-    }, 5000); // Banner nach 5 Sekunden anzeigen
+    }, 5000); // Banner nach 5 Sekunden
   });
 
   acceptBtn.addEventListener('click', () => {
