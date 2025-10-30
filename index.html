@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookie-Banner Studie - Online Shop</title>
+    <style>
+        :root {
+            --color-primary: #4A90E2;
+            --color-success: #4AE290;
+            --color-gray: #6c757d;
+            --color-light: #f8f9fa;
+            --color-dark: #343a40;
+            --color-white: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--color-light);
+            color: var(--color-dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Participant ID Screen */
+        #participant-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .participant-box {
+            background: var(--color-white);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .participant-box h1 {
+            color: var(--color-primary);
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        .participant-box p {
+            margin-bottom: 25px;
+            color: var(--color-gray);
+            font-size: 16px;
+        }
+
+        .participant-box input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            transition: border-color 0.3s;
+        }
+
+        .participant-box input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background-color: var(--color-primary);
+            color: var(--color-white);
+        }
+
+        .btn-primary:hover {
+            background-color: #3a7bc8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74, 144, 226, 0.3);
+        }
+
+        .btn-success {
+            background-color: var(--color-success);
+            color: var(--color-white);
+        }
+
+        .btn-success:hover {
+            background-color: #3ac278;
+        }
+
+        .btn-secondary {
+            background-color: var(--color-gray);
+            color: var(--color-white);
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        /* Shop Interface */
+        #shop-screen {
+            display: none;
+        }
+
+        .shop-header {
+            background-color: var(--color-white);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .shop-header h1 {
+            color: var(--color-primary);
+            font-size: 32px;
+        }
+
+        .cart-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .cart-counter {
+            background-color: var(--color-primary);
+            color: var(--color-white);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .product-card {
+            background-color: var(--color-white);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .product-icon {
+            width: 100%;
+            height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .product-name {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--color-dark);
+            margin-bottom: 10px;
+        }
+
+        .product-price {
+            font-size: 28px;
+            color: var(--color-primary);
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .product-card .btn {
+            width: 100%;
+        }
+
+        /* Cookie Banners */
+        .cookie-banner {
+            position: fixed;
+            background-color: var(--color-white);
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.2);
+            padding: 25px;
+            z-index: 1000;
+            display: none;
+        }
+
+        .cookie-banner.active {
+            display: block;
+        }
+
+        /* Variant A & B - Bottom Banner */
+        .cookie-banner.bottom {
+            bottom: 0;
+            left: 0;
+            right: 0;
+            border-top: 3px solid var(--color-primary);
+        }
+
+        .banner-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .banner-text {
+            flex: 1;
+            min-width: 300px;
+            font-size: 16px;
+            color: var(--color-dark);
+        }
+
+        .banner-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        /* Variant B - Animated Eyes */
+        .eyes-container {
+            display: flex;
+            gap: 20px;
+            margin-right: 20px;
+        }
+
+        .eye {
+            width: 50px;
+            height: 50px;
+            background-color: var(--color-white);
+            border: 3px solid var(--color-dark);
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pupil {
+            width: 20px;
+            height: 20px;
+            background-color: var(--color-dark);
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.1s;
+        }
+
+        .eye.blinking .pupil {
+            animation: blink 0.2s;
+        }
+
+        @keyframes blink {
+            0%, 100% { transform: translate(-50%, -50%) scaleY(1); }
+            50% { transform: translate(-50%, -50%) scaleY(0.1); }
+        }
+
+        /* Variant C - Center Modal */
+        .cookie-banner.center {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 600px;
+            width: 90%;
+            border-radius: 15px;
+            border: 3px solid var(--color-primary);
+        }
+
+        .cookie-banner.center .banner-content {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.6);
+            z-index: 999;
+            display: none;
+        }
+
+        .modal-overlay.active {
+            display: block;
+        }
+
+        /* Summary Screen */
+        #summary-screen {
+            display: none;
+            min-height: 100vh;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .summary-box {
+            background: var(--color-white);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .summary-box h2 {
+            color: var(--color-primary);
+            margin-bottom: 30px;
+            font-size: 32px;
+            text-align: center;
+        }
+
+        .data-item {
+            background-color: var(--color-light);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .data-label {
+            font-weight: 600;
+            color: var(--color-dark);
+        }
+
+        .data-value {
+            color: var(--color-primary);
+            font-weight: bold;
+        }
+
+        .summary-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .products-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+
+            .shop-header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .banner-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .eyes-container {
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .product-icon {
+                height: 120px;
+                font-size: 60px;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Participant ID Screen -->
+    <div id="participant-screen">
+        <div class="participant-box">
+            <h1>🔬 Cookie-Banner Studie</h1>
+            <p>Willkommen zur psychologischen Studie über Cookie-Banner-Designs. Bitte geben Sie Ihre Teilnehmer-ID ein, um zu beginnen.</p>
+            <input type="text" id="participant-id-input" placeholder="Teilnehmer-ID eingeben" required>
+            <button class="btn btn-primary" onclick="startStudy()">Studie starten</button>
+        </div>
+    </div>
+
+    <!-- Shop Screen -->
+    <div id="shop-screen">
+        <div class="container">
+            <div class="shop-header">
+                <h1>🛍️ TechShop</h1>
+                <div class="cart-info">
+                    <div class="cart-counter">
+                        🛒 <span id="cart-count">0</span> Artikel
+                    </div>
+                    <button class="btn btn-secondary" onclick="endStudy()">Studie beenden</button>
+                </div>
+            </div>
+
+            <div class="products-grid" id="products-grid">
+                <!-- Products will be inserted here by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Overlay (for Variant C) -->
+    <div class="modal-overlay" id="modal-overlay"></div>
+
+    <!-- Cookie Banner -->
+    <div class="cookie-banner" id="cookie-banner">
+        <div class="banner-content">
+            <div class="eyes-container" id="eyes-container" style="display: none;">
+                <div class="eye" id="eye1">
+                    <div class="pupil" id="pupil1"></div>
+                </div>
+                <div class="eye" id="eye2">
+                    <div class="pupil" id="pupil2"></div>
+                </div>
+            </div>
+            <div class="banner-text">
+                Diese Website verwendet Cookies für Analyse und Personalisierung.
+            </div>
+            <div class="banner-buttons">
+                <button class="btn btn-success" onclick="handleBannerClick('accept')">Alle akzeptieren</button>
+                <button class="btn btn-secondary" onclick="handleBannerClick('reject')">Ablehnen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Screen -->
+    <div id="summary-screen">
+        <div class="summary-box">
+            <h2>📊 Studienergebnisse</h2>
+            <div id="summary-data">
+                <!-- Data will be inserted here by JavaScript -->
+            </div>
+            <div class="summary-buttons">
+                <button class="btn btn-success" onclick="downloadData()">📥 Daten als JSON herunterladen</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Products data
+        const products = [
+            { name: "Laptop", price: 899, emoji: "💻", color: "#4A90E2" },
+            { name: "Kopfhörer", price: 149, emoji: "🎧", color: "#E24A90" },
+            { name: "Smartphone", price: 699, emoji: "📱", color: "#90E24A" },
+            { name: "Tablet", price: 449, emoji: "📱", color: "#E2904A" },
+            { name: "Smartwatch", price: 299, emoji: "⌚", color: "#904AE2" },
+            { name: "Kamera", price: 599, emoji: "📷", color: "#4AE290" }
+        ];
+
+        // Study data tracking
+        let studyData = {
+            participant_id: "",
+            banner_variant: "",
+            time_to_banner_interaction: 0,
+            banner_choice: "",
+            products_before_banner: 0,
+            products_after_banner: 0,
+            total_time_on_page: 0,
+            timestamp_start: null,
+            timestamp_banner_shown: null,
+            timestamp_banner_interaction: null,
+            timestamp_end: null,
+            cart_items: []
+        };
+
+        let cartCount = 0;
+        let bannerInteracted = false;
+        let studyTimer = null;
+        let blinkInterval = null;
+        let bannerVariant = "";
+
+        // Initialize products grid
+        function initProducts() {
+            const grid = document.getElementById('products-grid');
+            grid.innerHTML = '';
+            
+            products.forEach((product, index) => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.innerHTML = `
+                    <div class="product-icon" style="background-color: ${product.color}20;">
+                        ${product.emoji}
+                    </div>
+                    <div class="product-name">${product.name}</div>
+                    <div class="product-price">€${product.price}</div>
+                    <button class="btn btn-primary" onclick="addToCart('${product.name}', ${product.price})">In den Warenkorb</button>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Start study
+        function startStudy() {
+            const participantId = document.getElementById('participant-id-input').value.trim();
+            
+            if (!participantId) {
+                alert('Bitte geben Sie eine Teilnehmer-ID ein.');
+                return;
+            }
+
+            studyData.participant_id = participantId;
+            studyData.timestamp_start = new Date().toISOString();
+
+            console.log('Study started for participant:', participantId);
+
+            // Hide participant screen, show shop
+            document.getElementById('participant-screen').style.display = 'none';
+            document.getElementById('shop-screen').style.display = 'block';
+
+            // Initialize products
+            initProducts();
+
+            // Show banner after 2 seconds
+            setTimeout(() => {
+                showBanner();
+            }, 2000);
+
+            // End study after 60 seconds automatically
+            studyTimer = setTimeout(() => {
+                endStudy();
+            }, 60000);
+        }
+
+        // Show random banner variant
+        function showBanner() {
+            const variants = ['A', 'B', 'C'];
+            bannerVariant = variants[Math.floor(Math.random() * variants.length)];
+            studyData.banner_variant = bannerVariant;
+            studyData.timestamp_banner_shown = new Date().toISOString();
+
+            console.log('Showing banner variant:', bannerVariant);
+
+            const banner = document.getElementById('cookie-banner');
+            const overlay = document.getElementById('modal-overlay');
+            const eyesContainer = document.getElementById('eyes-container');
+
+            banner.classList.add('active');
+
+            if (bannerVariant === 'A') {
+                // Standard bottom banner
+                banner.classList.add('bottom');
+            } else if (bannerVariant === 'B') {
+                // Banner with animated eyes
+                banner.classList.add('bottom');
+                eyesContainer.style.display = 'flex';
+                startEyeAnimation();
+            } else if (bannerVariant === 'C') {
+                // Center modal
+                banner.classList.add('center');
+                overlay.classList.add('active');
+            }
+        }
+
+        // Animate eyes for Variant B
+        function startEyeAnimation() {
+            // Follow mouse movement
+            document.addEventListener('mousemove', handleMouseMove);
+
+            // Blink every 3-4 seconds
+            function blink() {
+                const eye1 = document.getElementById('eye1');
+                const eye2 = document.getElementById('eye2');
+                
+                eye1.classList.add('blinking');
+                eye2.classList.add('blinking');
+                
+                setTimeout(() => {
+                    eye1.classList.remove('blinking');
+                    eye2.classList.remove('blinking');
+                }, 200);
+            }
+
+            blinkInterval = setInterval(blink, 3500);
+        }
+
+        function handleMouseMove(e) {
+            const eye1 = document.getElementById('eye1');
+            const eye2 = document.getElementById('eye2');
+            
+            if (!eye1 || !eye2) return;
+
+            updatePupilPosition(eye1, document.getElementById('pupil1'), e.clientX, e.clientY);
+            updatePupilPosition(eye2, document.getElementById('pupil2'), e.clientX, e.clientY);
+        }
+
+        function updatePupilPosition(eye, pupil, mouseX, mouseY) {
+            const eyeRect = eye.getBoundingClientRect();
+            const eyeCenterX = eyeRect.left + eyeRect.width / 2;
+            const eyeCenterY = eyeRect.top + eyeRect.height / 2;
+
+            const angle = Math.atan2(mouseY - eyeCenterY, mouseX - eyeCenterX);
+            const distance = Math.min(eyeRect.width / 4, 10);
+
+            const pupilX = Math.cos(angle) * distance;
+            const pupilY = Math.sin(angle) * distance;
+
+            pupil.style.transform = `translate(calc(-50% + ${pupilX}px), calc(-50% + ${pupilY}px))`;
+        }
+
+        // Handle banner interaction
+        function handleBannerClick(choice) {
+            if (bannerInteracted) return;
+
+            bannerInteracted = true;
+            studyData.banner_choice = choice;
+            studyData.timestamp_banner_interaction = new Date().toISOString();
+
+            // Calculate time to interaction
+            const bannerShown = new Date(studyData.timestamp_banner_shown);
+            const bannerInteraction = new Date(studyData.timestamp_banner_interaction);
+            studyData.time_to_banner_interaction = (bannerInteraction - bannerShown) / 1000; // in seconds
+
+            console.log(`Banner ${choice}ed after ${studyData.time_to_banner_interaction.toFixed(2)} seconds`);
+
+            // Hide banner
+            document.getElementById('cookie-banner').classList.remove('active');
+            document.getElementById('modal-overlay').classList.remove('active');
+
+            // Stop eye animation if variant B
+            if (bannerVariant === 'B') {
+                document.removeEventListener('mousemove', handleMouseMove);
+                if (blinkInterval) {
+                    clearInterval(blinkInterval);
+                }
+            }
+        }
+
+        // Add to cart
+        function addToCart(productName, price) {
+            cartCount++;
+            document.getElementById('cart-count').textContent = cartCount;
+
+            // Track products before/after banner interaction
+            if (!bannerInteracted) {
+                studyData.products_before_banner++;
+            } else {
+                studyData.products_after_banner++;
+            }
+
+            studyData.cart_items.push({
+                product: productName,
+                price: price,
+                timestamp: new Date().toISOString(),
+                before_banner: !bannerInteracted
+            });
+
+            console.log(`Added ${productName} to cart (Total: ${cartCount})`);
+        }
+
+        // End study
+        function endStudy() {
+            if (studyTimer) {
+                clearTimeout(studyTimer);
+            }
+
+            studyData.timestamp_end = new Date().toISOString();
+
+            // Calculate total time on page
+            const start = new Date(studyData.timestamp_start);
+            const end = new Date(studyData.timestamp_end);
+            studyData.total_time_on_page = (end - start) / 1000; // in seconds
+
+            console.log('Study ended. Final data:', studyData);
+
+            // Hide shop, show summary
+            document.getElementById('shop-screen').style.display = 'none';
+            document.getElementById('summary-screen').style.display = 'block';
+
+            // Display summary
+            displaySummary();
+        }
+
+        // Display summary
+        function displaySummary() {
+            const summaryDiv = document.getElementById('summary-data');
+            summaryDiv.innerHTML = `
+                <div class="data-item">
+                    <span class="data-label">Teilnehmer-ID:</span>
+                    <span class="data-value">${studyData.participant_id}</span>
+                </div>
+                <div class="data-item">
+                    <span class="data-label">Banner-Variante:</span>
+                    <span class="data-value">${studyData.banner_variant}</span>
+                </div>
+                <div class="data-item">
+                    <span class="data-label">Zeit bis Banner-Interaktion:</span>
+                    <span class="data-value">${studyData.time_to_banner_interaction ? studyData.time_to_banner_interaction.toFixed(2) + ' Sekunden' : 'Nicht interagiert'}</span>
+                </div>
+                <div class="data-item">
+                    <span class="data-label">Banner-Entscheidung:</span>
+                    <span class="data-value">${studyData.banner_choice || 'Keine'}</span>
+                </div>
+                <div class="data-item">
+                    <span class="data-label">Produkte vor Banner-Interaktion:</span>
+                    <span class="data-value">${studyData.products_before_banner}</span>
+                </div>
+                <div class="data-item">
+                    <span class="data-label">Produkte nach Banner-Interaktion:</span>
+                    <span class="data-value">${studyData.products_after_banner}</span>
+                </div>
+                <div class="data-item">
+                    <span class="data-label">Gesamtzeit auf der Seite:</span>
+                    <span class="data-value">${studyData.total_time_on_page.toFixed(2)} Sekunden</span>
+                </div>
+                <div class="data-item">
+                    <span class="data-label">Gesamt Produkte im Warenkorb:</span>
+                    <span class="data-value">${cartCount}</span>
+                </div>
+            `;
+        }
+
+        // Download data as JSON
+        function downloadData() {
+            const dataStr = JSON.stringify(studyData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `studie-daten-${studyData.participant_id}-${Date.now()}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            console.log('Data downloaded');
+        }
+    </script>
+</body>
+</html>
