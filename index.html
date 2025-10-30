@@ -241,9 +241,61 @@
   const pupilLeft = document.getElementById("pupil-left");
   const pupilRight = document.getElementById("pupil-right");
 
-  // Augen folgen der Maus
+  // URL-Parameter auslesen
+  const urlParams = new URLSearchParams(window.location.search);
+  const condition = urlParams.get('condition'); // Werte: 'augen', 'geraeusch', 'beides', 'keine' oder null
+
+  // Funktion für Augenanimation
+  function startEyeAnimation() {
+    document.addEventListener("mousemove", (event) => {
+      const eyes = [{el: pupilLeft}, {el: pupilRight}];
+      eyes.forEach(({el}) => {
+        const rect = el.parentElement.getBoundingClientRect();
+        const eyeCenterX = rect.left + rect.width / 2;
+        const eyeCenterY = rect.top + rect.height / 2;
+        const dx = event.clientX - eyeCenterX;
+        const dy = event.clientY - eyeCenterY;
+        const angle = Math.atan2(dy, dx);
+        const maxOffset = 8;
+        const offsetX = Math.cos(angle) * maxOffset;
+        const offsetY = Math.sin(angle) * maxOffset;
+        el.style.left = 10 + offsetX + "px";
+        el.style.top = 10 + offsetY + "px";
+      });
+    });
+  }
+
+  // Funktion für gruseliges Geräusch abspielen (Beispiel)
+  function playCreepySound() {
+    const audio = new Audio('gruseliges_geraeusch.mp3'); // Stellen Sie sicher, diese Datei ist erreichbar
+    audio.play();
+  }
+
+  // Produkte rendern Funktion
+  function renderProducts() {
+    productsEl.innerHTML = "";
+    products.forEach((product, index) => {
+      const p = document.createElement("div");
+      p.classList.add("product");
+      p.innerHTML = `
+        <div class="emoji">${product.emoji}</div>
+        <div class="name">${product.name}</div>
+        <div class="price">€${product.price}</div>
+        <button data-index="${index}">In den Warenkorb</button>
+      `;
+      productsEl.appendChild(p);
+    });
+  }
+
+  // Update Warenkorb-Zähler
+  function updateCartCounter() {
+    cartCounter.textContent = cart.length;
+    cartCounter.style.display = cart.length > 0 ? "flex" : "none";
+  }
+
+  // Mausbewegung für Augenanimation nur wenn Banner angezeigt wird
   document.addEventListener("mousemove", (event) => {
-    if(!bannerShown) return;
+    if(!bannerShown || condition !== 'augen' && condition !== 'beides') return;
     const eyes = [{el: pupilLeft}, {el: pupilRight}];
     eyes.forEach(({el}) => {
       const rect = el.parentElement.getBoundingClientRect();
@@ -260,9 +312,9 @@
     });
   });
 
-  // Augenzwinkern alle 3 Sekunden
+  // Augenzwinkern alle 3 Sekunden (nur wenn 'augen' oder 'beides')
   setInterval(() => {
-    if(!bannerShown) return;
+    if(!bannerShown || (condition !== 'augen' && condition !== 'beides')) return;
     [pupilLeft, pupilRight].forEach(pupil => {
       pupil.style.height = "5px";
       setTimeout(() => {
@@ -270,26 +322,6 @@
       }, 200);
     });
   }, 3000);
-
-  function renderProducts() {
-    productsEl.innerHTML = "";
-    products.forEach((product, index) => {
-      const p = document.createElement("div");
-      p.classList.add("product");
-      p.innerHTML = `
-        <div class="emoji">${product.emoji}</div>
-        <div class="name">${product.name}</div>
-        <div class="price">€${product.price}</div>
-        <button data-index="${index}">In den Warenkorb</button>
-      `;
-      productsEl.appendChild(p);
-    });
-  }
-
-  function updateCartCounter() {
-    cartCounter.textContent = cart.length;
-    cartCounter.style.display = cart.length > 0 ? "flex" : "none";
-  }
 
   productsEl.addEventListener("click", (e) => {
     if(e.target.tagName !== "BUTTON") return;
@@ -305,7 +337,7 @@
     timeBannerInteract = Date.now();
     localStorage.setItem('cookieBannerChoice', 'accept');
     cookieBanner.style.display = 'none';
-    document.getElementById('finish-button').style.display = 'inline-block';
+    finishBtn.style.display = 'inline-block';
   });
 
   rejectBtn.addEventListener("click", () => {
@@ -313,10 +345,10 @@
     timeBannerInteract = Date.now();
     localStorage.setItem('cookieBannerChoice', 'reject');
     cookieBanner.style.display = 'none';
-    document.getElementById('finish-button').style.display = 'inline-block';
+    finishBtn.style.display = 'inline-block';
   });
 
-  document.getElementById('finish-button').addEventListener("click", () => {
+  finishBtn.addEventListener("click", () => {
     const timeEnd = Date.now();
     shopEl.style.display = 'none';
     cartCounter.style.display = 'none';
@@ -354,198 +386,24 @@
     participantId = idInput;
     startScreen.style.display = 'none';
     shopEl.style.display = 'block';
-    document.getElementById('finish-button').style.display = 'none';
+    finishBtn.style.display = 'none';
     timeStart = Date.now();
 
-    // Produkte rendern
     renderProducts();
     updateCartCounter();
 
-    // Cookie Banner nach 20 Sekunden anzeigen
+    // Banner nach 20 Sekunden anzeigen, abhängig von condition
     setTimeout(() => {
-      document.getElementById('cookie-banner').style.display = 'block';
+      cookieBanner.style.display = 'block';
       bannerShown = true;
+
+      if(condition === 'geraeusch' || condition === 'beides') {
+        playCreepySound();
+      }
+
+      // Augenanimation wird im Mausmove-Event separat aktiviert
     }, 20000);
   });
 </script>
-</body>
-</html>
-
-        }
-
-        // Animate eyes for Variant B
-        function startEyeAnimation() {
-            // Follow mouse movement
-            document.addEventListener('mousemove', handleMouseMove);
-
-            // Blink every 3-4 seconds
-            function blink() {
-                const eye1 = document.getElementById('eye1');
-                const eye2 = document.getElementById('eye2');
-                
-                eye1.classList.add('blinking');
-                eye2.classList.add('blinking');
-                
-                setTimeout(() => {
-                    eye1.classList.remove('blinking');
-                    eye2.classList.remove('blinking');
-                }, 200);
-            }
-
-            blinkInterval = setInterval(blink, 3500);
-        }
-
-        function handleMouseMove(e) {
-            const eye1 = document.getElementById('eye1');
-            const eye2 = document.getElementById('eye2');
-            
-            if (!eye1 || !eye2) return;
-
-            updatePupilPosition(eye1, document.getElementById('pupil1'), e.clientX, e.clientY);
-            updatePupilPosition(eye2, document.getElementById('pupil2'), e.clientX, e.clientY);
-        }
-
-        function updatePupilPosition(eye, pupil, mouseX, mouseY) {
-            const eyeRect = eye.getBoundingClientRect();
-            const eyeCenterX = eyeRect.left + eyeRect.width / 2;
-            const eyeCenterY = eyeRect.top + eyeRect.height / 2;
-
-            const angle = Math.atan2(mouseY - eyeCenterY, mouseX - eyeCenterX);
-            const distance = Math.min(eyeRect.width / 4, 10);
-
-            const pupilX = Math.cos(angle) * distance;
-            const pupilY = Math.sin(angle) * distance;
-
-            pupil.style.transform = `translate(calc(-50% + ${pupilX}px), calc(-50% + ${pupilY}px))`;
-        }
-
-        // Handle banner interaction
-        function handleBannerClick(choice) {
-            if (bannerInteracted) return;
-
-            bannerInteracted = true;
-            studyData.banner_choice = choice;
-            studyData.timestamp_banner_interaction = new Date().toISOString();
-
-            // Calculate time to interaction
-            const bannerShown = new Date(studyData.timestamp_banner_shown);
-            const bannerInteraction = new Date(studyData.timestamp_banner_interaction);
-            studyData.time_to_banner_interaction = (bannerInteraction - bannerShown) / 1000; // in seconds
-
-            console.log(`Banner ${choice}ed after ${studyData.time_to_banner_interaction.toFixed(2)} seconds`);
-
-            // Hide banner
-            document.getElementById('cookie-banner').classList.remove('active');
-            document.getElementById('modal-overlay').classList.remove('active');
-
-            // Stop eye animation if variant B
-            if (bannerVariant === 'B') {
-                document.removeEventListener('mousemove', handleMouseMove);
-                if (blinkInterval) {
-                    clearInterval(blinkInterval);
-                }
-            }
-        }
-
-        // Add to cart
-        function addToCart(productName, price) {
-            cartCount++;
-            document.getElementById('cart-count').textContent = cartCount;
-
-            // Track products before/after banner interaction
-            if (!bannerInteracted) {
-                studyData.products_before_banner++;
-            } else {
-                studyData.products_after_banner++;
-            }
-
-            studyData.cart_items.push({
-                product: productName,
-                price: price,
-                timestamp: new Date().toISOString(),
-                before_banner: !bannerInteracted
-            });
-
-            console.log(`Added ${productName} to cart (Total: ${cartCount})`);
-        }
-
-        // End study
-        function endStudy() {
-            if (studyTimer) {
-                clearTimeout(studyTimer);
-            }
-
-            studyData.timestamp_end = new Date().toISOString();
-
-            // Calculate total time on page
-            const start = new Date(studyData.timestamp_start);
-            const end = new Date(studyData.timestamp_end);
-            studyData.total_time_on_page = (end - start) / 1000; // in seconds
-
-            console.log('Study ended. Final data:', studyData);
-
-            // Hide shop, show summary
-            document.getElementById('shop-screen').style.display = 'none';
-            document.getElementById('summary-screen').style.display = 'block';
-
-            // Display summary
-            displaySummary();
-        }
-
-        // Display summary
-        function displaySummary() {
-            const summaryDiv = document.getElementById('summary-data');
-            summaryDiv.innerHTML = `
-                <div class="data-item">
-                    <span class="data-label">Teilnehmer-ID:</span>
-                    <span class="data-value">${studyData.participant_id}</span>
-                </div>
-                <div class="data-item">
-                    <span class="data-label">Banner-Variante:</span>
-                    <span class="data-value">${studyData.banner_variant}</span>
-                </div>
-                <div class="data-item">
-                    <span class="data-label">Zeit bis Banner-Interaktion:</span>
-                    <span class="data-value">${studyData.time_to_banner_interaction ? studyData.time_to_banner_interaction.toFixed(2) + ' Sekunden' : 'Nicht interagiert'}</span>
-                </div>
-                <div class="data-item">
-                    <span class="data-label">Banner-Entscheidung:</span>
-                    <span class="data-value">${studyData.banner_choice || 'Keine'}</span>
-                </div>
-                <div class="data-item">
-                    <span class="data-label">Produkte vor Banner-Interaktion:</span>
-                    <span class="data-value">${studyData.products_before_banner}</span>
-                </div>
-                <div class="data-item">
-                    <span class="data-label">Produkte nach Banner-Interaktion:</span>
-                    <span class="data-value">${studyData.products_after_banner}</span>
-                </div>
-                <div class="data-item">
-                    <span class="data-label">Gesamtzeit auf der Seite:</span>
-                    <span class="data-value">${studyData.total_time_on_page.toFixed(2)} Sekunden</span>
-                </div>
-                <div class="data-item">
-                    <span class="data-label">Gesamt Produkte im Warenkorb:</span>
-                    <span class="data-value">${cartCount}</span>
-                </div>
-            `;
-        }
-
-        // Download data as JSON
-        function downloadData() {
-            const dataStr = JSON.stringify(studyData, null, 2);
-            const dataBlob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(dataBlob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `studie-daten-${studyData.participant_id}-${Date.now()}.json`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-
-            console.log('Data downloaded');
-        }
-    </script>
 </body>
 </html>
