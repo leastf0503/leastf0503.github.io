@@ -245,33 +245,21 @@
   const urlParams = new URLSearchParams(window.location.search);
   const condition = urlParams.get('condition'); // Werte: 'augen', 'geraeusch', 'beides', 'keine' oder null
 
-  // Funktion für Augenanimation
-  function startEyeAnimation() {
-    document.addEventListener("mousemove", (event) => {
-      const eyes = [{el: pupilLeft}, {el: pupilRight}];
-      eyes.forEach(({el}) => {
-        const rect = el.parentElement.getBoundingClientRect();
-        const eyeCenterX = rect.left + rect.width / 2;
-        const eyeCenterY = rect.top + rect.height / 2;
-        const dx = event.clientX - eyeCenterX;
-        const dy = event.clientY - eyeCenterY;
-        const angle = Math.atan2(dy, dx);
-        const maxOffset = 8;
-        const offsetX = Math.cos(angle) * maxOffset;
-        const offsetY = Math.sin(angle) * maxOffset;
-        el.style.left = 10 + offsetX + "px";
-        el.style.top = 10 + offsetY + "px";
-      });
-    });
-  }
-
   // Funktion für gruseliges Geräusch abspielen (Beispiel)
   function playCreepySound() {
-    const audio = new Audio('gruseliges_geraeusch.mp3'); // Stellen Sie sicher, diese Datei ist erreichbar
+    const audio = new Audio('gruseliges_geraeusch.mp3'); // Pfad anpassen
     audio.play();
   }
 
-  // Produkte rendern Funktion
+  productsEl.addEventListener("click", (e) => {
+    if(e.target.tagName !== "BUTTON") return;
+    const index = e.target.getAttribute("data-index");
+    if(index !== null) {
+      cart.push(products[index]);
+      updateCartCounter();
+    }
+  });
+
   function renderProducts() {
     productsEl.innerHTML = "";
     products.forEach((product, index) => {
@@ -287,50 +275,10 @@
     });
   }
 
-  // Update Warenkorb-Zähler
   function updateCartCounter() {
     cartCounter.textContent = cart.length;
     cartCounter.style.display = cart.length > 0 ? "flex" : "none";
   }
-
-  // Mausbewegung für Augenanimation nur wenn Banner angezeigt wird
-  document.addEventListener("mousemove", (event) => {
-    if(!bannerShown || condition !== 'augen' && condition !== 'beides') return;
-    const eyes = [{el: pupilLeft}, {el: pupilRight}];
-    eyes.forEach(({el}) => {
-      const rect = el.parentElement.getBoundingClientRect();
-      const eyeCenterX = rect.left + rect.width / 2;
-      const eyeCenterY = rect.top + rect.height / 2;
-      const dx = event.clientX - eyeCenterX;
-      const dy = event.clientY - eyeCenterY;
-      const angle = Math.atan2(dy, dx);
-      const maxOffset = 8;
-      const offsetX = Math.cos(angle) * maxOffset;
-      const offsetY = Math.sin(angle) * maxOffset;
-      el.style.left = 10 + offsetX + "px";
-      el.style.top = 10 + offsetY + "px";
-    });
-  });
-
-  // Augenzwinkern alle 3 Sekunden (nur wenn 'augen' oder 'beides')
-  setInterval(() => {
-    if(!bannerShown || (condition !== 'augen' && condition !== 'beides')) return;
-    [pupilLeft, pupilRight].forEach(pupil => {
-      pupil.style.height = "5px";
-      setTimeout(() => {
-        pupil.style.height = "18px";
-      }, 200);
-    });
-  }, 3000);
-
-  productsEl.addEventListener("click", (e) => {
-    if(e.target.tagName !== "BUTTON") return;
-    const index = e.target.getAttribute("data-index");
-    if(index !== null) {
-      cart.push(products[index]);
-      updateCartCounter();
-    }
-  });
 
   acceptBtn.addEventListener("click", () => {
     bannerChoice = 'accept';
@@ -392,7 +340,7 @@
     renderProducts();
     updateCartCounter();
 
-    // Banner nach 20 Sekunden anzeigen, abhängig von condition
+    // Banner nach 20 Sekunden anzeigen und Augenanimation ggf. aktivieren
     setTimeout(() => {
       cookieBanner.style.display = 'block';
       bannerShown = true;
@@ -401,7 +349,36 @@
         playCreepySound();
       }
 
-      // Augenanimation wird im Mausmove-Event separat aktiviert
+      if(condition === 'augen' || condition === 'beides') {
+        // Augenbewegung aktivieren
+        document.addEventListener("mousemove", (event) => {
+          const eyes = [{el: pupilLeft}, {el: pupilRight}];
+          eyes.forEach(({el}) => {
+            const rect = el.parentElement.getBoundingClientRect();
+            const eyeCenterX = rect.left + rect.width / 2;
+            const eyeCenterY = rect.top + rect.height / 2;
+            const dx = event.clientX - eyeCenterX;
+            const dy = event.clientY - eyeCenterY;
+            const angle = Math.atan2(dy, dx);
+            const maxOffset = 8;
+            const offsetX = Math.cos(angle) * maxOffset;
+            const offsetY = Math.sin(angle) * maxOffset;
+            el.style.left = 10 + offsetX + "px";
+            el.style.top = 10 + offsetY + "px";
+          });
+        });
+
+        // Augenzwinkern alle 3 Sekunden
+        setInterval(() => {
+          if(!bannerShown) return;
+          [pupilLeft, pupilRight].forEach(pupil => {
+            pupil.style.height = "5px";
+            setTimeout(() => {
+              pupil.style.height = "18px";
+            }, 200);
+          });
+        }, 3000);
+      }
     }, 20000);
   });
 </script>
