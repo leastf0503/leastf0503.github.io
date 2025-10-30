@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Cookie Banner Studie - Interaktive Shopaufgabe</title>
+<title>Shop mit Cookie-Banner & Augen</title>
 <style>
   body {
     font-family: Arial, sans-serif;
@@ -49,13 +49,13 @@
   #shop {
     display: none;
     padding: 20px;
+    max-width: 960px;
+    margin: 0 auto;
   }
   #products {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 20px;
-    max-width: 960px;
-    margin: 0 auto;
   }
   .product {
     background: white;
@@ -147,35 +147,6 @@
     background-color: #dc3545;
     color: white;
   }
-  #summary {
-    margin: 20px auto;
-    max-width: 600px;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 1px 8px rgba(0,0,0,0.1);
-    padding: 15px;
-    display: none;
-  }
-  #summary pre {
-    white-space: pre-wrap;
-    word-wrap: break-word;
-  }
-  #cart-counter {
-    position: fixed;
-    top: 10px;
-    right: 15px;
-    background: #2e76cc;
-    color: white;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    font-weight: bold;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1rem;
-    z-index: 999;
-  }
 </style>
 </head>
 <body>
@@ -185,30 +156,22 @@
   <input type="text" id="participant-id" placeholder="Teilnehmer-ID" />
   <button id="start-button">Start</button>
 </div>
-<div id="cart-counter" style="display:none;">0</div>
+
 <div id="shop">
-  <h2>Füllen Sie Ihren Warenkorb</h2>
+  <h2>Produkte</h2>
   <div id="products"></div>
-  <button id="finish-button" style="margin-top:20px;">Studie beenden und zurück</button>
 </div>
+
 <div id="cookie-banner">
   <div class="eyes">
-    <div class="eye">
-      <div class="pupil" id="pupil-left"></div>
-    </div>
-    <div class="eye">
-      <div class="pupil" id="pupil-right"></div>
-    </div>
+    <div class="eye"><div class="pupil" id="pupil-left"></div></div>
+    <div class="eye"><div class="pupil" id="pupil-right"></div></div>
   </div>
   <p>Diese Website verwendet Cookies für Analyse und Personalisierung.</p>
   <button id="accept-btn">Alle akzeptieren</button>
   <button id="reject-btn">Alle ablehnen</button>
 </div>
-<div id="summary">
-  <h3>Ihre Studiendaten</h3>
-  <pre id="summary-data"></pre>
-  <button id="download-json">Daten herunterladen</button>
-</div>
+
 <script>
   const products = [
     { name: "Laptop", price: 899, emoji: "💻" },
@@ -219,52 +182,21 @@
     { name: "Kamera", price: 599, emoji: "📷" },
   ];
 
-  let cart = [];
-  let participantId = "";
+  const startScreen = document.getElementById('start-screen');
+  const shopEl = document.getElementById('shop');
+  const productsEl = document.getElementById('products');
+  const cookieBanner = document.getElementById('cookie-banner');
+  const pupilLeft = document.getElementById('pupil-left');
+  const pupilRight = document.getElementById('pupil-right');
+  const acceptBtn = document.getElementById('accept-btn');
+  const rejectBtn = document.getElementById('reject-btn');
   let bannerShown = false;
-  let bannerChoice = null;
-  let bannerTimer = null;
-  let timeStart = null;
-  let timeBannerInteract = null;
-
-  const startScreen = document.getElementById("start-screen");
-  const shopEl = document.getElementById("shop");
-  const productsEl = document.getElementById("products");
-  const acceptBtn = document.getElementById("accept-btn");
-  const rejectBtn = document.getElementById("reject-btn");
-  const cookieBanner = document.getElementById("cookie-banner");
-  const finishBtn = document.getElementById("finish-button");
-  const summaryEl = document.getElementById("summary");
-  const summaryDataEl = document.getElementById("summary-data");
-  const downloadJsonBtn = document.getElementById("download-json");
-  const cartCounter = document.getElementById("cart-counter");
-  const pupilLeft = document.getElementById("pupil-left");
-  const pupilRight = document.getElementById("pupil-right");
-
-  // URL-Parameter auslesen
-  const urlParams = new URLSearchParams(window.location.search);
-  const condition = urlParams.get('condition'); // Werte: 'augen', 'geraeusch', 'beides', 'keine' oder null
-
-  // Funktion für gruseliges Geräusch abspielen (Beispiel)
-  function playCreepySound() {
-    const audio = new Audio('gruseliges_geraeusch.mp3'); // Pfad anpassen
-    audio.play();
-  }
-
-  productsEl.addEventListener("click", (e) => {
-    if(e.target.tagName !== "BUTTON") return;
-    const index = e.target.getAttribute("data-index");
-    if(index !== null) {
-      cart.push(products[index]);
-      updateCartCounter();
-    }
-  });
 
   function renderProducts() {
-    productsEl.innerHTML = "";
+    productsEl.innerHTML = '';
     products.forEach((product, index) => {
-      const p = document.createElement("div");
-      p.classList.add("product");
+      const p = document.createElement('div');
+      p.classList.add('product');
       p.innerHTML = `
         <div class="emoji">${product.emoji}</div>
         <div class="name">${product.name}</div>
@@ -275,124 +207,60 @@
     });
   }
 
-  function updateCartCounter() {
-    cartCounter.textContent = cart.length;
-    cartCounter.style.display = cart.length > 0 ? "flex" : "none";
+  function startEyeAnimation() {
+    document.addEventListener('mousemove', (event) => {
+      const eyes = [{el: pupilLeft}, {el: pupilRight}];
+      eyes.forEach(({el}) => {
+        const rect = el.parentElement.getBoundingClientRect();
+        const eyeCenterX = rect.left + rect.width / 2;
+        const eyeCenterY = rect.top + rect.height / 2;
+        const dx = event.clientX - eyeCenterX;
+        const dy = event.clientY - eyeCenterY;
+        const angle = Math.atan2(dy, dx);
+        const maxOffset = 8;
+        const offsetX = Math.cos(angle) * maxOffset;
+        const offsetY = Math.sin(angle) * maxOffset;
+        el.style.left = 10 + offsetX + 'px';
+        el.style.top = 10 + offsetY + 'px';
+      });
+    });
+
+    setInterval(() => {
+      [pupilLeft, pupilRight].forEach(pupil => {
+        pupil.style.height = '5px';
+        setTimeout(() => {
+          pupil.style.height = '18px';
+        }, 200);
+      });
+    }, 3000);
   }
-
-  acceptBtn.addEventListener("click", () => {
-    bannerChoice = 'accept';
-    timeBannerInteract = Date.now();
-    localStorage.setItem('cookieBannerChoice', 'accept');
-    cookieBanner.style.display = 'none';
-    finishBtn.style.display = 'inline-block';
-  });
-
-  rejectBtn.addEventListener("click", () => {
-    bannerChoice = 'reject';
-    timeBannerInteract = Date.now();
-    localStorage.setItem('cookieBannerChoice', 'reject');
-    cookieBanner.style.display = 'none';
-    finishBtn.style.display = 'inline-block';
-  });
-
-  finishBtn.addEventListener("click", () => {
-    const timeEnd = Date.now();
-    shopEl.style.display = 'none';
-    cartCounter.style.display = 'none';
-    summaryEl.style.display = 'block';
-
-    const summary = {
-      participantId,
-      bannerChoice,
-      productsInCart: cart.length,
-      timeOnPageSec: ((timeEnd - timeStart) / 1000).toFixed(2),
-      timestampStart: new Date(timeStart).toISOString(),
-      timestampBannerInteract: timeBannerInteract ? new Date(timeBannerInteract).toISOString() : null,
-      timestampEnd: new Date(timeEnd).toISOString()
-    };
-    summaryDataEl.textContent = JSON.stringify(summary, null, 2);
-  });
-
-  downloadJsonBtn.addEventListener('click', () => {
-    const data = summaryDataEl.textContent;
-    const blob = new Blob([data], {type: 'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `study_data_${participantId || 'unknown'}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  });
 
   document.getElementById('start-button').addEventListener('click', () => {
-  const idInput = document.getElementById('participant-id').value.trim();
-  if (!idInput) {
-    alert('Bitte Teilnehmer-ID eingeben');
-    return;
-  }
-  participantId = idInput;
-  startScreen.style.display = 'none';
-  shopEl.style.display = 'block';
-  finishBtn.style.display = 'none';
-  timeStart = Date.now();
-
-  renderProducts();
-  updateCartCounter();
-
-  // Banner nach 20 Sekunden anzeigen und Augen-/Soundeffekte ggf. aktivieren
-  setTimeout(() => {
-    cookieBanner.style.display = 'block';
-    bannerShown = true;
-
-    if(condition === 'geraeusch' || condition === 'beides') {
-      playCreepySound();
+    const idInput = document.getElementById('participant-id').value.trim();
+    if(!idInput) {
+      alert('Bitte Teilnehmer-ID eingeben');
+      return;
     }
+    startScreen.style.display = 'none';
+    shopEl.style.display = 'block';
+    renderProducts();
 
-    if(condition === 'augen' || condition === 'beides') {
-      // Ausgangsposition der Pupillen setzen
-      pupilLeft.style.left = "10px";
-      pupilLeft.style.top = "10px";
-      pupilRight.style.left = "10px";
-      pupilRight.style.top = "10px";
+    setTimeout(() => {
+      cookieBanner.style.display = 'block';
+      bannerShown = true;
+      startEyeAnimation();
+    }, 5000); // Banner nach 5 Sekunden anzeigen
+  });
 
-      // Mausbewegung für Augen (Listener nur einmal hinzufügen)
-      function onMouseMove(event) {
-        const eyes = [{el: pupilLeft}, {el: pupilRight}];
-        eyes.forEach(({el}) => {
-          const rect = el.parentElement.getBoundingClientRect();
-          const eyeCenterX = rect.left + rect.width / 2;
-          const eyeCenterY = rect.top + rect.height / 2;
-          const dx = event.clientX - eyeCenterX;
-          const dy = event.clientY - eyeCenterY;
-          const angle = Math.atan2(dy, dx);
-          const maxOffset = 8;
-          const offsetX = Math.cos(angle) * maxOffset;
-          const offsetY = Math.sin(angle) * maxOffset;
-          el.style.left = 10 + offsetX + "px";
-          el.style.top = 10 + offsetY + "px";
-        });
-      }
+  acceptBtn.addEventListener('click', () => {
+    cookieBanner.style.display = 'none';
+    alert('Cookies akzeptiert');
+  });
 
-      // Eventlistener nur einmal hinzufügen
-      window.removeEventListener('mousemove', onMouseMove);
-      window.addEventListener('mousemove', onMouseMove);
-
-      // Augenzwinkern alle 3 Sekunden
-      setInterval(() => {
-        if(!bannerShown) return;
-        [pupilLeft, pupilRight].forEach(pupil => {
-          pupil.style.height = "5px";
-          setTimeout(() => {
-            pupil.style.height = "18px";
-          }, 200);
-        });
-      }, 3000);
-    }
-  }, 20000);
-});
-
-
+  rejectBtn.addEventListener('click', () => {
+    cookieBanner.style.display = 'none';
+    alert('Cookies abgelehnt');
+  });
 </script>
 </body>
 </html>
