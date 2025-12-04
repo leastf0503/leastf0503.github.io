@@ -225,8 +225,10 @@
                 const baseUrl = "https://www.soscisurvey.de/BA25LeaPaula/"; 
                 
                 // URL bauen mit allen Variablen (c, n, d, g)
-                const finalUrl = `${baseUrl}?q=next&c=${cVal}&n=${count}&d=${dJson}&g=${groupID}`;
-
+                // Wir entfernen "q=next", da die BaseURL meistens schon stimmt.
+// Stattdessen hängen wir nur unsere Daten an.
+// SoSci erkennt automatisch die laufende Session.
+const finalUrl = `${baseUrl}?c=${cVal}&n=${count}&d=${dJson}&g=${groupID}`;
                 // Weiterleiten
                 window.location.href = finalUrl;
             };
