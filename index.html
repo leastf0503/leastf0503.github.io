@@ -413,51 +413,50 @@
             );
         };
 
-        // 4. End Screen
-        const EndScreen = ({ data, cookieChoice, groupID }) => {
-            
-            // DIES IST DER LINK, DER ZU SOSCI ZURÜCKFÜHRT
-            // Du musst diesen Link anpassen, wenn deine SoSci Studie läuft.
-            const backToSurvey = () => {
-                // 'https://www.soscisurvey.de/DEINE_STUDIE_KENNUNG/?q=next'
-                // Wenn du Daten mitsenden willst:
-                // window.location.href = `https://www.soscisurvey.de/KENNUNG/?q=next&i=${cookieChoice === 'accept_all' ? 1 : 2}`;
-                
-                // Für jetzt: Einfacher Alert oder Placeholder
-                alert("Weiterleitung zu SoSci Survey... (Füge hier deinen Link ein)");
-                // window.location.href = "https://www.soscisurvey.de/DEIN_PROJEKT/";
-            };
+        
+        // 4. End Screen (Nach Datenerhebung)
+const EndScreen = ({ data, cookieChoice, groupID }) => {
+  
+  return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div className="bg-white p-8 rounded-xl shadow-lg max-w-lg w-full text-center border-t-4 border-green-500">
+        
+        <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+          <IconCheckCircle className="w-8 h-8" />
+        </div>
+        
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">Aufgabe erfolgreich erledigt!</h2>
+        
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+          <p className="text-blue-900 font-medium text-lg mb-2">
+            WICHTIG: So geht es weiter
+          </p>
+          <p className="text-blue-800 text-sm leading-relaxed">
+            Ihre Aufgabe auf dieser Webseite ist beendet.
+            Bitte kehren Sie nun zum Fragebogen zurück, um die Studie abzuschließen.
+          </p>
+        </div>
 
-            return (
-                <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-                    <div className="bg-white p-8 rounded-xl shadow-lg max-w-lg w-full text-center">
-                        <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <IconCheckCircle className="w-8 h-8" />
-                        </div>
-                        <h2 className="text-2xl font-bold text-gray-800 mb-2">Aufgabe erledigt</h2>
-                        <p className="text-gray-600 mb-6">
-                            Vielen Dank. Sie haben die Webseiten-Aufgabe abgeschlossen.
-                            Bitte kehren Sie nun zum Fragebogen zurück.
-                        </p>
+        {/* Die Debug-Daten kannst du für die echte Studie ausblenden oder drin lassen zum Testen */}
+        <div className="bg-gray-100 p-2 rounded text-left text-[10px] font-mono mb-6 text-gray-400">
+           Debug: G{groupID} / {cookieChoice}
+        </div>
 
-                        <div className="bg-gray-100 p-4 rounded text-left text-xs font-mono mb-6 overflow-auto max-h-40 border border-gray-200">
-                            <p className="font-bold mb-1 text-gray-500">Debug Data (Bitte notieren, falls Redirect nicht klappt):</p>
-                            <p>Group: {groupID}</p>
-                            <p>Cookie Choice: {cookieChoice}</p>
-                            <p>Disclosure: {JSON.stringify(data).substring(0, 50)}...</p>
-                        </div>
-
-                        <button 
-                            onClick={backToSurvey}
-                            className="bg-blue-600 text-white px-6 py-2 rounded font-medium hover:bg-blue-700 w-full"
-                        >
-                            Zurück zur Umfrage
-                        </button>
-                    </div>
-                </div>
-            );
-        };
-
+        {/* Der Button schließt das Fenster (funktioniert in den meisten Browsern, wenn per Link geöffnet) */}
+        <button 
+          onClick={() => window.close()}
+          className="bg-green-600 text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-green-700 w-full shadow-md transition-all hover:-translate-y-1"
+        >
+          Tab schließen & zum Fragebogen
+        </button>
+        
+        <p className="text-xs text-gray-400 mt-4">
+          Falls sich das Fenster nicht schließt: Bitte schließen Sie diesen Tab (X) manuell.
+        </p>
+      </div>
+    </div>
+  );
+};
         // --- HAUPT APP ---
         function App() {
             const [step, setStep] = useState('blog'); 
