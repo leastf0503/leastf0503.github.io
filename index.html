@@ -1,472 +1,521 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Eye, ShieldAlert, X, Heart, Activity, Apple, Coffee, ChevronRight, CheckCircle } from 'lucide-react';
-
-// --- KOMPONENTEN ---
-
-// 1. Der Manipulierte Cookie Banner
-const CookieBanner = ({ group, onDecision }) => {
-  const [showDetails, setShowDetails] = useState(false);
-  
-  // Konfiguration der Gruppen basierend auf URL Parameter ?g=...
-  // GRUPPE 4 WURDE ENTFERNT
-  // 0: Kontrolle
-  // 1: Augen
-  // 2: Sound
-  // 3: Augen + Sound
-  // 5: Augen + Info
-  // 6: Sound + Info
-  // 7: Augen + Sound + Info
-  const getConfig = (g) => {
-    const map = {
-      0: { eyes: false, sound: false, info: false }, // Kontrolle
-      1: { eyes: true,  sound: false, info: false }, // Nur Augen
-      2: { eyes: false, sound: true,  info: false }, // Nur Sound
-      3: { eyes: true,  sound: true,  info: false }, // Augen + Sound
-      // 4: ENTFERNT (Nur Info)
-      5: { eyes: true,  sound: false, info: true  }, // Augen + Info
-      6: { eyes: false, sound: true,  info: true  }, // Sound + Info
-      7: { eyes: true,  sound: true,  info: true  }, // Alles
-    };
-    return map[g] || map[0];
-  };
-
-  const config = getConfig(group);
-  const audioContextRef = useRef(null);
-
-  useEffect(() => {
-    // Sound Logik (Web Audio API für synthetischen Grusel-Sound)
-    if (config.sound) {
-      const playSound = () => {
-        try {
-          const AudioContext = window.AudioContext || window.webkitAudioContext;
-          if (!AudioContext) return;
-          
-          const ctx = new AudioContext();
-          audioContextRef.current = ctx;
-          
-          // Oszillator für tiefes Brummen (Unbehagen)
-          const osc = ctx.createOscillator();
-          const gainNode = ctx.createGain();
-          
-          osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(50, ctx.currentTime); // 50Hz (tief)
-          osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 2);
-          
-          // Leichte Dissonanz hinzufügen
-          const osc2 = ctx.createOscillator();
-          osc2.type = 'sine';
-          osc2.frequency.setValueAtTime(53, ctx.currentTime);
-          
-          gainNode.gain.setValueAtTime(0.05, ctx.currentTime); // Leise starten
-          gainNode.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 1); // Anschwellen
-
-          osc.connect(gainNode);
-          osc2.connect(gainNode);
-          gainNode.connect(ctx.destination);
-          
-          osc.start();
-          osc2.start();
-          
-          // Nach 10 Sekunden ausblenden
-          gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 10);
-          osc.stop(ctx.currentTime + 10);
-          osc2.stop(ctx.currentTime + 10);
-        } catch (e) {
-          console.error("Audio blockiert", e);
-        }
-      };
-
-      // Browser blockieren oft Audio ohne Interaktion. Wir versuchen es, 
-      // aber oft klappt es erst beim ersten Klick/Hover.
-      playSound();
-      // Fallback: Beim ersten Mouseover über den Banner
-      const banner = document.getElementById('cookie-banner-container');
-      if(banner) banner.addEventListener('mouseenter', playSound, { once: true });
-    }
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gesundheitsprofil Studie</title>
     
-    return () => {
-        if(audioContextRef.current) audioContextRef.current.close();
-    };
-  }, [config.sound]);
+    <!-- 1. Tailwind CSS für das Design -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. React und ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    
+    <!-- 3. Babel für die Übersetzung von JSX im Browser -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-  return (
-    <div id="cookie-banner-container" className="fixed bottom-0 left-0 right-0 z-50 p-4 md:p-6 bg-white shadow-[0_-5px_20px_rgba(0,0,0,0.3)] border-t-4 border-blue-600 animate-slide-up">
-      <div className="max-w-4xl mx-auto relative">
-        
-        {/* MANIPULATION: AUGEN */}
-        {config.eyes && (
-          <div className="absolute -top-16 left-1/2 transform -translate-x-1/2 flex gap-4 animate-pulse">
-            <div className="bg-white p-2 rounded-full border-2 border-gray-800 shadow-lg">
-               <Eye size={48} className="text-gray-900" />
-            </div>
-            <div className="bg-white p-2 rounded-full border-2 border-gray-800 shadow-lg">
-               <Eye size={48} className="text-gray-900" />
-            </div>
-          </div>
-        )}
+    <style>
+        /* Animationen für den Banner */
+        @keyframes slide-up {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .animate-slide-up {
+            animation: slide-up 0.5s ease-out forwards;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-gray-800">
 
-        {/* MANIPULATION: INFO TEXT POPUP */}
-        {config.info && (
-          <div className="mb-4 bg-red-50 border-l-4 border-red-500 p-4 flex items-start gap-3 rounded shadow-sm">
-            <ShieldAlert className="text-red-600 shrink-0 mt-1" />
-            <div>
-              <p className="font-bold text-red-800 text-sm uppercase">Warnung: Datenweitergabe</p>
-              <p className="text-sm text-red-700 mt-1">
-                Achtung: Wenn Sie "Alles Akzeptieren" wählen, werden Ihre Gesundheitsdaten an über <strong>500 Werbepartner</strong> weitergegeben und dauerhaft gespeichert.
-              </p>
-            </div>
-          </div>
-        )}
+    <!-- Hier wird die React App "eingehängt" -->
+    <div id="root"></div>
 
-        {/* STANDARD BANNER INHALT */}
-        <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
-          <div className="flex-1">
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Wir schätzen Ihre Privatsphäre</h3>
-            <p className="text-sm text-gray-600 leading-relaxed">
-              Wir verwenden Cookies und ähnliche Technologien, um Inhalte zu personalisieren, Marketingmaßnahmen zu messen und Erkenntnisse über unsere Zielgruppen zu gewinnen. 
-              {showDetails && (
-                <span className="block mt-2 text-xs text-gray-500">
-                  Dazu gehören: Identifikation von Geräten, Standortdaten, Surfverhalten und Gesundheitsinteressen. Ihre Daten können an Drittanbieter außerhalb der EU übertragen werden.
-                </span>
-              )}
-            </p>
-            <button 
-              onClick={() => setShowDetails(!showDetails)}
-              className="text-xs text-blue-600 underline mt-2 hover:text-blue-800"
-            >
-              {showDetails ? "Weniger anzeigen" : "Mehr Informationen"}
-            </button>
-          </div>
+    <!-- Dein React Code -->
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
 
-          <div className="flex flex-col gap-3 w-full md:w-auto shrink-0">
-            <button 
-              onClick={() => onDecision('accept_all')}
-              className="px-6 py-2.5 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 transition-colors shadow-sm text-sm"
-            >
-              Alles akzeptieren
-            </button>
-            <button 
-              onClick={() => onDecision('reject_all')}
-              className="px-6 py-2.5 bg-gray-100 text-gray-700 font-medium rounded hover:bg-gray-200 transition-colors border border-gray-300 text-sm"
-            >
-              Nur Notwendige
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
+        // --- ICONS (Als SVG Komponenten für Standalone-Nutzung) ---
+        const IconEye = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        );
+        const IconShieldAlert = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+        );
+        const IconHeart = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+        );
+        const IconActivity = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        );
+        const IconApple = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06Z"/><path d="M10 2c1 .5 2 2 2 5"/></svg>
+        );
+        const IconCoffee = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" x2="6" y1="2" y2="4"/><line x1="10" x2="10" y1="2" y2="4"/><line x1="14" x2="14" y1="2" y2="4"/></svg>
+        );
+        const IconChevronRight = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m9 18 6-6-6-6"/></svg>
+        );
+        const IconCheckCircle = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+        );
 
-// 2. Die "Health Blog" Seite
-const BlogPage = ({ onStartRegistration }) => {
-  const articles = [
-    { title: "5 Superfoods für Ihr Herz", icon: <Heart className="text-red-500" />, desc: "Wie Sie mit der richtigen Ernährung Herz-Kreislauf-Erkrankungen vorbeugen." },
-    { title: "Schlaf & Psyche", icon: <Activity className="text-blue-500" />, desc: "Warum Schlafhygiene der Schlüssel zu geistiger Gesundheit ist." },
-    { title: "Intervallfasten: Mythos oder Wunder?", icon: <Apple className="text-green-500" />, desc: "Wissenschaftliche Erkenntnisse über den 16:8 Rhythmus." },
-    { title: "Stressmanagement im Alltag", icon: <Coffee className="text-amber-700" />, desc: "Kleine Pausen, große Wirkung: Techniken zur Cortisol-Senkung." },
-  ];
+        // --- KOMPONENTEN ---
 
-  return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Fake Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="bg-green-500 p-1.5 rounded text-white">
-              <Activity size={24} />
-            </div>
-            <span className="font-bold text-xl text-gray-800 tracking-tight">VitalCore<span className="text-green-500">.de</span></span>
-          </div>
-          <nav className="hidden md:flex gap-6 text-sm font-medium text-gray-600">
-            <span className="hover:text-green-600 cursor-pointer">Ernährung</span>
-            <span className="hover:text-green-600 cursor-pointer">Fitness</span>
-            <span className="hover:text-green-600 cursor-pointer">Mental Health</span>
-            <span className="text-gray-300">|</span>
-            <span className="text-green-600 cursor-pointer">Login</span>
-          </nav>
-        </div>
-      </header>
+        // 1. Der Manipulierte Cookie Banner
+        const CookieBanner = ({ group, onDecision }) => {
+            const [showDetails, setShowDetails] = useState(false);
+            
+            // Konfiguration: Gruppe 4 entfernt/übersprungen
+            const getConfig = (g) => {
+                const map = {
+                    0: { eyes: false, sound: false, info: false }, // Kontrolle
+                    1: { eyes: true,  sound: false, info: false }, // Nur Augen
+                    2: { eyes: false, sound: true,  info: false }, // Nur Sound
+                    3: { eyes: true,  sound: true,  info: false }, // Augen + Sound
+                    // 4: EXISTIERT NICHT MEHR
+                    5: { eyes: true,  sound: false, info: true  }, // Augen + Info
+                    6: { eyes: false, sound: true,  info: true  }, // Sound + Info
+                    7: { eyes: true,  sound: true,  info: true  }, // Alles
+                };
+                return map[g] || map[0];
+            };
 
-      {/* Hero Section */}
-      <div className="bg-green-600 text-white py-12 px-4">
-        <div className="max-w-3xl mx-auto text-center">
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">Ihre Gesundheit, Ihr Profil</h1>
-          <p className="text-green-100 text-lg mb-8">
-            Personalisierte Gesundheits-Tipps basierend auf modernsten Algorithmen.
-          </p>
-          <div className="inline-block bg-white/20 px-4 py-2 rounded-full text-sm font-medium backdrop-blur-sm">
-            Studien-Demo v.1.0.4
-          </div>
-        </div>
-      </div>
+            const config = getConfig(group);
+            const audioContextRef = useRef(null);
 
-      {/* Blog Grid */}
-      <div className="max-w-5xl mx-auto px-4 py-12">
-        <div className="flex justify-between items-end mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Aktuelle Beiträge</h2>
-          <span className="text-sm text-gray-500">Zuletzt aktualisiert: Heute</span>
-        </div>
-        
-        <div className="grid md:grid-cols-2 gap-6 mb-12">
-          {articles.map((art, idx) => (
-            <div key={idx} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer group">
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-3 bg-gray-50 rounded-lg group-hover:bg-green-50 transition-colors">
-                  {art.icon}
+            useEffect(() => {
+                if (config.sound) {
+                    const playSound = () => {
+                        try {
+                            const AudioContext = window.AudioContext || window.webkitAudioContext;
+                            if (!AudioContext) return;
+                            
+                            const ctx = new AudioContext();
+                            audioContextRef.current = ctx;
+                            
+                            const osc = ctx.createOscillator();
+                            const gainNode = ctx.createGain();
+                            
+                            osc.type = 'sawtooth';
+                            osc.frequency.setValueAtTime(50, ctx.currentTime);
+                            osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 2);
+                            
+                            const osc2 = ctx.createOscillator();
+                            osc2.type = 'sine';
+                            osc2.frequency.setValueAtTime(53, ctx.currentTime);
+                            
+                            gainNode.gain.setValueAtTime(0.05, ctx.currentTime);
+                            gainNode.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 1);
+
+                            osc.connect(gainNode);
+                            osc2.connect(gainNode);
+                            gainNode.connect(ctx.destination);
+                            
+                            osc.start();
+                            osc2.start();
+                            
+                            gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 10);
+                            osc.stop(ctx.currentTime + 10);
+                            osc2.stop(ctx.currentTime + 10);
+                        } catch (e) {
+                            console.error("Audio error", e);
+                        }
+                    };
+
+                    playSound();
+                    const banner = document.getElementById('cookie-banner-container');
+                    if(banner) banner.addEventListener('mouseenter', playSound, { once: true });
+                }
+                
+                return () => {
+                    if(audioContextRef.current && audioContextRef.current.state !== 'closed') {
+                        audioContextRef.current.close();
+                    }
+                };
+            }, [config.sound]);
+
+            return (
+                <div id="cookie-banner-container" className="fixed bottom-0 left-0 right-0 z-50 p-4 md:p-6 bg-white shadow-[0_-5px_20px_rgba(0,0,0,0.3)] border-t-4 border-blue-600 animate-slide-up">
+                    <div className="max-w-4xl mx-auto relative">
+                        
+                        {/* MANIPULATION: AUGEN */}
+                        {config.eyes && (
+                            <div className="absolute -top-16 left-1/2 transform -translate-x-1/2 flex gap-4 animate-pulse">
+                                <div className="bg-white p-2 rounded-full border-2 border-gray-800 shadow-lg">
+                                    <IconEye className="text-gray-900 w-12 h-12" />
+                                </div>
+                                <div className="bg-white p-2 rounded-full border-2 border-gray-800 shadow-lg">
+                                    <IconEye className="text-gray-900 w-12 h-12" />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* MANIPULATION: INFO TEXT POPUP */}
+                        {config.info && (
+                            <div className="mb-4 bg-red-50 border-l-4 border-red-500 p-4 flex items-start gap-3 rounded shadow-sm">
+                                <IconShieldAlert className="text-red-600 shrink-0 mt-1" />
+                                <div>
+                                    <p className="font-bold text-red-800 text-sm uppercase">Warnung: Datenweitergabe</p>
+                                    <p className="text-sm text-red-700 mt-1">
+                                        Achtung: Wenn Sie "Alles Akzeptieren" wählen, werden Ihre Gesundheitsdaten an über <strong>500 Werbepartner</strong> weitergegeben und dauerhaft gespeichert.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* STANDARD BANNER */}
+                        <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+                            <div className="flex-1">
+                                <h3 className="text-lg font-bold text-gray-900 mb-2">Wir schätzen Ihre Privatsphäre</h3>
+                                <p className="text-sm text-gray-600 leading-relaxed">
+                                    Wir verwenden Cookies und ähnliche Technologien, um Inhalte zu personalisieren, Marketingmaßnahmen zu messen und Erkenntnisse über unsere Zielgruppen zu gewinnen. 
+                                    {showDetails && (
+                                        <span className="block mt-2 text-xs text-gray-500">
+                                            Dazu gehören: Identifikation von Geräten, Standortdaten, Surfverhalten und Gesundheitsinteressen. Ihre Daten können an Drittanbieter außerhalb der EU übertragen werden.
+                                        </span>
+                                    )}
+                                </p>
+                                <button 
+                                    onClick={() => setShowDetails(!showDetails)}
+                                    className="text-xs text-blue-600 underline mt-2 hover:text-blue-800"
+                                >
+                                    {showDetails ? "Weniger anzeigen" : "Mehr Informationen"}
+                                </button>
+                            </div>
+
+                            <div className="flex flex-col gap-3 w-full md:w-auto shrink-0">
+                                <button 
+                                    onClick={() => onDecision('accept_all')}
+                                    className="px-6 py-2.5 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 transition-colors shadow-sm text-sm"
+                                >
+                                    Alles akzeptieren
+                                </button>
+                                <button 
+                                    onClick={() => onDecision('reject_all')}
+                                    className="px-6 py-2.5 bg-gray-100 text-gray-700 font-medium rounded hover:bg-gray-200 transition-colors border border-gray-300 text-sm"
+                                >
+                                    Nur Notwendige
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Artikel</span>
-              </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-green-600 transition-colors">{art.title}</h3>
-              <p className="text-gray-600 text-sm leading-relaxed">{art.desc}</p>
-            </div>
-          ))}
-        </div>
+            );
+        };
 
-        {/* Call to Action - The Task */}
-        <div className="bg-blue-900 rounded-2xl p-8 md:p-12 text-center text-white relative overflow-hidden">
-          <div className="relative z-10">
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">Personalisierung starten</h2>
-            <p className="text-blue-200 mb-8 max-w-xl mx-auto">
-              Um die Algorithmus-Genauigkeit zu testen, bitten wir Sie nun, Ihr Gesundheitsprofil zu erstellen.
-              Dies ist Teil Ihrer Aufgabe in der Studie.
-            </p>
-            <button 
-              onClick={onStartRegistration}
-              className="bg-green-500 hover:bg-green-400 text-white px-8 py-3 rounded-lg font-bold text-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 flex items-center gap-2 mx-auto"
-            >
-              Konto erstellen & Profil ausfüllen <ChevronRight size={20} />
-            </button>
-          </div>
-          {/* Decorative circles */}
-          <div className="absolute top-0 left-0 w-64 h-64 bg-blue-800 rounded-full mix-blend-multiply filter blur-3xl opacity-30 -translate-x-1/2 -translate-y-1/2"></div>
-          <div className="absolute bottom-0 right-0 w-64 h-64 bg-green-800 rounded-full mix-blend-multiply filter blur-3xl opacity-30 translate-x-1/2 translate-y-1/2"></div>
-        </div>
-      </div>
-    </div>
-  );
-};
+        // 2. Blog Page
+        const BlogPage = ({ onStartRegistration }) => {
+            const articles = [
+                { title: "5 Superfoods für Ihr Herz", icon: <IconHeart className="text-red-500" />, desc: "Wie Sie mit der richtigen Ernährung Herz-Kreislauf-Erkrankungen vorbeugen." },
+                { title: "Schlaf & Psyche", icon: <IconActivity className="text-blue-500" />, desc: "Warum Schlafhygiene der Schlüssel zu geistiger Gesundheit ist." },
+                { title: "Intervallfasten: Mythos oder Wunder?", icon: <IconApple className="text-green-500" />, desc: "Wissenschaftliche Erkenntnisse über den 16:8 Rhythmus." },
+                { title: "Stressmanagement im Alltag", icon: <IconCoffee className="text-amber-700" />, desc: "Kleine Pausen, große Wirkung: Techniken zur Cortisol-Senkung." },
+            ];
 
-// 3. Das Selbstoffenbarungs-Formular (Self-Disclosure)
-const RegistrationForm = ({ onSubmit }) => {
-  const [formData, setFormData] = useState({
-    gender: '',
-    age: '',
-    height: '',
-    weight: '',
-    diet: '',
-    substances: [],
-    bodySatisfaction: 5
-  });
+            return (
+                <div className="min-h-screen bg-slate-50">
+                    <header className="bg-white shadow-sm sticky top-0 z-10">
+                        <div className="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                                <div className="bg-green-500 p-1.5 rounded text-white">
+                                    <IconActivity size={24} />
+                                </div>
+                                <span className="font-bold text-xl text-gray-800 tracking-tight">VitalCore<span className="text-green-500">.de</span></span>
+                            </div>
+                            <nav className="hidden md:flex gap-6 text-sm font-medium text-gray-600">
+                                <span className="hover:text-green-600 cursor-pointer">Ernährung</span>
+                                <span className="hover:text-green-600 cursor-pointer">Fitness</span>
+                                <span className="hover:text-green-600 cursor-pointer">Mental Health</span>
+                                <span className="text-gray-300">|</span>
+                                <span className="text-green-600 cursor-pointer">Login</span>
+                            </nav>
+                        </div>
+                    </header>
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+                    <div className="bg-green-600 text-white py-12 px-4">
+                        <div className="max-w-3xl mx-auto text-center">
+                            <h1 className="text-3xl md:text-4xl font-bold mb-4">Ihre Gesundheit, Ihr Profil</h1>
+                            <p className="text-green-100 text-lg mb-8">
+                                Personalisierte Gesundheits-Tipps basierend auf modernsten Algorithmen.
+                            </p>
+                            <div className="inline-block bg-white/20 px-4 py-2 rounded-full text-sm font-medium backdrop-blur-sm">
+                                Studien-Demo v.1.0.4
+                            </div>
+                        </div>
+                    </div>
 
-  const handleCheckbox = (value) => {
-    setFormData(prev => {
-      const newSubs = prev.substances.includes(value) 
-        ? prev.substances.filter(s => s !== value)
-        : [...prev.substances, value];
-      return { ...prev, substances: newSubs };
-    });
-  };
+                    <div className="max-w-5xl mx-auto px-4 py-12">
+                        <div className="flex justify-between items-end mb-6">
+                            <h2 className="text-2xl font-bold text-gray-800">Aktuelle Beiträge</h2>
+                            <span className="text-sm text-gray-500">Zuletzt aktualisiert: Heute</span>
+                        </div>
+                        
+                        <div className="grid md:grid-cols-2 gap-6 mb-12">
+                            {articles.map((art, idx) => (
+                                <div key={idx} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer group">
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div className="p-3 bg-gray-50 rounded-lg group-hover:bg-green-50 transition-colors">
+                                            {art.icon}
+                                        </div>
+                                        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Artikel</span>
+                                    </div>
+                                    <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-green-600 transition-colors">{art.title}</h3>
+                                    <p className="text-gray-600 text-sm leading-relaxed">{art.desc}</p>
+                                </div>
+                            ))}
+                        </div>
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit(formData);
-  };
+                        <div className="bg-blue-900 rounded-2xl p-8 md:p-12 text-center text-white relative overflow-hidden">
+                            <div className="relative z-10">
+                                <h2 className="text-2xl md:text-3xl font-bold mb-4">Personalisierung starten</h2>
+                                <p className="text-blue-200 mb-8 max-w-xl mx-auto">
+                                    Um die Algorithmus-Genauigkeit zu testen, bitten wir Sie nun, Ihr Gesundheitsprofil zu erstellen.
+                                    Dies ist Teil Ihrer Aufgabe in der Studie.
+                                </p>
+                                <button 
+                                    onClick={onStartRegistration}
+                                    className="bg-green-500 hover:bg-green-400 text-white px-8 py-3 rounded-lg font-bold text-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 flex items-center gap-2 mx-auto"
+                                >
+                                    Konto erstellen & Profil ausfüllen <IconChevronRight className="w-5 h-5" />
+                                </button>
+                            </div>
+                            <div className="absolute top-0 left-0 w-64 h-64 bg-blue-800 rounded-full mix-blend-multiply filter blur-3xl opacity-30 -translate-x-1/2 -translate-y-1/2"></div>
+                            <div className="absolute bottom-0 right-0 w-64 h-64 bg-green-800 rounded-full mix-blend-multiply filter blur-3xl opacity-30 translate-x-1/2 translate-y-1/2"></div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
 
-  return (
-    <div className="min-h-screen bg-slate-50 py-8 px-4">
-      <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
-        <div className="bg-green-600 p-6 text-white">
-          <h2 className="text-2xl font-bold">Mein Gesundheitsprofil</h2>
-          <p className="text-green-100 text-sm mt-1">Bitte füllen Sie die folgenden Daten wahrheitsgemäß aus, um den Algorithmus zu kalibrieren.</p>
-        </div>
-        
-        <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-6">
-          
-          {/* Basisdaten */}
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Geschlecht</label>
-              <select name="gender" onChange={handleChange} className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
-                <option value="">Bitte wählen...</option>
-                <option value="m">Männlich</option>
-                <option value="w">Weiblich</option>
-                <option value="d">Divers</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Alter</label>
-              <input type="number" name="age" onChange={handleChange} className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 outline-none" placeholder="z.B. 25" />
-            </div>
-          </div>
+        // 3. Formular
+        const RegistrationForm = ({ onSubmit }) => {
+            const [formData, setFormData] = useState({
+                gender: '',
+                age: '',
+                height: '',
+                weight: '',
+                diet: '',
+                substances: [],
+                bodySatisfaction: 5
+            });
 
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Größe (cm)</label>
-              <input type="number" name="height" onChange={handleChange} className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 outline-none" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Gewicht (kg)</label>
-              <input type="number" name="weight" onChange={handleChange} className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 outline-none" />
-            </div>
-          </div>
+            const handleChange = (e) => {
+                const { name, value } = e.target;
+                setFormData(prev => ({ ...prev, [name]: value }));
+            };
 
-          <hr className="border-gray-100" />
+            const handleCheckbox = (value) => {
+                setFormData(prev => {
+                    const newSubs = prev.substances.includes(value) 
+                        ? prev.substances.filter(s => s !== value)
+                        : [...prev.substances, value];
+                    return { ...prev, substances: newSubs };
+                });
+            };
 
-          {/* Lifestyle */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Ernährungsweise</label>
-            <div className="space-y-2">
-              {['Allesesser', 'Vegetarisch', 'Vegan', 'Paleo', 'Keto'].map(opt => (
-                <label key={opt} className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="diet" value={opt} onChange={handleChange} className="text-green-600 focus:ring-green-500" />
-                  <span className="text-gray-700 text-sm">{opt}</span>
-                </label>
-              ))}
-            </div>
-          </div>
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                onSubmit(formData);
+            };
 
-          {/* Sensible Daten (Visceral relevant) */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Konsumgewohnheiten (Zutreffendes bitte ankreuzen)</label>
-            <div className="grid grid-cols-2 gap-2">
-              {['Rauchen', 'Alkohol (regelmäßig)', 'Medikamente', 'Nahrungsergänzung', 'Drogen', 'Keine davon'].map(opt => (
-                <label key={opt} className="flex items-center gap-2 cursor-pointer p-2 border rounded hover:bg-gray-50">
-                  <input type="checkbox" onChange={() => handleCheckbox(opt)} className="text-green-600 rounded focus:ring-green-500" />
-                  <span className="text-sm text-gray-600">{opt}</span>
-                </label>
-              ))}
-            </div>
-          </div>
+            return (
+                <div className="min-h-screen bg-slate-50 py-8 px-4">
+                    <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+                        <div className="bg-green-600 p-6 text-white">
+                            <h2 className="text-2xl font-bold">Mein Gesundheitsprofil</h2>
+                            <p className="text-green-100 text-sm mt-1">Bitte füllen Sie die folgenden Daten wahrheitsgemäß aus, um den Algorithmus zu kalibrieren.</p>
+                        </div>
+                        
+                        <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-6">
+                            
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Geschlecht</label>
+                                    <select name="gender" onChange={handleChange} className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+                                        <option value="">Bitte wählen...</option>
+                                        <option value="m">Männlich</option>
+                                        <option value="w">Weiblich</option>
+                                        <option value="d">Divers</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Alter</label>
+                                    <input type="number" name="age" onChange={handleChange} className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 outline-none" placeholder="z.B. 25" />
+                                </div>
+                            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Zufriedenheit mit dem eigenen Körper (1-10)</label>
-            <div className="flex items-center gap-4">
-              <span className="text-xs text-gray-500">Unglücklich</span>
-              <input 
-                type="range" min="1" max="10" name="bodySatisfaction" 
-                onChange={handleChange} 
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600"
-              />
-              <span className="text-xs text-gray-500">Sehr zufrieden</span>
-            </div>
-            <div className="text-center text-sm font-bold text-green-600 mt-1">{formData.bodySatisfaction}</div>
-          </div>
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Größe (cm)</label>
+                                    <input type="number" name="height" onChange={handleChange} className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 outline-none" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Gewicht (kg)</label>
+                                    <input type="number" name="weight" onChange={handleChange} className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 outline-none" />
+                                </div>
+                            </div>
 
-          <div className="pt-4">
-            <button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow transition-colors">
-              Profil speichern & Fortfahren
-            </button>
-            <p className="text-center text-xs text-gray-400 mt-3">
-              Ihre Daten werden sicher per SSL übertragen.
-            </p>
-          </div>
+                            <hr className="border-gray-100" />
 
-        </form>
-      </div>
-    </div>
-  );
-};
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Ernährungsweise</label>
+                                <div className="space-y-2">
+                                    {['Allesesser', 'Vegetarisch', 'Vegan', 'Paleo', 'Keto'].map(opt => (
+                                        <label key={opt} className="flex items-center gap-2 cursor-pointer">
+                                            <input type="radio" name="diet" value={opt} onChange={handleChange} className="text-green-600 focus:ring-green-500" />
+                                            <span className="text-gray-700 text-sm">{opt}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
 
-// 4. End Screen (Nach Datenerhebung)
-const EndScreen = ({ data, cookieChoice, groupID }) => {
-  // Hinweis: Hier würdest du normalerweise einen Redirect zu SoSci Survey machen
-  // z.B. window.location.href = `https://soscisurvey.de/DEINE_STUDIE/?q=NEXT&i=${groupID}&cookie=${cookieChoice}&disclosure=${JSON.stringify(data)}`;
-  
-  return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <div className="bg-white p-8 rounded-xl shadow-lg max-w-lg w-full text-center">
-        <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-          <CheckCircle size={32} />
-        </div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Aufgabe erledigt</h2>
-        <p className="text-gray-600 mb-6">
-          Vielen Dank. Sie haben die Webseiten-Aufgabe abgeschlossen.
-          Bitte kehren Sie nun zum Fragebogen zurück.
-        </p>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Konsumgewohnheiten (Zutreffendes bitte ankreuzen)</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {['Rauchen', 'Alkohol (regelmäßig)', 'Medikamente', 'Nahrungsergänzung', 'Drogen', 'Keine davon'].map(opt => (
+                                        <label key={opt} className="flex items-center gap-2 cursor-pointer p-2 border rounded hover:bg-gray-50">
+                                            <input type="checkbox" onChange={() => handleCheckbox(opt)} className="text-green-600 rounded focus:ring-green-500" />
+                                            <span className="text-sm text-gray-600">{opt}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
 
-        <div className="bg-gray-100 p-4 rounded text-left text-xs font-mono mb-6 overflow-auto max-h-40 border border-gray-200">
-          <p className="font-bold mb-1 text-gray-500">Debug Data (Was gespeichert wurde):</p>
-          <p>Group: {groupID}</p>
-          <p>Cookie Choice: {cookieChoice}</p>
-          <p>Disclosure: {JSON.stringify(data)}</p>
-        </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Zufriedenheit mit dem eigenen Körper (1-10)</label>
+                                <div className="flex items-center gap-4">
+                                    <span className="text-xs text-gray-500">Unglücklich</span>
+                                    <input 
+                                        type="range" min="1" max="10" name="bodySatisfaction" 
+                                        onChange={handleChange} 
+                                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600"
+                                    />
+                                    <span className="text-xs text-gray-500">Sehr zufrieden</span>
+                                </div>
+                                <div className="text-center text-sm font-bold text-green-600 mt-1">{formData.bodySatisfaction}</div>
+                            </div>
 
-        <button className="bg-blue-600 text-white px-6 py-2 rounded font-medium hover:bg-blue-700 w-full">
-          Zurück zur Umfrage
-        </button>
-      </div>
-    </div>
-  );
-};
+                            <div className="pt-4">
+                                <button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow transition-colors">
+                                    Profil speichern & Fortfahren
+                                </button>
+                                <p className="text-center text-xs text-gray-400 mt-3">
+                                    Ihre Daten werden sicher per SSL übertragen.
+                                </p>
+                            </div>
 
+                        </form>
+                    </div>
+                </div>
+            );
+        };
 
-// --- HAUPTANWENDUNG ---
+        // 4. End Screen
+        const EndScreen = ({ data, cookieChoice, groupID }) => {
+            
+            // DIES IST DER LINK, DER ZU SOSCI ZURÜCKFÜHRT
+            // Du musst diesen Link anpassen, wenn deine SoSci Studie läuft.
+            const backToSurvey = () => {
+                // 'https://www.soscisurvey.de/DEINE_STUDIE_KENNUNG/?q=next'
+                // Wenn du Daten mitsenden willst:
+                // window.location.href = `https://www.soscisurvey.de/KENNUNG/?q=next&i=${cookieChoice === 'accept_all' ? 1 : 2}`;
+                
+                // Für jetzt: Einfacher Alert oder Placeholder
+                alert("Weiterleitung zu SoSci Survey... (Füge hier deinen Link ein)");
+                // window.location.href = "https://www.soscisurvey.de/DEIN_PROJEKT/";
+            };
 
-export default function App() {
-  const [step, setStep] = useState('blog'); // 'blog', 'register', 'end'
-  const [cookieChoice, setCookieChoice] = useState(null);
-  const [bannerVisible, setBannerVisible] = useState(false);
-  const [groupID, setGroupID] = useState(0);
+            return (
+                <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+                    <div className="bg-white p-8 rounded-xl shadow-lg max-w-lg w-full text-center">
+                        <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <IconCheckCircle className="w-8 h-8" />
+                        </div>
+                        <h2 className="text-2xl font-bold text-gray-800 mb-2">Aufgabe erledigt</h2>
+                        <p className="text-gray-600 mb-6">
+                            Vielen Dank. Sie haben die Webseiten-Aufgabe abgeschlossen.
+                            Bitte kehren Sie nun zum Fragebogen zurück.
+                        </p>
 
-  useEffect(() => {
-    // 1. Gruppe aus URL lesen (z.B. ?g=2)
-    const params = new URLSearchParams(window.location.search);
-    const g = parseInt(params.get('g')) || 0;
-    setGroupID(g);
+                        <div className="bg-gray-100 p-4 rounded text-left text-xs font-mono mb-6 overflow-auto max-h-40 border border-gray-200">
+                            <p className="font-bold mb-1 text-gray-500">Debug Data (Bitte notieren, falls Redirect nicht klappt):</p>
+                            <p>Group: {groupID}</p>
+                            <p>Cookie Choice: {cookieChoice}</p>
+                            <p>Disclosure: {JSON.stringify(data).substring(0, 50)}...</p>
+                        </div>
 
-    // 2. Banner mit kurzer Verzögerung anzeigen (wirkt natürlicher)
-    const timer = setTimeout(() => {
-      setBannerVisible(true);
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, []);
+                        <button 
+                            onClick={backToSurvey}
+                            className="bg-blue-600 text-white px-6 py-2 rounded font-medium hover:bg-blue-700 w-full"
+                        >
+                            Zurück zur Umfrage
+                        </button>
+                    </div>
+                </div>
+            );
+        };
 
-  const handleCookieDecision = (decision) => {
-    setCookieChoice(decision);
-    setBannerVisible(false); // Banner schließen
-  };
+        // --- HAUPT APP ---
+        function App() {
+            const [step, setStep] = useState('blog'); 
+            const [cookieChoice, setCookieChoice] = useState(null);
+            const [bannerVisible, setBannerVisible] = useState(false);
+            const [groupID, setGroupID] = useState(0);
 
-  const handleRegistrationSubmit = (data) => {
-    // Hier finalisiert man die Daten
-    setStep('end');
-    // data wird an EndScreen übergeben
-  };
+            useEffect(() => {
+                const params = new URLSearchParams(window.location.search);
+                const g = parseInt(params.get('g')) || 0;
+                setGroupID(g);
 
-  const finalData = {
-    // Hier würden die Daten gesammelt werden
-  };
+                const timer = setTimeout(() => {
+                    setBannerVisible(true);
+                }, 1500);
+                return () => clearTimeout(timer);
+            }, []);
 
-  return (
-    <div className="font-sans text-gray-800">
-      {step === 'blog' && (
-        <>
-          <BlogPage onStartRegistration={() => setStep('register')} />
-          {bannerVisible && (
-            <CookieBanner 
-              group={groupID} 
-              onDecision={handleCookieDecision} 
-            />
-          )}
-        </>
-      )}
+            const handleCookieDecision = (decision) => {
+                setCookieChoice(decision);
+                setBannerVisible(false);
+            };
 
-      {step === 'register' && (
-        <RegistrationForm onSubmit={handleRegistrationSubmit} />
-      )}
+            const handleRegistrationSubmit = (data) => {
+                setStep('end');
+            };
 
-      {step === 'end' && (
-        <EndScreen 
-          groupID={groupID}
-          cookieChoice={cookieChoice}
-          data={finalData} // Placeholder für State in EndScreen
-        />
-      )}
-    </div>
-  );
-}
+            return (
+                <div className="font-sans text-gray-800">
+                    {step === 'blog' && (
+                        <React.Fragment>
+                            <BlogPage onStartRegistration={() => setStep('register')} />
+                            {bannerVisible && (
+                                <CookieBanner 
+                                    group={groupID} 
+                                    onDecision={handleCookieDecision} 
+                                />
+                            )}
+                        </React.Fragment>
+                    )}
+
+                    {step === 'register' && (
+                        <RegistrationForm onSubmit={handleRegistrationSubmit} />
+                    )}
+
+                    {step === 'end' && (
+                        <EndScreen 
+                            groupID={groupID}
+                            cookieChoice={cookieChoice}
+                            data={{}} 
+                        />
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
