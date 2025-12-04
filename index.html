@@ -222,16 +222,15 @@
                 const dJson = encodeURIComponent(JSON.stringify(data || {}));
 
                 // --- HIER DEINEN LINK EINFÜGEN ---
-                const baseUrl = "https://www.soscisurvey.de/BA25LeaPaula/"; 
-                
-                // URL bauen mit allen Variablen (c, n, d, g)
-                // Wir entfernen "q=next", da die BaseURL meistens schon stimmt.
-// Stattdessen hängen wir nur unsere Daten an.
-// SoSci erkennt automatisch die laufende Session.
+                // --- IM EndScreen TEIL ---
+
+const baseUrl = "https://www.soscisurvey.de/BA25LeaPaula/"; 
+
+// WICHTIG: Wir entfernen "?q=next" komplett!
+// Wir hängen nur deine Daten an. SoSci lädt dann einfach die aktuelle Seite neu.
 const finalUrl = `${baseUrl}?c=${cVal}&n=${count}&d=${dJson}&g=${groupID}`;
-                // Weiterleiten
-                window.location.href = finalUrl;
-            };
+
+window.location.href = finalUrl;
 
             return (
                 <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
