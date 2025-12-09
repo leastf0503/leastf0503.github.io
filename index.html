@@ -11,28 +11,13 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- STYLE -->
     <style>
         @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
         .animate-slide-up { animation: slide-up 0.5s ease-out forwards; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        #error-box { display: none; position: fixed; top: 0; left: 0; width: 100%; background: #fee2e2; color: #991b1b; padding: 20px; z-index: 9999; border-bottom: 2px solid #ef4444; }
     </style>
 </head>
 <body class="bg-slate-50 text-gray-800">
-
-    <!-- ERROR HANDLER -->
-    <div id="error-box">
-        <strong>Ein Fehler ist aufgetreten:</strong> <span id="error-msg"></span>
-        <br><small>Bitte prüfe die Konsole (F12).</small>
-    </div>
-    <script>
-        window.onerror = function(msg, url, line) {
-            document.getElementById('error-box').style.display = 'block';
-            document.getElementById('error-msg').innerText = msg + " (Zeile: " + line + ")";
-            return false;
-        };
-    </script>
 
     <div id="root"></div>
 
@@ -218,7 +203,7 @@
             );
         };
 
-        // --- 4. END SCREEN MIT KORREKTER SYNTAX ---
+        // --- 4. END SCREEN (DYNAMISCH) ---
         const EndScreen = ({ data, cookieChoice, groupID }) => {
             
             const backToSurvey = () => {
@@ -231,11 +216,21 @@
                 }
                 const dJson = encodeURIComponent(JSON.stringify(data || {}));
                 
-                // --- PROJEKTNAME ---
-                const baseUrl = "https://www.soscisurvey.de/BA25LeaPaula/"; 
+                // --- DYNAMISCHER RÜCKWEG ---
+                // Wir lesen den Link, den SoSci uns gegeben hat (Parameter "r")
+                const params = new URLSearchParams(window.location.search);
+                let targetUrl = params.get('r');
+
+                // Fallback (Falls kein Link da ist):
+                if (!targetUrl) {
+                    targetUrl = "https://www.soscisurvey.de/BA25LeaPaula/";
+                }
+
+                // Prüfen ob schon Parameter im Link sind
+                const separator = targetUrl.includes('?') ? '&' : '?';
                 
-                // Link ohne "q=next"
-                const finalUrl = `${baseUrl}?c=${cVal}&n=${count}&d=${dJson}&g=${groupID}`;
+                // Alles zusammenbauen
+                const finalUrl = `${targetUrl}${separator}c=${cVal}&n=${count}&d=${dJson}&g=${groupID}`;
 
                 window.location.href = finalUrl;
             };
