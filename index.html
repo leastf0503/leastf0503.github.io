@@ -140,7 +140,7 @@
 
             useEffect(() => {
                 // Audio initialisieren mit neuem Dateinamen
-                audioRef.current = new Audio('sound.pm4');
+                audioRef.current = new Audio('sound.mp3');
                 
                 if (config.sound) {
                     playUnsettlingSound(audioRef.current);
@@ -303,7 +303,7 @@
 
             useEffect(() => {
                 // Audio vorladen mit neuem Dateinamen "sound.pm4"
-                audioRef.current = new Audio('sound.pm4');
+                audioRef.current = new Audio('sound.mp3');
                 return () => {
                     if(audioRef.current) {
                         audioRef.current.pause();
