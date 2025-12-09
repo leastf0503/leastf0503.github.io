@@ -203,53 +203,60 @@
             );
         };
 
-        // --- 4. END SCREEN (DYNAMISCH) ---
-        const EndScreen = ({ data, cookieChoice, groupID }) => {
-            
-            const backToSurvey = () => {
-                const cVal = cookieChoice || 'no_choice';
-                let count = 0;
-                if (data) { 
-                    Object.values(data).forEach(val => { 
-                        if (Array.isArray(val)) { if (val.length > 0) count++; } else if (val && val !== '') { count++; } 
-                    }); 
-                }
-                const dJson = encodeURIComponent(JSON.stringify(data || {}));
-                
-                // --- DYNAMISCHER RÜCKWEG ---
-                // Wir lesen den Link, den SoSci uns gegeben hat (Parameter "r")
-                const params = new URLSearchParams(window.location.search);
-                let targetUrl = params.get('r');
+       // --- 4. END SCREEN (MANUELLER CODE) ---
+const EndScreen = ({ data, cookieChoice, groupID }) => {
+    
+    // Wir generieren einen Code, der alle Infos enthält
+    // Format: G{Gruppe}-C{Cookie}-N{Anzahl}-HASH
+    // Beispiel: G3-C1-N5-X92
+    
+    const cCode = cookieChoice === 'accept_all' ? '1' : '0'; // 1=Accept, 0=Reject
+    
+    // Zähle Felder
+    let count = 0;
+    if (data) { Object.values(data).forEach(val => { if (val && val !== '') count++; }); }
+    
+    // Einfacher Code
+    const surveyCode = `G${groupID}-C${cCode}-N${count}-${Math.floor(Math.random() * 1000)}`;
 
-                // Fallback (Falls kein Link da ist):
-                if (!targetUrl) {
-                    targetUrl = "https://www.soscisurvey.de/BA25LeaPaula/";
-                }
-
-                // Prüfen ob schon Parameter im Link sind
-                const separator = targetUrl.includes('?') ? '&' : '?';
-                
-                // Alles zusammenbauen
-                const finalUrl = `${targetUrl}${separator}c=${cVal}&n=${count}&d=${dJson}&g=${groupID}`;
-
-                window.location.href = finalUrl;
-            };
-
-            return (
-                <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-                    <div className="bg-white p-8 rounded-xl shadow-lg max-w-lg w-full text-center border-t-4 border-green-500">
-                        <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4"><IconCheckCircle className="w-8 h-8" /></div>
-                        <h2 className="text-2xl font-bold text-gray-800 mb-4">Aufgabe erfolgreich erledigt!</h2>
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
-                            <p className="text-blue-900 font-medium text-lg mb-2">WICHTIG: Speichern & Zurück</p>
-                            <p className="text-blue-800 text-sm leading-relaxed">Ihre Aufgabe ist beendet. Klicken Sie auf den Button unten, um Ihre Eingaben zu speichern und zum Fragebogen zurückzukehren.</p>
-                        </div>
-                        <button onClick={backToSurvey} className="bg-green-600 text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-green-700 w-full shadow-md transition-all hover:-translate-y-1">Daten speichern & Zurück zum Fragebogen</button>
-                    </div>
+    return (
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+            <div className="bg-white p-8 rounded-xl shadow-lg max-w-lg w-full text-center border-t-4 border-green-500">
+                <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <IconCheckCircle className="w-8 h-8" />
                 </div>
-            );
-        };
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">Aufgabe erledigt!</h2>
+                
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6 text-left">
+                    <p className="text-blue-900 font-bold text-sm mb-2 uppercase">Ihr Bestätigungs-Code:</p>
+                    <div className="flex gap-2">
+                        <input 
+                            readOnly 
+                            value={surveyCode} 
+                            className="w-full bg-white border border-blue-300 rounded p-3 font-mono text-lg text-center tracking-widest font-bold select-all"
+                            onClick={(e) => e.target.select()}
+                        />
+                    </div>
+                    <p className="text-blue-800 text-xs mt-3">
+                        Bitte <strong>kopieren</strong> oder notieren Sie diesen Code. 
+                        Sie müssen ihn gleich im Fragebogen eingeben.
+                    </p>
+                </div>
 
+                <p className="text-gray-600 text-sm mb-6">
+                    Kehren Sie nun zum Tab mit dem Fragebogen zurück.
+                </p>
+                
+                <button 
+                    onClick={() => window.close()}
+                    className="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-300 w-full"
+                >
+                    Fenster schließen
+                </button>
+            </div>
+        </div>
+    );
+};
         // --- HAUPT APP ---
         function App() {
             const [step, setStep] = useState('blog'); 
