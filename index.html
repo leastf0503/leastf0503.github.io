@@ -4,18 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gesundheitsprofil Studie</title>
+    
+    <!-- LIBRARIES -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- STYLE -->
     <style>
         @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
         .animate-slide-up { animation: slide-up 0.5s ease-out forwards; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        #error-box { display: none; position: fixed; top: 0; left: 0; width: 100%; background: #fee2e2; color: #991b1b; padding: 20px; z-index: 9999; border-bottom: 2px solid #ef4444; }
     </style>
 </head>
 <body class="bg-slate-50 text-gray-800">
+
+    <!-- ERROR HANDLER -->
+    <div id="error-box">
+        <strong>Ein Fehler ist aufgetreten:</strong> <span id="error-msg"></span>
+        <br><small>Bitte prüfe die Konsole (F12).</small>
+    </div>
+    <script>
+        window.onerror = function(msg, url, line) {
+            document.getElementById('error-box').style.display = 'block';
+            document.getElementById('error-msg').innerText = msg + " (Zeile: " + line + ")";
+            return false;
+        };
+    </script>
+
     <div id="root"></div>
+
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
@@ -198,39 +218,27 @@
             );
         };
 
-        // --- 4. END SCREEN MIT DATEN-ÜBERTRAGUNG ---
+        // --- 4. END SCREEN MIT KORREKTER SYNTAX ---
         const EndScreen = ({ data, cookieChoice, groupID }) => {
             
-            // DIESE FUNKTION BERECHNET DIE DATEN UND LEITET ZURÜCK
             const backToSurvey = () => {
-                // 1. Daten vorbereiten
                 const cVal = cookieChoice || 'no_choice';
-                
-                // Zählen wie viele Felder ausgefüllt wurden
                 let count = 0;
-                if (data) {
-                    Object.values(data).forEach(val => {
-                        if (Array.isArray(val)) {
-                            if (val.length > 0) count++; 
-                        } else if (val && val !== '') {
-                            count++; 
-                        }
-                    });
+                if (data) { 
+                    Object.values(data).forEach(val => { 
+                        if (Array.isArray(val)) { if (val.length > 0) count++; } else if (val && val !== '') { count++; } 
+                    }); 
                 }
-
-                // Daten als JSON String encoden
                 const dJson = encodeURIComponent(JSON.stringify(data || {}));
+                
+                // --- PROJEKTNAME ---
+                const baseUrl = "https://www.soscisurvey.de/BA25LeaPaula/"; 
+                
+                // Link ohne "q=next"
+                const finalUrl = `${baseUrl}?c=${cVal}&n=${count}&d=${dJson}&g=${groupID}`;
 
-                // --- HIER DEINEN LINK EINFÜGEN ---
-                // --- IM EndScreen TEIL ---
-
-const baseUrl = "https://www.soscisurvey.de/BA25LeaPaula/"; 
-
-// WICHTIG: Wir entfernen "?q=next" komplett!
-// Wir hängen nur deine Daten an. SoSci lädt dann einfach die aktuelle Seite neu.
-const finalUrl = `${baseUrl}?c=${cVal}&n=${count}&d=${dJson}&g=${groupID}`;
-
-window.location.href = finalUrl;
+                window.location.href = finalUrl;
+            };
 
             return (
                 <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
