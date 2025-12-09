@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
@@ -21,14 +20,23 @@
         
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; }
         
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        /* Error Box Style */
+        #error-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; padding: 20px; background: #fee2e2; border-bottom: 2px solid #ef4444; color: #991b1b; z-index: 9999; font-family: monospace; }
     </style>
 </head>
 <body>
+
+    <!-- ERROR MONITOR -->
+    <div id="error-overlay">
+        <strong>Systemfehler:</strong> <span id="error-msg">Unbekannter Fehler</span>
+    </div>
+    <script>
+        window.onerror = function(msg, url, line, col, error) {
+            document.getElementById('error-overlay').style.display = 'block';
+            document.getElementById('error-msg').innerText = msg + " (Zeile: " + line + ")";
+            return false;
+        };
+    </script>
 
     <div id="root"></div>
 
@@ -43,17 +51,17 @@
         );
         
         const paths = {
-            eye: <><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></>,
-            shield: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="M12 8v4"/><path d="M12 16h.01"/></>,
-            check: <><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></>,
-            user: <><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></>,
-            search: <><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></>,
+            eye: <React.Fragment><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></React.Fragment>,
+            shield: <React.Fragment><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="M12 8v4"/><path d="M12 16h.01"/></React.Fragment>,
+            check: <React.Fragment><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></React.Fragment>,
+            user: <React.Fragment><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></React.Fragment>,
+            search: <React.Fragment><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></React.Fragment>,
             arrowRight: <path d="M5 12h14m-7-7 7 7-7 7"/>,
             leaf: <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" />,
-            copy: <><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></>,
+            copy: <React.Fragment><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></React.Fragment>,
             activity: <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>,
-            apple: <><path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06Z"/><path d="M10 2c1 .5 2 2 2 5"/></>,
-            coffee: <><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" x2="6" y1="2" y2="4"/><line x1="10" x2="10" y1="2" y2="4"/><line x1="14" x2="14" y1="2" y2="4"/></>,
+            apple: <React.Fragment><path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06Z"/><path d="M10 2c1 .5 2 2 2 5"/></React.Fragment>,
+            coffee: <React.Fragment><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" x2="6" y1="2" y2="4"/><line x1="10" x2="10" y1="2" y2="4"/><line x1="14" x2="14" y1="2" y2="4"/></React.Fragment>,
             heart: <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
         };
 
@@ -79,12 +87,12 @@
             const playPromise = audioObj.play();
             if (playPromise !== undefined) {
                 playPromise.catch(error => {
-                    console.log("Audio Playback Error:", error);
+                    console.log("Audio Playback Error (Autoplay?):", error);
                 });
             }
         };
 
-        // --- 0. INTRO SCREEN (NEU: Türöffner für den Sound) ---
+        // --- 0. INTRO SCREEN ---
         const IntroScreen = ({ onStart }) => (
             <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
                 <div className="bg-white max-w-md w-full p-8 rounded-2xl shadow-2xl text-center animate-fade-in">
@@ -96,10 +104,7 @@
                         Bitte stellen Sie sicher, dass Ihr Ton eingeschaltet ist.<br/>
                         Klicken Sie auf "Starten", um die Webseite zu laden.
                     </p>
-                    <button 
-                        onClick={onStart}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition-transform transform active:scale-95 text-lg"
-                    >
+                    <button onClick={onStart} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition-transform transform active:scale-95 text-lg">
                         Starten
                     </button>
                 </div>
@@ -110,18 +115,12 @@
         const StimulusOverlay = ({ config, variant = "banner" }) => {
             return (
                 <React.Fragment>
-                    {/* AUGEN */}
                     {config.eyes && (
                         <div className={`pointer-events-none z-[60] flex gap-4 transition-opacity duration-500 ${variant === 'form' ? 'fixed top-0 left-1/2 -translate-x-1/2 pt-2 opacity-90' : 'absolute -top-12 left-1/2 -translate-x-1/2 opacity-100'}`}>
-                            <div className="bg-white p-2 rounded-full border-2 border-gray-900 shadow-xl">
-                                <Icon path={paths.eye} className="w-10 h-10 text-gray-900 animate-pulse-slow" />
-                            </div>
-                            <div className="bg-white p-2 rounded-full border-2 border-gray-900 shadow-xl">
-                                <Icon path={paths.eye} className="w-10 h-10 text-gray-900 animate-pulse-slow" />
-                            </div>
+                            <div className="bg-white p-2 rounded-full border-2 border-gray-900 shadow-xl"><Icon path={paths.eye} className="w-10 h-10 text-gray-900 animate-pulse-slow" /></div>
+                            <div className="bg-white p-2 rounded-full border-2 border-gray-900 shadow-xl"><Icon path={paths.eye} className="w-10 h-10 text-gray-900 animate-pulse-slow" /></div>
                         </div>
                     )}
-                    {/* INFO TEXT */}
                     {config.info && variant === 'form' && (
                         <div className="fixed bottom-4 right-4 max-w-xs bg-red-50 border-l-4 border-red-500 p-4 shadow-2xl z-[60] rounded-r animate-fade-in bg-white">
                             <div className="flex gap-2">
@@ -138,14 +137,11 @@
         };
 
         // --- 2. COOKIE BANNER ---
-        // WICHTIG: Erhält das "freigeschaltete" audioObject von der App
         const CookieBanner = ({ group, onDecision, audioObject }) => {
             const config = getGroupConfig(group);
             const [details, setDetails] = useState(false);
 
             useEffect(() => {
-                // Wenn Sound aktiv ist, spielen wir ihn ab
-                // Da der Nutzer im Intro geklickt hat, ist das jetzt erlaubt!
                 if (config.sound && audioObject) {
                     playSoundFile(audioObject);
                 }
@@ -180,18 +176,119 @@
         };
 
         // --- 3. BLOG PAGE ---
-        const BlogPage = ({ onStart }) => (
-            <div className="min-h-screen flex flex-col">
-                <nav className="bg-white border-b sticky top-0 z-20"><div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between"><div className="flex items-center gap-2 text-green-600"><Icon path={paths.leaf} className="w-8 h-8" /><span className="text-2xl font-bold tracking-tight text-gray-900">Vital<span className="text-green-600">Core</span></span></div><div className="flex gap-4 items-center"><button className="bg-gray-900 text-white px-4 py-2 rounded-full text-sm font-medium">Login</button></div></div></nav>
-                <main className="flex-grow">
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-100 py-16 px-4"><div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-12"><div className="flex-1 space-y-6"><h1 className="text-4xl md:text-5xl font-extrabold text-gray-900">Die Wissenschaft der Langlebigkeit</h1><button onClick={onStart} className="inline-flex items-center gap-2 text-green-700 font-bold hover:gap-4 transition-all">Artikel lesen <Icon path={paths.arrowRight} className="w-5 h-5" /></button></div><div className="w-full md:w-1/2 h-64 md:h-80 bg-emerald-200 rounded-2xl shadow-inner flex items-center justify-center relative overflow-hidden"><Icon path={paths.activity} className="w-32 h-32 text-emerald-600 opacity-50" /></div></div></div>
-                    <div className="max-w-6xl mx-auto px-4 py-12 grid grid-cols-1 md:grid-cols-3 gap-12"><div className="md:col-span-2 space-y-12"><h2 className="text-2xl font-bold border-b pb-4">Neueste Erkenntnisse</h2>{[ {cat: "Ernährung", title: "Intervallfasten", color: "bg-orange-100", icon: paths.apple}, {cat: "Mental Health", title: "Digital Detox", color: "bg-blue-100", icon: paths.coffee} ].map((art, i) => (<div key={i} className="flex gap-6 group cursor-pointer"><div className={`w-32 h-32 ${art.color} rounded-xl shrink-0 flex items-center justify-center`}><Icon path={art.icon} className="w-12 h-12 opacity-50" /></div><div><h3 className="text-xl font-bold text-gray-900">{art.title}</h3></div></div>))}</div><div className="space-y-8"><div className="bg-slate-900 text-white p-8 rounded-2xl shadow-xl text-center"><h3 className="text-xl font-bold mb-2">Ihr Gesundheitsprofil</h3><button onClick={onStart} className="w-full bg-white text-slate-900 font-bold py-3 rounded-lg">Kostenlos starten</button></div></div></div>
-                </main>
-            </div>
-        );
+        const BlogPage = ({ onStart }) => {
+            const articles = [
+                { id: 1, title: "Die 5 Säulen der Langlebigkeit", cat: "Forschung", time: "5 min", date: "12. Okt 2024", author: "Dr. med. Weber", color: "bg-blue-100", icon: paths.activity, desc: "Neue Studien zeigen: Es sind nicht nur die Gene. Erfahren Sie, wie kleine Anpassungen in Ihrer Routine Ihr biologisches Alter senken." },
+                { id: 2, title: "Intervallfasten 16:8", cat: "Ernährung", time: "8 min", date: "10. Okt 2024", author: "Sarah Klein", color: "bg-orange-100", icon: paths.apple, desc: "Warum Pausen für den Stoffwechsel wichtiger sind als Kalorienzählen. Ein Guide für Einsteiger." },
+                { id: 3, title: "Digital Detox & Cortisol", cat: "Mental Health", time: "6 min", date: "08. Okt 2024", author: "M. Psych. Bauer", color: "bg-purple-100", icon: paths.coffee, desc: "Wie ständige Erreichbarkeit Ihren Hormonhaushalt beeinflusst und was Sie dagegen tun können." },
+                { id: 4, title: "Herzgesundheit 2.0", cat: "Prävention", time: "4 min", date: "05. Okt 2024", author: "Prof. Dr. Lang", color: "bg-red-100", icon: paths.heart, desc: "Neue Marker im Blutbild, die Sie kennen sollten, bevor es zu spät ist." }
+            ];
+
+            return (
+                <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-slate-50">
+                    <nav className="bg-white border-b sticky top-0 z-20 shadow-sm">
+                        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+                            <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+                                <div className="p-1.5 bg-green-100 rounded text-green-600"><Icon path={paths.leaf} className="w-6 h-6" /></div>
+                                <span className="text-xl font-bold tracking-tight text-slate-800">Vital<span className="text-green-600">Core</span></span>
+                            </div>
+                            <div className="hidden md:flex gap-8 text-sm font-medium text-slate-500">
+                                {["Ernährung", "Fitness", "Achtsamkeit", "Magazin"].map(item => (<a key={item} href="#" className="hover:text-green-600 transition-colors py-2 border-b-2 border-transparent hover:border-green-500">{item}</a>))}
+                            </div>
+                            <div className="flex gap-4 items-center">
+                                <button className="p-2 text-slate-400 hover:text-slate-600"><Icon path={paths.search} className="w-5 h-5" /></button>
+                                <button className="bg-slate-900 text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/20">Login</button>
+                            </div>
+                        </div>
+                    </nav>
+
+                    <main className="flex-grow">
+                        <div className="relative bg-slate-900 text-white py-20 px-4 overflow-hidden">
+                            <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+                            <div className="absolute top-0 right-0 w-96 h-96 bg-green-500 rounded-full blur-3xl opacity-20 -translate-y-1/2 translate-x-1/2"></div>
+                            <div className="max-w-6xl mx-auto relative z-10 flex flex-col md:flex-row items-center gap-12">
+                                <div className="flex-1 space-y-6">
+                                    <div className="inline-flex items-center gap-2 bg-green-500/20 border border-green-500/30 text-green-300 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider"><span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>Trending Topic</div>
+                                    <h1 className="text-4xl md:text-6xl font-extrabold leading-tight tracking-tight">Die Zukunft Ihrer <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-300">Gesundheit</span></h1>
+                                    <p className="text-lg text-slate-300 max-w-xl leading-relaxed">Wissenschaftlich fundierte Analysen treffen auf modernste Technologie. Entdecken Sie, was Ihr Körper wirklich braucht.</p>
+                                    <div className="flex gap-4 pt-4">
+                                        <button onClick={onStart} className="bg-green-500 hover:bg-green-400 text-slate-900 px-8 py-3.5 rounded-lg font-bold shadow-lg shadow-green-900/20 transition-all hover:-translate-y-1 flex items-center gap-2">Profil erstellen <Icon path={paths.arrowRight} className="w-5 h-5" /></button>
+                                        <button className="px-8 py-3.5 rounded-lg font-bold text-white border border-slate-700 hover:bg-slate-800 transition-colors">Mehr erfahren</button>
+                                    </div>
+                                </div>
+                                <div className="hidden md:flex w-1/2 justify-center"><div className="relative w-80 h-96 bg-gradient-to-tr from-slate-800 to-slate-700 rounded-2xl border border-slate-600 p-6 shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-500"><div className="h-4 w-20 bg-slate-600 rounded-full mb-8"></div><div className="space-y-4"><div className="h-2 w-full bg-slate-600/50 rounded"></div><div className="h-2 w-3/4 bg-slate-600/50 rounded"></div><div className="h-32 w-full bg-green-500/10 rounded-xl border border-green-500/20 flex items-center justify-center mt-8"><Icon path={paths.activity} className="w-16 h-16 text-green-500" /></div></div></div></div>
+                            </div>
+                        </div>
+
+                        <div className="max-w-6xl mx-auto px-4 py-16 grid grid-cols-1 lg:grid-cols-3 gap-12">
+                            <div className="lg:col-span-2 space-y-12">
+                                <div className="flex items-end justify-between border-b border-slate-200 pb-4"><h2 className="text-2xl font-bold text-slate-800">Neueste Artikel</h2><a href="#" className="text-sm text-green-600 font-medium hover:underline">Alle anzeigen</a></div>
+                                <div className="space-y-8">
+                                    {articles.map((art) => (
+                                        <article key={art.id} className="group flex flex-col sm:flex-row gap-6 bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow cursor-pointer">
+                                            <div className={`w-full sm:w-48 h-48 ${art.color} rounded-xl shrink-0 flex items-center justify-center group-hover:scale-[1.02] transition-transform`}><Icon path={art.icon} className="w-16 h-16 opacity-40 mix-blend-multiply" /></div>
+                                            <div className="flex-1 flex flex-col">
+                                                <div className="flex items-center gap-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2"><span className="text-green-600">{art.cat}</span><span>•</span><span>{art.date}</span></div>
+                                                <h3 className="text-xl font-bold text-slate-900 mb-3 group-hover:text-green-600 transition-colors">{art.title}</h3>
+                                                <p className="text-slate-600 text-sm leading-relaxed mb-4 flex-grow">{art.desc}</p>
+                                                <div className="flex items-center justify-between text-xs text-slate-400 mt-auto border-t border-slate-100 pt-4">
+                                                    <div className="flex items-center gap-2"><div className="w-6 h-6 bg-slate-200 rounded-full flex items-center justify-center text-slate-500"><Icon path={paths.user} className="w-3 h-3" /></div>{art.author}</div>
+                                                    <div className="flex items-center gap-1"><Icon path={paths.clock} className="w-3 h-3" /> {art.time}</div>
+                                                </div>
+                                            </div>
+                                        </article>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="space-y-8">
+                                <div className="bg-white p-8 rounded-2xl shadow-lg border border-green-100 text-center relative overflow-hidden">
+                                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-400 to-emerald-500"></div>
+                                    <div className="w-16 h-16 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4"><Icon path={paths.check} className="w-8 h-8" /></div>
+                                    <h3 className="text-xl font-bold text-slate-900 mb-2">Gesundheits-Check</h3>
+                                    <p className="text-slate-500 text-sm mb-6 leading-relaxed">Nutzen Sie unseren kostenlosen Algorithmus, um Ihren persönlichen Status zu ermitteln.</p>
+                                    <button onClick={onStart} className="w-full bg-slate-900 text-white font-bold py-3 rounded-lg hover:bg-slate-800 transition-colors shadow-lg">Jetzt starten</button>
+                                </div>
+                                <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                                    <h4 className="font-bold text-sm text-slate-700 uppercase mb-4">Newsletter</h4>
+                                    <p className="text-xs text-slate-500 mb-4">Erhalten Sie wöchentlich die neuesten Studien direkt in Ihr Postfach.</p>
+                                    <div className="space-y-3">
+                                        <input type="email" placeholder="Ihre E-Mail Adresse" className="w-full px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" disabled />
+                                        <button className="w-full bg-green-600 text-white py-2 rounded-lg text-sm font-bold opacity-50 cursor-not-allowed">Anmelden</button>
+                                    </div>
+                                </div>
+                                <div className="bg-white border rounded-xl p-6">
+                                    <h4 className="font-bold text-sm text-slate-700 uppercase mb-4">Beliebte Themen</h4>
+                                    <div className="flex flex-wrap gap-2">
+                                        {['Keto', 'Yoga', 'Schlaf', 'Vitamin D', 'Stress', 'Immunsystem', 'Biohacking', 'Meditation'].map(tag => (
+                                            <span key={tag} className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-medium rounded-full hover:bg-green-100 hover:text-green-700 cursor-pointer transition-colors">#{tag}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </main>
+                    <footer className="bg-white border-t py-12 mt-12">
+                        <div className="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                            <div className="col-span-1 md:col-span-2">
+                                <div className="flex items-center gap-2 text-green-600 mb-4"><Icon path={paths.leaf} className="w-6 h-6" /><span className="text-xl font-bold tracking-tight text-slate-800">Vital<span className="text-green-600">Core</span></span></div>
+                                <p className="text-slate-500 text-sm max-w-xs">Ihre vertrauenswürdige Quelle für evidenzbasierte Gesundheitsinformationen und personalisierte Analysen.</p>
+                            </div>
+                            <div>
+                                <h5 className="font-bold text-slate-900 mb-4">Entdecken</h5>
+                                <ul className="space-y-2 text-sm text-slate-500"><li><a href="#" className="hover:text-green-600">Artikel</a></li><li><a href="#" className="hover:text-green-600">Podcasts</a></li><li><a href="#" className="hover:text-green-600">Guides</a></li></ul>
+                            </div>
+                            <div>
+                                <h5 className="font-bold text-slate-900 mb-4">Rechtliches</h5>
+                                <ul className="space-y-2 text-sm text-slate-500"><li><span className="cursor-pointer hover:text-green-600">Impressum</span></li><li><span className="cursor-pointer hover:text-green-600">Datenschutz</span></li><li><span className="cursor-pointer hover:text-green-600">AGB</span></li></ul>
+                            </div>
+                        </div>
+                        <div className="max-w-6xl mx-auto px-4 pt-8 border-t text-center text-slate-400 text-sm"><p>&copy; 2025 VitalCore Health Systems. Alle Rechte vorbehalten.</p></div>
+                    </footer>
+                </div>
+            );
+        };
 
         // --- 4. REGISTRATION FORM ---
-        // Erhält auch das audioObject
         const RegistrationForm = ({ onSubmit, group, audioObject }) => {
             const [formData, setFormData] = useState({ gender: '', age: '', height: '', weight: '', diet: '', substances: [], bodySatisfaction: 5 });
             const [interactionStarted, setInteractionStarted] = useState(false);
@@ -216,41 +313,19 @@
                 <div className="min-h-screen bg-slate-50 py-12 px-4 relative">
                     {interactionStarted && <StimulusOverlay config={config} variant="form" />}
                     <div className="max-w-xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 relative z-10">
-                        <div className="bg-slate-900 p-8 text-white text-center"><h2 className="text-2xl font-bold">Profil einrichten</h2></div>
+                        <div className="bg-slate-900 p-8 text-white text-center"><h2 className="text-2xl font-bold">Profil einrichten</h2><p className="text-slate-400 text-sm">Bitte beantworten Sie alle Fragen wahrheitsgemäß.</p></div>
                         <form onSubmit={(e) => { e.preventDefault(); onSubmit(formData); }} className="p-8 space-y-6">
                             <div className="grid grid-cols-2 gap-4">
-                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Geschlecht</label><select name="gender" onFocus={interact} onChange={handleChange} className="w-full bg-gray-50 border p-3 rounded"><option value="">Wählen...</option><option value="m">Männlich</option><option value="w">Weiblich</option></select></div>
-                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Alter</label><input type="number" name="age" onFocus={interact} onChange={handleChange} className="w-full bg-gray-50 border p-3 rounded" /></div>
+                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Geschlecht</label><select name="gender" onFocus={interact} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded p-3 outline-none focus:ring-2 focus:ring-green-500"><option value="">Bitte wählen...</option><option value="m">Männlich</option><option value="w">Weiblich</option><option value="d">Divers</option></select></div>
+                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Alter</label><input type="number" name="age" onFocus={interact} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded p-3 outline-none focus:ring-2 focus:ring-green-500" placeholder="Jahre" /></div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
-                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Größe (cm)</label><input type="number" name="height" onFocus={interact} onChange={handleChange} className="w-full bg-gray-50 border p-3 rounded" /></div>
-                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Gewicht (kg)</label><input type="number" name="weight" onFocus={interact} onChange={handleChange} className="w-full bg-gray-50 border p-3 rounded" /></div>
+                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Größe (cm)</label><input type="number" name="height" onFocus={interact} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded p-3 outline-none focus:ring-2 focus:ring-green-500" /></div>
+                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Gewicht (kg)</label><input type="number" name="weight" onFocus={interact} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded p-3 outline-none focus:ring-2 focus:ring-green-500" /></div>
                             </div>
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Ernährungsweise</label>
-                                <div className="space-y-2">
-                                    {['Allesesser', 'Vegetarisch', 'Vegan', 'Paleo', 'Keto'].map(opt => (
-                                        <label key={opt} className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                                            <input type="radio" name="diet" value={opt} onFocus={interact} onChange={handleChange} className="w-4 h-4 text-green-600 focus:ring-green-500" />
-                                            <span className="text-gray-700 text-sm font-medium">{opt}</span>
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Konsumgewohnheiten</label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {['Rauchen', 'Alkohol (regelmäßig)', 'Medikamente', 'Nahrungsergänzung', 'Drogen', 'Keine davon'].map(opt => (
-                                        <label key={opt} className="flex items-center gap-2 cursor-pointer p-2 border rounded hover:bg-gray-50">
-                                            <input type="checkbox" onFocus={interact} onChange={() => handleCheckbox(opt)} className="rounded text-green-600 focus:ring-green-500" />
-                                            <span className="text-sm text-gray-600">{opt}</span>
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className="pt-4">
-                                <button type="submit" className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-xl">Profil speichern</button>
-                            </div>
+                            <div><label className="block text-xs font-bold text-gray-500 uppercase mb-2">Ernährungsweise</label><div className="space-y-2">{['Allesesser', 'Vegetarisch', 'Vegan', 'Paleo', 'Keto'].map(opt => (<label key={opt} className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"><input type="radio" name="diet" value={opt} onFocus={interact} onChange={handleChange} className="w-4 h-4 text-green-600 focus:ring-green-500" /><span className="text-gray-700 text-sm font-medium">{opt}</span></label>))}</div></div>
+                            <div><label className="block text-xs font-bold text-gray-500 uppercase mb-2">Konsumgewohnheiten</label><div className="grid grid-cols-2 gap-2">{['Rauchen', 'Alkohol (regelmäßig)', 'Medikamente', 'Nahrungsergänzung', 'Drogen', 'Keine davon'].map(opt => (<label key={opt} className="flex items-center gap-2 cursor-pointer p-2 border rounded hover:bg-gray-50"><input type="checkbox" onFocus={interact} onChange={() => handleCheckbox(opt)} className="rounded text-green-600 focus:ring-green-500" /><span className="text-sm text-gray-600">{opt}</span></label>))}</div></div>
+                            <div className="pt-4"><button type="submit" className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-xl shadow-lg transition-all transform active:scale-95">Profil speichern & Analyse starten</button><div className="text-center mt-4 flex items-center justify-center gap-2 text-gray-400 text-xs"><Icon path={paths.shield} className="w-3 h-3" /> SSL-Verschlüsselt</div></div>
                         </form>
                     </div>
                 </div>
@@ -259,20 +334,27 @@
 
         // --- 5. END SCREEN ---
         const EndScreen = ({ data, cookieChoice, groupID }) => {
+            const [copied, setCopied] = useState(false);
             const cCode = cookieChoice === 'accept_all' ? '1' : '0';
-            let count = 0; if (data) Object.values(data).forEach(v => { if(v) count++; });
-            const surveyCode = `G${groupID}-C${cCode}-N${count}-${Math.floor(Math.random()*900+100)}`;
-            const copyToClipboard = () => { navigator.clipboard.writeText(surveyCode); };
+            let count = 0; if (data) Object.values(data).forEach(val => { if (val && val !== '') count++; });
+            const surveyCode = `G${groupID}-C${cCode}-N${count}-${Math.floor(Math.random() * 899 + 100)}`;
+            const copyToClipboard = () => { navigator.clipboard.writeText(surveyCode).then(() => setCopied(true)); };
 
             return (
                 <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-                    <div className="bg-white p-10 rounded-2xl shadow-2xl max-w-md w-full text-center">
-                        <h2 className="text-3xl font-bold text-gray-900 mb-4">Fertig!</h2>
-                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8 text-left">
-                            <p className="text-blue-900 font-bold text-xs uppercase mb-2">Code:</p>
-                            <input readOnly value={surveyCode} className="w-full p-3 font-mono font-bold text-xl text-center bg-white border rounded" onClick={e=>e.target.select()}/>
+                    <div className="bg-white p-10 rounded-2xl shadow-2xl max-w-md w-full text-center border-t-8 border-green-500">
+                        <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6"><Icon path={paths.check} className="w-10 h-10" /></div>
+                        <h2 className="text-3xl font-bold text-gray-900 mb-2">Fertig!</h2>
+                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8 text-left relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-full h-1 bg-blue-200"></div>
+                            <p className="text-blue-900 font-bold text-xs uppercase mb-3 tracking-wider">Ihr Bestätigungs-Code</p>
+                            <div className="flex gap-2">
+                                <input readOnly value={surveyCode} className="w-full bg-white border-2 border-blue-200 rounded-lg p-3 font-mono text-xl text-center tracking-widest font-bold text-gray-800 focus:outline-none focus:border-blue-500 transition-colors" onClick={(e) => e.target.select()}/>
+                                <button onClick={copyToClipboard} className={`px-4 rounded-lg font-bold transition-colors flex items-center justify-center ${copied ? 'bg-green-500 text-white' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>{copied ? <Icon path={paths.check} className="w-6 h-6"/> : <Icon path={paths.copy} className="w-6 h-6"/>}</button>
+                            </div>
+                            <p className="text-blue-700 text-xs mt-3 flex gap-2 items-center"><span className="w-4 h-4 bg-blue-200 rounded-full flex items-center justify-center text-[10px] font-bold text-blue-800">!</span>Bitte kopieren Sie diesen Code für den Fragebogen.</p>
                         </div>
-                        <button onClick={() => window.close()} className="text-gray-400 underline">Schließen</button>
+                        <button onClick={() => window.close()} className="text-gray-400 hover:text-gray-600 text-sm font-medium underline transition-colors">Fenster schließen</button>
                     </div>
                 </div>
             );
@@ -280,67 +362,42 @@
 
         // --- HAUPT APP ---
         function App() {
-            // WICHTIG: Startet jetzt mit 'intro'
             const [step, setStep] = useState('intro');
             const [cookieChoice, setCookieChoice] = useState(null);
             const [bannerVisible, setBannerVisible] = useState(false);
             const [groupID, setGroupID] = useState(0);
             const [finalData, setFinalData] = useState({});
-            
-            // Audio Objekt Zentral (nur einmal erstellen)
             const audioRef = useRef(null);
 
             useEffect(() => {
                 const params = new URLSearchParams(window.location.search);
                 const g = parseInt(params.get('g')) || 0;
                 setGroupID(g);
-                
-                // DATEINAME HIER:
                 audioRef.current = new Audio('sound.mp3'); 
                 audioRef.current.volume = 0.5;
             }, []);
 
-            // Dies ist die "Entsperr"-Funktion
             const handleStartStudy = () => {
                 if (audioRef.current) {
-                    // Kurz anspielen (Ton aus/leise) und sofort pausieren
-                    // Damit weiß der Browser: User hat interagiert -> Audio erlaubt
                     audioRef.current.volume = 0; 
                     audioRef.current.play().then(() => {
                         audioRef.current.pause();
                         audioRef.current.currentTime = 0;
-                        audioRef.current.volume = 0.5; // Wieder laut machen
+                        audioRef.current.volume = 0.5;
                     }).catch(e => console.log("Unlock failed", e));
                 }
-                
-                // Weiter zur Blog Seite
                 setStep('blog');
                 setTimeout(() => setBannerVisible(true), 1500);
             };
 
-            const handleCookieDecision = (decision) => {
-                setCookieChoice(decision);
-                setBannerVisible(false);
-            };
-
-            const handleRegistrationSubmit = (data) => {
-                setFinalData(data);
-                setStep('end');
-            };
+            const handleCookieDecision = (decision) => { setCookieChoice(decision); setBannerVisible(false); };
+            const handleRegistrationSubmit = (data) => { setFinalData(data); setStep('end'); };
 
             return (
                 <div className="font-sans text-gray-800 antialiased selection:bg-green-100 selection:text-green-900">
                     {step === 'intro' && <IntroScreen onStart={handleStartStudy} />}
-                    
-                    {step === 'blog' && (
-                        <>
-                            <BlogPage onStart={() => setStep('register')} />
-                            {bannerVisible && <CookieBanner group={groupID} onDecision={handleCookieDecision} audioObject={audioRef.current} />}
-                        </>
-                    )}
-                    
+                    {step === 'blog' && <><BlogPage onStart={() => setStep('register')} />{bannerVisible && <CookieBanner group={groupID} onDecision={handleCookieDecision} audioObject={audioRef.current} />}</>}
                     {step === 'register' && <RegistrationForm onSubmit={handleRegistrationSubmit} group={groupID} audioObject={audioRef.current} />}
-                    
                     {step === 'end' && <EndScreen groupID={groupID} cookieChoice={cookieChoice} data={finalData} />}
                 </div>
             );
