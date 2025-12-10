@@ -48,8 +48,26 @@
                 {path}
             </svg>
         );
+
+        // --- NEU: REALISTISCHES AUGE ---
+        // Diese Komponente zeichnet ein detaillierteres Auge als SVG
+        const RealisticEye = ({ color, className }) => (
+            <svg viewBox="0 0 100 60" className={className} preserveAspectRatio="xMidYMid meet">
+                {/* Augapfel (Weiß) */}
+                <path d="M5,30 Q50,-15 95,30 Q50,75 5,30 Z" fill="#fff" stroke="#333" strokeWidth="2" />
+                {/* Iris (Farbig) */}
+                <circle cx="50" cy="30" r="16" fill={color} />
+                {/* Iris Details (Optionaler Ring) */}
+                <circle cx="50" cy="30" r="16" fill="none" stroke="rgba(0,0,0,0.2)" strokeWidth="1" />
+                {/* Pupille (Schwarz) */}
+                <circle cx="50" cy="30" r="7" fill="#111" />
+                {/* Lichtreflex (Macht es lebendig) */}
+                <circle cx="55" cy="24" r="3" fill="#fff" opacity="0.9" />
+            </svg>
+        );
         
         const paths = {
+            // Das alte Icon "eye" wird hier nicht mehr für den Stimulus genutzt, aber falls du es woanders brauchst, bleibt es drin:
             eye: <React.Fragment><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></React.Fragment>,
             shield: <React.Fragment><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="M12 8v4"/><path d="M12 16h.01"/></React.Fragment>,
             check: <React.Fragment><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></React.Fragment>,
@@ -62,7 +80,7 @@
             apple: <React.Fragment><path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06Z"/><path d="M10 2c1 .5 2 2 2 5"/></React.Fragment>,
             coffee: <React.Fragment><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" x2="6" y1="2" y2="4"/><line x1="10" x2="10" y1="2" y2="4"/><line x1="14" x2="14" y1="2" y2="4"/></React.Fragment>,
             heart: <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>,
-            clock: <circle cx="12" cy="12" r="10"/> // Added simple clock for consistency
+            clock: <circle cx="12" cy="12" r="10"/>
         };
 
         // --- HELPER ---
@@ -81,13 +99,11 @@
 
         const playSoundFile = (audioObj) => {
             if (!audioObj) return;
-            // Immer von vorne abspielen
             audioObj.currentTime = 0;
-            // Promise nutzen um Fehler zu fangen
             const playPromise = audioObj.play();
             if (playPromise !== undefined) {
                 playPromise.catch(error => {
-                    console.log("Audio Playback Error (Autoplay?):", error);
+                    console.log("Audio Playback Error:", error);
                 });
             }
         };
@@ -113,12 +129,21 @@
 
         // --- 1. STIMULUS OVERLAY ---
         const StimulusOverlay = ({ config, variant = "banner" }) => {
+            // FARBLOGIK: Banner = Blau, Form = Braun
+            const eyeColor = variant === 'banner' ? '#3b82f6' : '#5D4037'; 
+            // #3b82f6 ist ein helles Blau, #5D4037 ist ein dunkles Braun
+
             return (
                 <React.Fragment>
                     {config.eyes && (
                         <div className={`pointer-events-none z-[60] flex gap-4 transition-opacity duration-500 ${variant === 'form' ? 'fixed top-0 left-1/2 -translate-x-1/2 pt-2 opacity-90' : 'absolute -top-12 left-1/2 -translate-x-1/2 opacity-100'}`}>
-                            <div className="bg-white p-2 rounded-full border-2 border-gray-900 shadow-xl"><Icon path={paths.eye} className="w-10 h-10 text-gray-900 animate-pulse-slow" /></div>
-                            <div className="bg-white p-2 rounded-full border-2 border-gray-900 shadow-xl"><Icon path={paths.eye} className="w-10 h-10 text-gray-900 animate-pulse-slow" /></div>
+                            {/* Wir nutzen jetzt RealisticEye statt Icon */}
+                            <div className="bg-white p-1 rounded-full border border-gray-400 shadow-xl overflow-hidden animate-pulse-slow">
+                                <RealisticEye color={eyeColor} className="w-12 h-8" />
+                            </div>
+                            <div className="bg-white p-1 rounded-full border border-gray-400 shadow-xl overflow-hidden animate-pulse-slow">
+                                <RealisticEye color={eyeColor} className="w-12 h-8" />
+                            </div>
                         </div>
                     )}
                     {config.info && variant === 'form' && (
@@ -142,7 +167,6 @@
             const [details, setDetails] = useState(false);
 
             useEffect(() => {
-                // Hier wird sound.mp3 gespielt (wird über App übergeben)
                 if (config.sound && audioObject) {
                     playSoundFile(audioObject);
                 }
@@ -298,7 +322,6 @@
             const interact = () => {
                 if (!interactionStarted) {
                     setInteractionStarted(true);
-                    // Hier wird jetzt das übergebene audioObject gespielt (das soundmann.mp3 ist)
                     if (config.sound && audioObject) playSoundFile(audioObject);
                 }
             };
@@ -370,16 +393,14 @@
             const [groupID, setGroupID] = useState(0);
             const [finalData, setFinalData] = useState({});
             
-            // ZWEI AUDIO-REFERENZEN
-            const audioRef = useRef(null);    // Für Banner
-            const audioManRef = useRef(null); // Für Formular
+            const audioRef = useRef(null);
+            const audioManRef = useRef(null);
 
             useEffect(() => {
                 const params = new URLSearchParams(window.location.search);
                 const g = parseInt(params.get('g')) || 0;
                 setGroupID(g);
                 
-                // Initialisierung beider Sounds
                 audioRef.current = new Audio('sound.mp3'); 
                 audioRef.current.volume = 0.5;
 
@@ -388,7 +409,6 @@
             }, []);
 
             const handleStartStudy = () => {
-                // BEIDE Sounds unlocken (kurz anspielen und pausieren)
                 const unlockAudio = (audioObj) => {
                     if (audioObj) {
                         audioObj.volume = 0; 
@@ -416,12 +436,10 @@
                     {step === 'blog' && (
                         <>
                             <BlogPage onStart={() => setStep('register')} />
-                            {/* CookieBanner bekommt sound.mp3 */}
                             {bannerVisible && <CookieBanner group={groupID} onDecision={handleCookieDecision} audioObject={audioRef.current} />}
                         </>
                     )}
                     {step === 'register' && (
-                        /* RegistrationForm bekommt soundmann.mp3 */
                         <RegistrationForm onSubmit={handleRegistrationSubmit} group={groupID} audioObject={audioManRef.current} />
                     )}
                     {step === 'end' && <EndScreen groupID={groupID} cookieChoice={cookieChoice} data={finalData} />}
