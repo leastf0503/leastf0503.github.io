@@ -20,8 +20,17 @@
         
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; }
         
-        /* Error Box Style */
         #error-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; padding: 20px; background: #fee2e2; border-bottom: 2px solid #ef4444; color: #991b1b; z-index: 9999; font-family: monospace; }
+        
+        /* Loading Spinner für den Redirect */
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Custom Scrollbar for Data Box */
+        .data-scroll::-webkit-scrollbar { width: 8px; }
+        .data-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
+        .data-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .data-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body>
@@ -42,33 +51,24 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // --- ICONS ---
+        // --- ICONS & ASSETS ---
         const Icon = ({ path, className }) => (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
                 {path}
             </svg>
         );
 
-        // --- NEU: REALISTISCHES AUGE ---
-        // Diese Komponente zeichnet ein detaillierteres Auge als SVG
         const RealisticEye = ({ color, className }) => (
             <svg viewBox="0 0 100 60" className={className} preserveAspectRatio="xMidYMid meet">
-                {/* Augapfel (Weiß) */}
                 <path d="M5,30 Q50,-15 95,30 Q50,75 5,30 Z" fill="#fff" stroke="#333" strokeWidth="2" />
-                {/* Iris (Farbig) */}
                 <circle cx="50" cy="30" r="16" fill={color} />
-                {/* Iris Details (Optionaler Ring) */}
                 <circle cx="50" cy="30" r="16" fill="none" stroke="rgba(0,0,0,0.2)" strokeWidth="1" />
-                {/* Pupille (Schwarz) */}
                 <circle cx="50" cy="30" r="7" fill="#111" />
-                {/* Lichtreflex (Macht es lebendig) */}
                 <circle cx="55" cy="24" r="3" fill="#fff" opacity="0.9" />
             </svg>
         );
         
         const paths = {
-            // Das alte Icon "eye" wird hier nicht mehr für den Stimulus genutzt, aber falls du es woanders brauchst, bleibt es drin:
-            eye: <React.Fragment><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></React.Fragment>,
             shield: <React.Fragment><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="M12 8v4"/><path d="M12 16h.01"/></React.Fragment>,
             check: <React.Fragment><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></React.Fragment>,
             user: <React.Fragment><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></React.Fragment>,
@@ -102,9 +102,7 @@
             audioObj.currentTime = 0;
             const playPromise = audioObj.play();
             if (playPromise !== undefined) {
-                playPromise.catch(error => {
-                    console.log("Audio Playback Error:", error);
-                });
+                playPromise.catch(error => console.log("Audio Error:", error));
             }
         };
 
@@ -129,15 +127,11 @@
 
         // --- 1. STIMULUS OVERLAY ---
         const StimulusOverlay = ({ config, variant = "banner" }) => {
-            // FARBLOGIK: Banner = Blau, Form = Braun
             const eyeColor = variant === 'banner' ? '#3b82f6' : '#5D4037'; 
-            // #3b82f6 ist ein helles Blau, #5D4037 ist ein dunkles Braun
-
             return (
                 <React.Fragment>
                     {config.eyes && (
                         <div className={`pointer-events-none z-[60] flex gap-4 transition-opacity duration-500 ${variant === 'form' ? 'fixed top-0 left-1/2 -translate-x-1/2 pt-2 opacity-90' : 'absolute -top-12 left-1/2 -translate-x-1/2 opacity-100'}`}>
-                            {/* Wir nutzen jetzt RealisticEye statt Icon */}
                             <div className="bg-white p-1 rounded-full border border-gray-400 shadow-xl overflow-hidden animate-pulse-slow">
                                 <RealisticEye color={eyeColor} className="w-12 h-8" />
                             </div>
@@ -162,15 +156,14 @@
         };
 
         // --- 2. COOKIE BANNER ---
-        const CookieBanner = ({ group, onDecision, audioObject }) => {
+        const CookieBanner = ({ group, onDecision, audioObject, onBannerLoad }) => {
             const config = getGroupConfig(group);
             const [details, setDetails] = useState(false);
 
             useEffect(() => {
-                if (config.sound && audioObject) {
-                    playSoundFile(audioObject);
-                }
-            }, [config.sound, audioObject]);
+                onBannerLoad();
+                if (config.sound && audioObject) playSoundFile(audioObject);
+            }, []);
 
             return (
                 <div className="fixed bottom-0 left-0 right-0 z-50 p-4 md:p-6 bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.2)] border-t-4 border-blue-600 animate-slide-up">
@@ -357,29 +350,78 @@
             );
         };
 
-        // --- 5. END SCREEN ---
+        // --- 5. END SCREEN (HANDLES REDIRECT) ---
         const EndScreen = ({ data, cookieChoice, groupID }) => {
-            const [copied, setCopied] = useState(false);
+            const [manualMode, setManualMode] = useState(false);
+            const [copiedCode, setCopiedCode] = useState(false);
+            const [copiedData, setCopiedData] = useState(false);
+            
+            // Daten aufbereiten
+            const fullDataString = JSON.stringify(data, null, 2);
+            
+            // Einfacher Code für manuelle Eingabe
             const cCode = cookieChoice === 'accept_all' ? '1' : '0';
             let count = 0; if (data) Object.values(data).forEach(val => { if (val && val !== '') count++; });
             const surveyCode = `G${groupID}-C${cCode}-N${count}-${Math.floor(Math.random() * 899 + 100)}`;
-            const copyToClipboard = () => { navigator.clipboard.writeText(surveyCode).then(() => setCopied(true)); };
 
+            useEffect(() => {
+                // Prüfen ob 'r' Parameter da ist (Return Link von SoSci)
+                const params = new URLSearchParams(window.location.search);
+                const returnLink = params.get('r');
+
+                if (returnLink) {
+                    // --- AUTOMATISCHER REDIRECT ---
+                    // Hier angepasst auf IV01 statt IV01_01
+                    const redirectUrl = decodeURIComponent(returnLink) + '&IV01=' + encodeURIComponent(JSON.stringify(data));
+                    
+                    // Kurze Verzögerung für UX
+                    setTimeout(() => {
+                        window.location.href = redirectUrl;
+                    }, 1000);
+                } else {
+                    // Kein Link da? Dann manueller Modus anzeigen (Test-Modus)
+                    setManualMode(true);
+                }
+            }, []);
+
+            const copyCode = () => { navigator.clipboard.writeText(surveyCode).then(() => setCopiedCode(true)); };
+            const copyData = () => { navigator.clipboard.writeText(fullDataString).then(() => setCopiedData(true)); };
+
+            if (!manualMode) {
+                return (
+                    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+                        <div className="loader mb-4"></div>
+                        <h2 className="text-xl font-bold text-gray-700">Daten werden gespeichert...</h2>
+                        <p className="text-gray-500">Sie werden gleich zurückgeleitet.</p>
+                    </div>
+                );
+            }
+
+            // FALLBACK: Wenn kein SoSci Link da ist, zeige manuelle Felder
             return (
                 <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-                    <div className="bg-white p-10 rounded-2xl shadow-2xl max-w-md w-full text-center border-t-8 border-green-500">
-                        <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6"><Icon path={paths.check} className="w-10 h-10" /></div>
-                        <h2 className="text-3xl font-bold text-gray-900 mb-2">Fertig!</h2>
-                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8 text-left relative overflow-hidden">
-                            <div className="absolute top-0 left-0 w-full h-1 bg-blue-200"></div>
-                            <p className="text-blue-900 font-bold text-xs uppercase mb-3 tracking-wider">Ihr Bestätigungs-Code</p>
-                            <div className="flex gap-2">
-                                <input readOnly value={surveyCode} className="w-full bg-white border-2 border-blue-200 rounded-lg p-3 font-mono text-xl text-center tracking-widest font-bold text-gray-800 focus:outline-none focus:border-blue-500 transition-colors" onClick={(e) => e.target.select()}/>
-                                <button onClick={copyToClipboard} className={`px-4 rounded-lg font-bold transition-colors flex items-center justify-center ${copied ? 'bg-green-500 text-white' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>{copied ? <Icon path={paths.check} className="w-6 h-6"/> : <Icon path={paths.copy} className="w-6 h-6"/>}</button>
+                    <div className="bg-white p-8 md:p-10 rounded-2xl shadow-2xl max-w-2xl w-full border-t-8 border-green-500">
+                        <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4"><Icon path={paths.check} className="w-8 h-8" /></div>
+                        <h2 className="text-3xl font-bold text-gray-900 mb-2 text-center">Vielen Dank!</h2>
+                        <div className="text-center mb-6 p-4 bg-yellow-50 text-yellow-800 rounded border border-yellow-200">Test-Modus: Kein Rück-Link gefunden.</div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 relative overflow-hidden flex flex-col">
+                                <p className="text-blue-900 font-bold text-xs uppercase mb-3 tracking-wider">1. Bestätigungs-Code</p>
+                                <input readOnly value={surveyCode} className="w-full bg-white border border-blue-200 rounded-lg p-2 font-mono text-lg font-bold text-center text-gray-800 mb-3" onClick={(e) => e.target.select()}/>
+                                <button onClick={copyCode} className={`w-full py-2 rounded-lg font-bold text-sm transition-colors flex items-center justify-center gap-2 ${copiedCode ? 'bg-green-500 text-white' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>
+                                    {copiedCode ? "Kopiert!" : "Code kopieren"} <Icon path={paths.copy} className="w-4 h-4"/>
+                                </button>
                             </div>
-                            <p className="text-blue-700 text-xs mt-3 flex gap-2 items-center"><span className="w-4 h-4 bg-blue-200 rounded-full flex items-center justify-center text-[10px] font-bold text-blue-800">!</span>Bitte kopieren Sie diesen Code für den Fragebogen.</p>
+
+                            <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 relative overflow-hidden flex flex-col">
+                                <p className="text-slate-900 font-bold text-xs uppercase mb-3 tracking-wider">2. Datensatz</p>
+                                <textarea readOnly value={fullDataString} className="data-scroll w-full flex-1 bg-white border border-slate-200 rounded-lg p-2 font-mono text-xs text-slate-600 mb-3 resize-none focus:outline-none" style={{height: '80px'}} onClick={(e) => e.target.select()}></textarea>
+                                <button onClick={copyData} className={`w-full py-2 rounded-lg font-bold text-sm transition-colors flex items-center justify-center gap-2 ${copiedData ? 'bg-green-500 text-white' : 'bg-slate-800 text-white hover:bg-slate-700'}`}>
+                                    {copiedData ? "Kopiert!" : "Datensatz kopieren"} <Icon path={paths.copy} className="w-4 h-4"/>
+                                </button>
+                            </div>
                         </div>
-                        <button onClick={() => window.close()} className="text-gray-400 hover:text-gray-600 text-sm font-medium underline transition-colors">Fenster schließen</button>
                     </div>
                 </div>
             );
@@ -393,6 +435,9 @@
             const [groupID, setGroupID] = useState(0);
             const [finalData, setFinalData] = useState({});
             
+            const timers = useRef({ blogStart: 0, bannerStart: 0, formStart: 0 });
+            const [times, setTimes] = useState({ blogTime: 0, cookieTime: 0, registrationTime: 0 });
+
             const audioRef = useRef(null);
             const audioManRef = useRef(null);
 
@@ -419,24 +464,58 @@
                         }).catch(e => console.log("Unlock failed", e));
                     }
                 };
-
                 unlockAudio(audioRef.current);
                 unlockAudio(audioManRef.current);
 
+                timers.current.blogStart = Date.now();
                 setStep('blog');
                 setTimeout(() => setBannerVisible(true), 1500);
             };
 
-            const handleCookieDecision = (decision) => { setCookieChoice(decision); setBannerVisible(false); };
-            const handleRegistrationSubmit = (data) => { setFinalData(data); setStep('end'); };
+            const handleBannerLoad = () => {
+                timers.current.bannerStart = Date.now();
+            };
+
+            const handleCookieDecision = (decision) => { 
+                const duration = Date.now() - timers.current.bannerStart;
+                setTimes(prev => ({ ...prev, cookieTime: duration }));
+                setCookieChoice(decision); 
+                setBannerVisible(false); 
+            };
+
+            const handleGoToRegistration = () => {
+                const duration = Date.now() - timers.current.blogStart;
+                setTimes(prev => ({ ...prev, blogTime: duration }));
+                timers.current.formStart = Date.now();
+                setStep('register');
+            };
+
+            const handleRegistrationSubmit = (formData) => { 
+                const duration = Date.now() - timers.current.formStart;
+                setFinalData({
+                    groupID: groupID,
+                    ...formData,
+                    cookieChoice: cookieChoice,
+                    ...times,
+                    registrationTime: duration
+                }); 
+                setStep('end'); 
+            };
 
             return (
                 <div className="font-sans text-gray-800 antialiased selection:bg-green-100 selection:text-green-900">
                     {step === 'intro' && <IntroScreen onStart={handleStartStudy} />}
                     {step === 'blog' && (
                         <>
-                            <BlogPage onStart={() => setStep('register')} />
-                            {bannerVisible && <CookieBanner group={groupID} onDecision={handleCookieDecision} audioObject={audioRef.current} />}
+                            <BlogPage onStart={handleGoToRegistration} />
+                            {bannerVisible && (
+                                <CookieBanner 
+                                    group={groupID} 
+                                    onDecision={handleCookieDecision} 
+                                    audioObject={audioRef.current} 
+                                    onBannerLoad={handleBannerLoad} 
+                                />
+                            )}
                         </>
                     )}
                     {step === 'register' && (
