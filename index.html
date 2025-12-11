@@ -366,7 +366,8 @@
                         try { finalLink = decodeURIComponent(finalLink); } catch(e){}
                     }
                     
-                    const finalUrl = finalLink + '&IV01=' + encodeURIComponent(fullDataString);
+                    // Wir nennen es jetzt 'mydata', das ist sicherer
+const finalUrl = finalLink + '&mydata=' + encodeURIComponent(fullDataString);
                     setTargetUrl(finalUrl);
                     
                 } else {
