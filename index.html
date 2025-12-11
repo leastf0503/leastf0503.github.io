@@ -77,7 +77,14 @@
             arrowLeft: <path d="M19 12H5m7 7-7-7 7-7"/>,
             leaf: <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" />,
             copy: <React.Fragment><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></React.Fragment>,
-            clock: <circle cx="12" cy="12" r="10"/>
+            activity: <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>,
+            apple: <React.Fragment><path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06Z"/><path d="M10 2c1 .5 2 2 2 5"/></React.Fragment>,
+            coffee: <React.Fragment><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" x2="6" y1="2" y2="4"/><line x1="10" x2="10" y1="2" y2="4"/><line x1="14" x2="14" y1="2" y2="4"/></React.Fragment>,
+            heart: <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>,
+            clock: <circle cx="12" cy="12" r="10"/>,
+            star: <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />,
+            menu: <path d="M3 12h18M3 6h18M3 18h18" />,
+            x: <path d="M18 6 6 18M6 6l12 12" />
         };
 
         // --- CONTENT DATA (Mit reparierten Bild-Links) ---
@@ -89,8 +96,8 @@
                 time: "5 min", 
                 date: "12. Okt 2024", 
                 author: "Dr. med. Weber", 
-                // NEUES BILD: Läufer in der Natur (sehr zuverlässig)
-                image: "https://images.unsplash.com/photo-1552674605-469523f54050?auto=format&fit=crop&w=800&q=80", 
+                // NEUES BILD: Läufer in der Natur (sehr stabil)
+                image: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=800&q=80", 
                 color: "bg-blue-100", 
                 icon: paths.activity, 
                 desc: "Neue Studien zeigen: Es sind nicht nur die Gene. Erfahren Sie, wie kleine Anpassungen in Ihrer Routine Ihr biologisches Alter senken.",
@@ -111,7 +118,6 @@
                 time: "8 min", 
                 date: "10. Okt 2024", 
                 author: "Sarah Klein", 
-                // Bild: Gesundes Essen (Bowl)
                 image: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=800", 
                 color: "bg-orange-100", 
                 icon: paths.apple, 
@@ -134,7 +140,6 @@
                 time: "6 min", 
                 date: "08. Okt 2024", 
                 author: "M. Psych. Bauer", 
-                // NEUES BILD: Frau liest Buch im Bett (sehr zuverlässig)
                 image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80", 
                 color: "bg-purple-100", 
                 icon: paths.coffee, 
@@ -157,7 +162,6 @@
                 time: "4 min", 
                 date: "05. Okt 2024", 
                 author: "Prof. Dr. Lang", 
-                // Bild: Stethoskop
                 image: "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=800", 
                 color: "bg-red-100", 
                 icon: paths.heart, 
@@ -290,6 +294,9 @@
         const BlogPage = ({ onStart }) => {
             const [selectedArticle, setSelectedArticle] = useState(null);
             const [categoryFilter, setCategoryFilter] = useState("Alle");
+            const [showLoginModal, setShowLoginModal] = useState(false);
+            const [newsletterEmail, setNewsletterEmail] = useState("");
+            const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
 
             // Filter logic
             const filteredArticles = categoryFilter === "Alle" 
@@ -375,7 +382,22 @@
 
             // --- Sub-Component: List View (Home) ---
             return (
-                <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-slate-50">
+                <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-slate-50 relative">
+                    
+                    {/* FAKE LOGIN MODAL */}
+                    {showLoginModal && (
+                        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 animate-fade-in" onClick={() => setShowLoginModal(false)}>
+                            <div className="bg-white rounded-xl shadow-2xl p-8 max-w-sm w-full text-center" onClick={(e) => e.stopPropagation()}>
+                                <div className="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <Icon path={paths.shield} className="w-6 h-6" />
+                                </div>
+                                <h3 className="text-xl font-bold text-gray-900 mb-2">Zugriff verweigert</h3>
+                                <p className="text-gray-600 mb-6">Dieser Bereich ist für Teilnehmer der Studie gesperrt. Bitte fahren Sie mit der Erstellung eines neuen Profils fort.</p>
+                                <button onClick={() => setShowLoginModal(false)} className="w-full bg-gray-900 text-white font-bold py-2 rounded-lg">Verstanden</button>
+                            </div>
+                        </div>
+                    )}
+
                     <nav className="bg-white border-b sticky top-0 z-20 shadow-sm">
                         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
                             <div onClick={() => {setCategoryFilter("Alle"); setSelectedArticle(null);}} className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
@@ -394,8 +416,8 @@
                                 ))}
                             </div>
                             <div className="flex gap-4 items-center">
-                                <button className="p-2 text-slate-400 hover:text-slate-600"><Icon path={paths.search} className="w-5 h-5" /></button>
-                                <button className="bg-slate-900 text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/20">Login</button>
+                                <button className="p-2 text-slate-400 hover:text-slate-600" onClick={() => setShowLoginModal(true)}><Icon path={paths.search} className="w-5 h-5" /></button>
+                                <button onClick={() => setShowLoginModal(true)} className="bg-slate-900 text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/20">Login</button>
                             </div>
                         </div>
                     </nav>
@@ -415,6 +437,39 @@
                                     </div>
                                 </div>
                                 <div className="hidden md:flex w-1/2 justify-center"><div className="relative w-80 h-96 bg-gradient-to-tr from-slate-800 to-slate-700 rounded-2xl border border-slate-600 p-6 shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-500"><div className="h-4 w-20 bg-slate-600 rounded-full mb-8"></div><div className="space-y-4"><div className="h-2 w-full bg-slate-600/50 rounded"></div><div className="h-2 w-3/4 bg-slate-600/50 rounded"></div><div className="h-32 w-full bg-green-500/10 rounded-xl border border-green-500/20 flex items-center justify-center mt-8"><Icon path={paths.activity} className="w-16 h-16 text-green-500" /></div></div></div></div>
+                            </div>
+                        </div>
+
+                        {/* --- NEW: TRUST BAR --- */}
+                        <div className="bg-white border-b py-6">
+                            <div className="max-w-6xl mx-auto px-4 flex justify-center flex-wrap gap-8 md:gap-16 opacity-50 grayscale">
+                                <div className="flex items-center gap-2 text-xl font-bold"><Icon path={paths.activity} className="w-6 h-6"/> MedTech Berlin</div>
+                                <div className="flex items-center gap-2 text-xl font-bold"><Icon path={paths.shield} className="w-6 h-6"/> Institut für Prävention</div>
+                                <div className="flex items-center gap-2 text-xl font-bold"><Icon path={paths.check} className="w-6 h-6"/> HealthCert</div>
+                                <div className="flex items-center gap-2 text-xl font-bold"><Icon path={paths.leaf} className="w-6 h-6"/> BioScience</div>
+                            </div>
+                        </div>
+
+                        {/* --- NEW: FEATURES SECTION --- */}
+                        <div className="bg-slate-50 py-16">
+                            <div className="max-w-6xl mx-auto px-4">
+                                <div className="text-center max-w-2xl mx-auto mb-12">
+                                    <h2 className="text-3xl font-bold text-slate-900 mb-4">So funktioniert VitalCore</h2>
+                                    <p className="text-slate-600">Unsere Plattform verbindet medizinisches Wissen mit Ihrer täglichen Routine. Einfach, sicher und effektiv.</p>
+                                </div>
+                                <div className="grid md:grid-cols-3 gap-8">
+                                    {[
+                                        {icon: paths.search, title: "Analyse", text: "Wir analysieren Ihre Daten mit modernsten Algorithmen, um Schwachstellen frühzeitig zu erkennen."},
+                                        {icon: paths.clock, title: "Planung", text: "Erhalten Sie maßgeschneiderte Tagespläne für Ernährung und Bewegung, die in Ihren Alltag passen."},
+                                        {icon: paths.activity, title: "Tracking", text: "Verfolgen Sie Ihre Fortschritte in Echtzeit und passen Sie Ihre Ziele dynamisch an."}
+                                    ].map((f, i) => (
+                                        <div key={i} className="bg-white p-6 rounded-xl shadow-sm border hover:shadow-md transition-shadow">
+                                            <div className="w-12 h-12 bg-green-100 text-green-600 rounded-lg flex items-center justify-center mb-4"><Icon path={f.icon} className="w-6 h-6"/></div>
+                                            <h3 className="text-xl font-bold mb-2">{f.title}</h3>
+                                            <p className="text-slate-500 text-sm">{f.text}</p>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </div>
 
@@ -458,10 +513,23 @@
                                 <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
                                     <h4 className="font-bold text-sm text-slate-700 uppercase mb-4">Newsletter</h4>
                                     <p className="text-xs text-slate-500 mb-4">Erhalten Sie wöchentlich die neuesten Studien direkt in Ihr Postfach.</p>
-                                    <div className="space-y-3">
-                                        <input type="email" placeholder="Ihre E-Mail Adresse" className="w-full px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" disabled />
-                                        <button className="w-full bg-green-600 text-white py-2 rounded-lg text-sm font-bold opacity-50 cursor-not-allowed">Anmelden</button>
-                                    </div>
+                                    
+                                    {!newsletterSubscribed ? (
+                                        <div className="space-y-3">
+                                            <input 
+                                                type="email" 
+                                                placeholder="Ihre E-Mail Adresse" 
+                                                className="w-full px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" 
+                                                value={newsletterEmail}
+                                                onChange={(e) => setNewsletterEmail(e.target.value)}
+                                            />
+                                            <button onClick={() => {if(newsletterEmail) setNewsletterSubscribed(true)}} className="w-full bg-green-600 text-white py-2 rounded-lg text-sm font-bold hover:bg-green-700 transition-colors">Anmelden</button>
+                                        </div>
+                                    ) : (
+                                        <div className="p-3 bg-green-50 text-green-700 rounded text-sm text-center font-bold border border-green-200 animate-fade-in">
+                                            ✅ Erfolgreich angemeldet!
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="bg-white border rounded-xl p-6">
                                     <h4 className="font-bold text-sm text-slate-700 uppercase mb-4">Beliebte Themen</h4>
@@ -473,6 +541,47 @@
                                 </div>
                             </div>
                         </div>
+
+                        {/* --- NEW: TESTIMONIALS --- */}
+                        <div className="bg-slate-900 text-white py-16">
+                            <div className="max-w-6xl mx-auto px-4 text-center">
+                                <h2 className="text-3xl font-bold mb-12">Das sagen unsere Nutzer</h2>
+                                <div className="grid md:grid-cols-3 gap-8">
+                                    {[
+                                        {text: "Endlich eine App, die Wissenschaft verständlich macht. Ich fühle mich vitaler als je zuvor.", name: "Michael K.", role: "Nutzer seit 2023"},
+                                        {text: "Die Analysen sind unglaublich präzise. Ich konnte meine Schlafqualität innerhalb von 2 Wochen verbessern.", name: "Anna S.", role: "Profi-Sportlerin"},
+                                        {text: "Datenschutz war mir wichtig. Hier fühle ich mich sicher aufgehoben. Top Design!", name: "Thomas B.", role: "IT-Spezialist"}
+                                    ].map((t, i) => (
+                                        <div key={i} className="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                                            <div className="flex justify-center gap-1 text-yellow-400 mb-4"><Icon path={paths.star} className="w-4 h-4 fill-current"/><Icon path={paths.star} className="w-4 h-4 fill-current"/><Icon path={paths.star} className="w-4 h-4 fill-current"/><Icon path={paths.star} className="w-4 h-4 fill-current"/><Icon path={paths.star} className="w-4 h-4 fill-current"/></div>
+                                            <p className="italic text-slate-300 mb-4">"{t.text}"</p>
+                                            <div className="font-bold">{t.name}</div>
+                                            <div className="text-xs text-slate-500">{t.role}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* --- NEW: FAQ SECTION --- */}
+                        <div className="bg-white py-16">
+                            <div className="max-w-3xl mx-auto px-4">
+                                <h2 className="text-3xl font-bold text-center mb-8">Häufig gestellte Fragen</h2>
+                                <div className="space-y-4">
+                                    {[
+                                        {q: "Ist VitalCore wirklich kostenlos?", a: "Die Basis-Analyse ist komplett kostenlos. Für tiefergehende Laborwerte bieten wir Premium-Pakete an."},
+                                        {q: "Wie sicher sind meine Daten?", a: "Wir nutzen modernste Ende-zu-Ende Verschlüsselung. Ihre Gesundheitsdaten gehören nur Ihnen."},
+                                        {q: "Kann ich die App mit meiner Smartwatch verbinden?", a: "Ja, VitalCore ist kompatibel mit Apple Health, Google Fit, Garmin und Fitbit."}
+                                    ].map((faq, i) => (
+                                        <div key={i} className="border rounded-lg p-4 hover:bg-slate-50 cursor-pointer">
+                                            <h4 className="font-bold text-slate-900 mb-1 flex justify-between items-center">{faq.q} <Icon path={paths.arrowRight} className="w-4 h-4 text-gray-400"/></h4>
+                                            <p className="text-sm text-slate-600 mt-2">{faq.a}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
                     </main>
                     <footer className="bg-white border-t py-12 mt-12">
                         <div className="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
@@ -482,11 +591,19 @@
                             </div>
                             <div>
                                 <h5 className="font-bold text-slate-900 mb-4">Entdecken</h5>
-                                <ul className="space-y-2 text-sm text-slate-500"><li><a href="#" className="hover:text-green-600">Artikel</a></li><li><a href="#" className="hover:text-green-600">Podcasts</a></li><li><a href="#" className="hover:text-green-600">Guides</a></li></ul>
+                                <ul className="space-y-2 text-sm text-slate-500">
+                                    <li><button onClick={() => window.scrollTo(0,0)} className="hover:text-green-600">Artikel</button></li>
+                                    <li><button onClick={() => setShowLoginModal(true)} className="hover:text-green-600">Podcasts</button></li>
+                                    <li><button onClick={() => setShowLoginModal(true)} className="hover:text-green-600">Guides</button></li>
+                                </ul>
                             </div>
                             <div>
                                 <h5 className="font-bold text-slate-900 mb-4">Rechtliches</h5>
-                                <ul className="space-y-2 text-sm text-slate-500"><li><span className="cursor-pointer hover:text-green-600">Impressum</span></li><li><span className="cursor-pointer hover:text-green-600">Datenschutz</span></li><li><span className="cursor-pointer hover:text-green-600">AGB</span></li></ul>
+                                <ul className="space-y-2 text-sm text-slate-500">
+                                    <li><button onClick={() => alert("Impressum Demo")} className="cursor-pointer hover:text-green-600">Impressum</button></li>
+                                    <li><button onClick={() => alert("Datenschutz Demo")} className="cursor-pointer hover:text-green-600">Datenschutz</button></li>
+                                    <li><button onClick={() => alert("AGB Demo")} className="cursor-pointer hover:text-green-600">AGB</button></li>
+                                </ul>
                             </div>
                         </div>
                         <div className="max-w-6xl mx-auto px-4 pt-8 border-t text-center text-slate-400 text-sm"><p>&copy; 2025 VitalCore Health Systems. Alle Rechte vorbehalten.</p></div>
