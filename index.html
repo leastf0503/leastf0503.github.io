@@ -77,14 +77,10 @@
             arrowLeft: <path d="M19 12H5m7 7-7-7 7-7"/>,
             leaf: <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" />,
             copy: <React.Fragment><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></React.Fragment>,
-            activity: <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>,
-            apple: <React.Fragment><path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06Z"/><path d="M10 2c1 .5 2 2 2 5"/></React.Fragment>,
-            coffee: <React.Fragment><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" x2="6" y1="2" y2="4"/><line x1="10" x2="10" y1="2" y2="4"/><line x1="14" x2="14" y1="2" y2="4"/></React.Fragment>,
-            heart: <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>,
             clock: <circle cx="12" cy="12" r="10"/>
         };
 
-        // --- CONTENT DATA (Die echten Texte) ---
+        // --- CONTENT DATA (Mit ECHTEN Bildern) ---
         const BLOG_CONTENT = [
             { 
                 id: 1, 
@@ -93,8 +89,8 @@
                 time: "5 min", 
                 date: "12. Okt 2024", 
                 author: "Dr. med. Weber", 
-                color: "bg-blue-100", 
-                icon: paths.activity, 
+                // Bild: Eine fitte, ältere Person beim Joggen oder Natur
+                image: "https://images.unsplash.com/photo-1559839734-2b71ea86b48e?q=80&w=800&auto=format&fit=crop", 
                 desc: "Neue Studien zeigen: Es sind nicht nur die Gene. Erfahren Sie, wie kleine Anpassungen in Ihrer Routine Ihr biologisches Alter senken.",
                 fullText: [
                     "Die Suche nach dem Jungbrunnen ist so alt wie die Menschheit selbst. Doch während Alchemisten früher vergeblich nach Elixieren suchten, liefert die moderne Wissenschaft heute konkrete Antworten. Eine umfassende Meta-Analyse der Universität Zürich hat nun fünf Schlüsselfaktoren identifiziert, die maßgeblich für ein langes und gesundes Leben verantwortlich sind.",
@@ -113,8 +109,8 @@
                 time: "8 min", 
                 date: "10. Okt 2024", 
                 author: "Sarah Klein", 
-                color: "bg-orange-100", 
-                icon: paths.apple, 
+                // Bild: Gesundes Essen, Avocado, Bowl
+                image: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=800&auto=format&fit=crop", 
                 desc: "Warum Pausen für den Stoffwechsel wichtiger sind als Kalorienzählen. Ein Guide für Einsteiger.",
                 fullText: [
                     "Der menschliche Körper ist nicht dafür gemacht, ständig Nahrung zu verarbeiten. In unserer modernen Welt, in der Essen rund um die Uhr verfügbar ist, kommt unser Stoffwechsel kaum noch zur Ruhe. Das Konzept des Intervallfastens (Intermittent Fasting) setzt genau hier an.",
@@ -134,8 +130,8 @@
                 time: "6 min", 
                 date: "08. Okt 2024", 
                 author: "M. Psych. Bauer", 
-                color: "bg-purple-100", 
-                icon: paths.coffee, 
+                // Bild: Entspannung, Buch lesen, Tee
+                image: "https://images.unsplash.com/photo-1445412452242-926e68961960?q=80&w=800&auto=format&fit=crop", 
                 desc: "Wie ständige Erreichbarkeit Ihren Hormonhaushalt beeinflusst und was Sie dagegen tun können.",
                 fullText: [
                     "Das Smartphone ist unser ständiger Begleiter. Durchschnittlich greifen wir 80 Mal am Tag zum Handy. Jedes 'Pling', jede Vibration und jedes rote Benachrichtigungs-Icon löst in unserem Gehirn eine Mikro-Stressreaktion aus.",
@@ -155,8 +151,8 @@
                 time: "4 min", 
                 date: "05. Okt 2024", 
                 author: "Prof. Dr. Lang", 
-                color: "bg-red-100", 
-                icon: paths.heart, 
+                // Bild: Arzt, Stethoskop oder Herz-Modell
+                image: "https://images.unsplash.com/photo-1628348068343-c6a848d2b6dd?q=80&w=800&auto=format&fit=crop", 
                 desc: "Neue Marker im Blutbild, die Sie kennen sollten, bevor es zu spät ist.",
                 fullText: [
                     "Jahrelang galt Cholesterin als der alleinige Bösewicht bei Herzerkrankungen. Doch die Kardiologie hat sich weiterentwickelt. Heute wissen wir: Ein differenzierter Blick ist lebenswichtig.",
@@ -315,8 +311,8 @@
 
                         <article className="max-w-4xl mx-auto px-4 py-12 flex flex-col md:flex-row gap-12">
                             <div className="flex-1">
-                                <div className={`w-full h-64 ${selectedArticle.color} rounded-2xl flex items-center justify-center mb-8`}>
-                                    <Icon path={selectedArticle.icon} className="w-24 h-24 opacity-40 mix-blend-multiply" />
+                                <div className="w-full h-64 rounded-2xl overflow-hidden mb-8 shadow-md">
+                                    <img src={selectedArticle.image} alt={selectedArticle.title} className="w-full h-full object-cover" />
                                 </div>
                                 <div className="flex items-center gap-3 text-sm font-bold text-green-600 uppercase tracking-wider mb-3">
                                     {selectedArticle.cat} • {selectedArticle.date}
@@ -416,7 +412,9 @@
                                 <div className="space-y-8">
                                     {filteredArticles.length > 0 ? filteredArticles.map((art) => (
                                         <article key={art.id} onClick={() => setSelectedArticle(art)} className="group flex flex-col sm:flex-row gap-6 bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow cursor-pointer">
-                                            <div className={`w-full sm:w-48 h-48 ${art.color} rounded-xl shrink-0 flex items-center justify-center group-hover:scale-[1.02] transition-transform`}><Icon path={art.icon} className="w-16 h-16 opacity-40 mix-blend-multiply" /></div>
+                                            <div className="w-full sm:w-48 h-48 shrink-0 overflow-hidden rounded-xl">
+                                                <img src={art.image} alt={art.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                            </div>
                                             <div className="flex-1 flex flex-col">
                                                 <div className="flex items-center gap-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2"><span className="text-green-600">{art.cat}</span><span>•</span><span>{art.date}</span></div>
                                                 <h3 className="text-xl font-bold text-slate-900 mb-3 group-hover:text-green-600 transition-colors">{art.title}</h3>
