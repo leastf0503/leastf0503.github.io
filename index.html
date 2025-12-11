@@ -80,7 +80,7 @@
             clock: <circle cx="12" cy="12" r="10"/>
         };
 
-        // --- CONTENT DATA (Mit ECHTEN Bildern) ---
+        // --- CONTENT DATA (Mit stabilen Bild-Links) ---
         const BLOG_CONTENT = [
             { 
                 id: 1, 
@@ -89,8 +89,10 @@
                 time: "5 min", 
                 date: "12. Okt 2024", 
                 author: "Dr. med. Weber", 
-                // Bild: Eine fitte, ältere Person beim Joggen oder Natur
-                image: "https://images.unsplash.com/photo-1559839734-2b71ea86b48e?q=80&w=800&auto=format&fit=crop", 
+                // Bild: Jogging im Freien
+                image: "https://images.unsplash.com/photo-1559839734-2b71ea86b48e?auto=format&fit=crop&w=800", 
+                color: "bg-blue-100", 
+                icon: paths.activity, 
                 desc: "Neue Studien zeigen: Es sind nicht nur die Gene. Erfahren Sie, wie kleine Anpassungen in Ihrer Routine Ihr biologisches Alter senken.",
                 fullText: [
                     "Die Suche nach dem Jungbrunnen ist so alt wie die Menschheit selbst. Doch während Alchemisten früher vergeblich nach Elixieren suchten, liefert die moderne Wissenschaft heute konkrete Antworten. Eine umfassende Meta-Analyse der Universität Zürich hat nun fünf Schlüsselfaktoren identifiziert, die maßgeblich für ein langes und gesundes Leben verantwortlich sind.",
@@ -109,8 +111,10 @@
                 time: "8 min", 
                 date: "10. Okt 2024", 
                 author: "Sarah Klein", 
-                // Bild: Gesundes Essen, Avocado, Bowl
-                image: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=800&auto=format&fit=crop", 
+                // Bild: Gesundes Essen (Bowl)
+                image: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=800", 
+                color: "bg-orange-100", 
+                icon: paths.apple, 
                 desc: "Warum Pausen für den Stoffwechsel wichtiger sind als Kalorienzählen. Ein Guide für Einsteiger.",
                 fullText: [
                     "Der menschliche Körper ist nicht dafür gemacht, ständig Nahrung zu verarbeiten. In unserer modernen Welt, in der Essen rund um die Uhr verfügbar ist, kommt unser Stoffwechsel kaum noch zur Ruhe. Das Konzept des Intervallfastens (Intermittent Fasting) setzt genau hier an.",
@@ -130,8 +134,10 @@
                 time: "6 min", 
                 date: "08. Okt 2024", 
                 author: "M. Psych. Bauer", 
-                // Bild: Entspannung, Buch lesen, Tee
-                image: "https://images.unsplash.com/photo-1445412452242-926e68961960?q=80&w=800&auto=format&fit=crop", 
+                // Bild: Frau liest Buch
+                image: "https://images.unsplash.com/photo-1521356279905-e1d72a68770d?auto=format&fit=crop&w=800", 
+                color: "bg-purple-100", 
+                icon: paths.coffee, 
                 desc: "Wie ständige Erreichbarkeit Ihren Hormonhaushalt beeinflusst und was Sie dagegen tun können.",
                 fullText: [
                     "Das Smartphone ist unser ständiger Begleiter. Durchschnittlich greifen wir 80 Mal am Tag zum Handy. Jedes 'Pling', jede Vibration und jedes rote Benachrichtigungs-Icon löst in unserem Gehirn eine Mikro-Stressreaktion aus.",
@@ -151,8 +157,10 @@
                 time: "4 min", 
                 date: "05. Okt 2024", 
                 author: "Prof. Dr. Lang", 
-                // Bild: Arzt, Stethoskop oder Herz-Modell
-                image: "https://images.unsplash.com/photo-1628348068343-c6a848d2b6dd?q=80&w=800&auto=format&fit=crop", 
+                // Bild: Stethoskop
+                image: "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=800", 
+                color: "bg-red-100", 
+                icon: paths.heart, 
                 desc: "Neue Marker im Blutbild, die Sie kennen sollten, bevor es zu spät ist.",
                 fullText: [
                     "Jahrelang galt Cholesterin als der alleinige Bösewicht bei Herzerkrankungen. Doch die Kardiologie hat sich weiterentwickelt. Heute wissen wir: Ein differenzierter Blick ist lebenswichtig.",
@@ -312,7 +320,13 @@
                         <article className="max-w-4xl mx-auto px-4 py-12 flex flex-col md:flex-row gap-12">
                             <div className="flex-1">
                                 <div className="w-full h-64 rounded-2xl overflow-hidden mb-8 shadow-md">
-                                    <img src={selectedArticle.image} alt={selectedArticle.title} className="w-full h-full object-cover" />
+                                    {/* HIER WIRD DAS BILD GELADEN. FALLBACK EINGEBAUT. */}
+                                    <img 
+                                        src={selectedArticle.image} 
+                                        alt={selectedArticle.title} 
+                                        className="w-full h-full object-cover" 
+                                        onError={(e) => {e.target.onerror = null; e.target.src='https://placehold.co/800x400/e2e8f0/475569?text=Bild+nicht+verfügbar';}}
+                                    />
                                 </div>
                                 <div className="flex items-center gap-3 text-sm font-bold text-green-600 uppercase tracking-wider mb-3">
                                     {selectedArticle.cat} • {selectedArticle.date}
@@ -413,7 +427,12 @@
                                     {filteredArticles.length > 0 ? filteredArticles.map((art) => (
                                         <article key={art.id} onClick={() => setSelectedArticle(art)} className="group flex flex-col sm:flex-row gap-6 bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow cursor-pointer">
                                             <div className="w-full sm:w-48 h-48 shrink-0 overflow-hidden rounded-xl">
-                                                <img src={art.image} alt={art.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                                <img 
+                                                    src={art.image} 
+                                                    alt={art.title} 
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                                                    onError={(e) => {e.target.onerror = null; e.target.src='https://placehold.co/800x400/e2e8f0/475569?text=Bild+nicht+verfügbar';}}
+                                                />
                                             </div>
                                             <div className="flex-1 flex flex-col">
                                                 <div className="flex items-center gap-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2"><span className="text-green-600">{art.cat}</span><span>•</span><span>{art.date}</span></div>
