@@ -1,4 +1,50 @@
-<script type="text/babel">
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VitalCore - Ihr Gesundheitsportal</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes pulse-slow { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        .animate-slide-up { animation: slide-up 0.5s ease-out forwards; }
+        .animate-fade-in { animation: fade-in 0.8s ease-out forwards; }
+        .animate-pulse-slow { animation: pulse-slow 3s infinite; }
+        
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; }
+        
+        /* Error Box Style */
+        #error-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; padding: 20px; background: #fee2e2; border-bottom: 2px solid #ef4444; color: #991b1b; z-index: 9999; font-family: monospace; }
+        
+        /* Custom Scrollbar */
+        .data-scroll::-webkit-scrollbar { width: 8px; }
+        .data-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
+        .data-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <div id="error-overlay">
+        <strong>Systemfehler:</strong> <span id="error-msg">Unbekannter Fehler</span>
+    </div>
+    <script>
+        window.onerror = function(msg, url, line, col, error) {
+            document.getElementById('error-overlay').style.display = 'block';
+            document.getElementById('error-msg').innerText = msg + " (Zeile: " + line + ")";
+            return false;
+        };
+    </script>
+
+    <div id="root"></div>
+
+    <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
         // --- ICONS & ASSETS ---
@@ -301,7 +347,6 @@
         };
 
         // --- 5. END SCREEN (DEBUG & FIX) ---
-        // Hier wurde der automatische Redirect entfernt, um das "Neuladen"-Problem zu lösen.
         const EndScreen = ({ data, cookieChoice, groupID, returnLink }) => {
             const [manualMode, setManualMode] = useState(false);
             const [targetUrl, setTargetUrl] = useState("");
@@ -315,17 +360,12 @@
             const surveyCode = `G${groupID}-C${cCode}-N${count}-${Math.floor(Math.random() * 899 + 100)}`;
 
             useEffect(() => {
-                // Wir nutzen jetzt den returnLink, der von GANZ OBEN durchgereicht wurde.
-                // Dadurch geht er nicht verloren.
                 if (returnLink) {
                     let finalLink = returnLink;
-                    // Sicherstellen, dass er sauber ist (manchmal ist er URL-encoded)
                     if (finalLink.includes('%3A') || finalLink.includes('%2F')) {
                         try { finalLink = decodeURIComponent(finalLink); } catch(e){}
                     }
                     
-                    // Daten anhängen
-                    // Wir codieren das JSON, damit es sicher durch die URL geht
                     const finalUrl = finalLink + '&IV01=' + encodeURIComponent(fullDataString);
                     setTargetUrl(finalUrl);
                     
@@ -339,7 +379,6 @@
                 window.location.href = targetUrl;
             };
 
-            // Wenn wir einen Link haben: Button anzeigen
             if (!manualMode && targetUrl) {
                 return (
                     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 text-center">
@@ -362,7 +401,6 @@
                 );
             }
 
-            // FALLBACK: Wenn kein SoSci Link da ist
             return (
                 <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
                     <div className="bg-white p-8 rounded-2xl shadow-xl border-l-4 border-red-500">
@@ -475,7 +513,6 @@
                     {step === 'register' && (
                         <RegistrationForm onSubmit={handleRegistrationSubmit} group={groupID} audioObject={audioManRef.current} />
                     )}
-                    {/* HIER: Wir geben returnLink an den EndScreen weiter */}
                     {step === 'end' && <EndScreen groupID={groupID} cookieChoice={cookieChoice} data={finalData} returnLink={returnLink} />}
                 </div>
             );
@@ -484,3 +521,5 @@
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
+</body>
+</html>
