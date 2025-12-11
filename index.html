@@ -413,7 +413,7 @@
             const handleStartStudy = () => {
                 const unlockAudio = (audioObj) => { if (audioObj) { audioObj.volume = 0; audioObj.play().then(() => { audioObj.pause(); audioObj.currentTime = 0; audioObj.volume = 0.5; }).catch(e => console.log("Unlock failed", e)); } };
                 unlockAudio(audioRef.current); unlockAudio(audioManRef.current);
-                timers.current.blogStart = Date.now(); setStep('blog'); setTimeout(() => setBannerVisible(true), 1500);
+                timers.current.blogStart = Date.now(); setStep('blog'); setTimeout(() => setBannerVisible(true), 3000);
             };
 
             const handleBannerLoad = () => { timers.current.bannerStart = Date.now(); };
