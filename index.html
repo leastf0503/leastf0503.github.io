@@ -1,54 +1,4 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VitalCore - Ihr Gesundheitsportal</title>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-    <style>
-        @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes pulse-slow { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-        .animate-slide-up { animation: slide-up 0.5s ease-out forwards; }
-        .animate-fade-in { animation: fade-in 0.8s ease-out forwards; }
-        .animate-pulse-slow { animation: pulse-slow 3s infinite; }
-        
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; }
-        
-        #error-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; padding: 20px; background: #fee2e2; border-bottom: 2px solid #ef4444; color: #991b1b; z-index: 9999; font-family: monospace; }
-        
-        /* Loading Spinner für den Redirect */
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        /* Custom Scrollbar for Data Box */
-        .data-scroll::-webkit-scrollbar { width: 8px; }
-        .data-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
-        .data-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .data-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-    </style>
-</head>
-<body>
-
-    <div id="error-overlay">
-        <strong>Systemfehler:</strong> <span id="error-msg">Unbekannter Fehler</span>
-    </div>
-    <script>
-        window.onerror = function(msg, url, line, col, error) {
-            document.getElementById('error-overlay').style.display = 'block';
-            document.getElementById('error-msg').innerText = msg + " (Zeile: " + line + ")";
-            return false;
-        };
-    </script>
-
-    <div id="root"></div>
-
-    <script type="text/babel">
+<script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
         // --- ICONS & ASSETS ---
@@ -350,78 +300,75 @@
             );
         };
 
-        // --- 5. END SCREEN (HANDLES REDIRECT) ---
-        const EndScreen = ({ data, cookieChoice, groupID }) => {
+        // --- 5. END SCREEN (DEBUG & FIX) ---
+        // Hier wurde der automatische Redirect entfernt, um das "Neuladen"-Problem zu lösen.
+        const EndScreen = ({ data, cookieChoice, groupID, returnLink }) => {
             const [manualMode, setManualMode] = useState(false);
-            const [copiedCode, setCopiedCode] = useState(false);
-            const [copiedData, setCopiedData] = useState(false);
+            const [targetUrl, setTargetUrl] = useState("");
             
             // Daten aufbereiten
             const fullDataString = JSON.stringify(data, null, 2);
             
-            // Einfacher Code für manuelle Eingabe
+            // Backup Code
             const cCode = cookieChoice === 'accept_all' ? '1' : '0';
             let count = 0; if (data) Object.values(data).forEach(val => { if (val && val !== '') count++; });
             const surveyCode = `G${groupID}-C${cCode}-N${count}-${Math.floor(Math.random() * 899 + 100)}`;
 
             useEffect(() => {
-                // Prüfen ob 'r' Parameter da ist (Return Link von SoSci)
-                const params = new URLSearchParams(window.location.search);
-                const returnLink = params.get('r');
-
+                // Wir nutzen jetzt den returnLink, der von GANZ OBEN durchgereicht wurde.
+                // Dadurch geht er nicht verloren.
                 if (returnLink) {
-                    // --- AUTOMATISCHER REDIRECT ---
-                    // Hier angepasst auf IV01 statt IV01_01
-                    const redirectUrl = decodeURIComponent(returnLink) + '&IV01=' + encodeURIComponent(JSON.stringify(data));
+                    let finalLink = returnLink;
+                    // Sicherstellen, dass er sauber ist (manchmal ist er URL-encoded)
+                    if (finalLink.includes('%3A') || finalLink.includes('%2F')) {
+                        try { finalLink = decodeURIComponent(finalLink); } catch(e){}
+                    }
                     
-                    // Kurze Verzögerung für UX
-                    setTimeout(() => {
-                        window.location.href = redirectUrl;
-                    }, 1000);
+                    // Daten anhängen
+                    // Wir codieren das JSON, damit es sicher durch die URL geht
+                    const finalUrl = finalLink + '&IV01=' + encodeURIComponent(fullDataString);
+                    setTargetUrl(finalUrl);
+                    
                 } else {
-                    // Kein Link da? Dann manueller Modus anzeigen (Test-Modus)
                     setManualMode(true);
                 }
-            }, []);
+            }, [returnLink, fullDataString]);
 
-            const copyCode = () => { navigator.clipboard.writeText(surveyCode).then(() => setCopiedCode(true)); };
-            const copyData = () => { navigator.clipboard.writeText(fullDataString).then(() => setCopiedData(true)); };
+            const handleReturnClick = () => {
+                if (!targetUrl) { alert("Kein Link vorhanden."); return; }
+                window.location.href = targetUrl;
+            };
 
-            if (!manualMode) {
+            // Wenn wir einen Link haben: Button anzeigen
+            if (!manualMode && targetUrl) {
                 return (
-                    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
-                        <div className="loader mb-4"></div>
-                        <h2 className="text-xl font-bold text-gray-700">Daten werden gespeichert...</h2>
-                        <p className="text-gray-500">Sie werden gleich zurückgeleitet.</p>
+                    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 text-center">
+                        <div className="bg-white p-8 rounded-2xl shadow-xl max-w-lg w-full border-t-8 border-blue-500 animate-fade-in">
+                            <h2 className="text-2xl font-bold text-gray-800 mb-4">Aufgabe beendet!</h2>
+                            <p className="text-gray-600 mb-6">Bitte klicken Sie auf den Button, um Ihre Daten zu speichern und zum Fragebogen zurückzukehren.</p>
+                            
+                            <button 
+                                onClick={handleReturnClick}
+                                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition-transform transform active:scale-95 text-lg mb-6"
+                            >
+                                Daten speichern & Zurück
+                            </button>
+
+                            <div className="text-left bg-gray-100 p-2 rounded border text-[10px] break-all font-mono text-gray-400">
+                                <strong>DEBUG LINK:</strong> {targetUrl.substring(0, 50)}...
+                            </div>
+                        </div>
                     </div>
                 );
             }
 
-            // FALLBACK: Wenn kein SoSci Link da ist, zeige manuelle Felder
+            // FALLBACK: Wenn kein SoSci Link da ist
             return (
                 <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-                    <div className="bg-white p-8 md:p-10 rounded-2xl shadow-2xl max-w-2xl w-full border-t-8 border-green-500">
-                        <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4"><Icon path={paths.check} className="w-8 h-8" /></div>
-                        <h2 className="text-3xl font-bold text-gray-900 mb-2 text-center">Vielen Dank!</h2>
-                        <div className="text-center mb-6 p-4 bg-yellow-50 text-yellow-800 rounded border border-yellow-200">Test-Modus: Kein Rück-Link gefunden.</div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 relative overflow-hidden flex flex-col">
-                                <p className="text-blue-900 font-bold text-xs uppercase mb-3 tracking-wider">1. Bestätigungs-Code</p>
-                                <input readOnly value={surveyCode} className="w-full bg-white border border-blue-200 rounded-lg p-2 font-mono text-lg font-bold text-center text-gray-800 mb-3" onClick={(e) => e.target.select()}/>
-                                <button onClick={copyCode} className={`w-full py-2 rounded-lg font-bold text-sm transition-colors flex items-center justify-center gap-2 ${copiedCode ? 'bg-green-500 text-white' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>
-                                    {copiedCode ? "Kopiert!" : "Code kopieren"} <Icon path={paths.copy} className="w-4 h-4"/>
-                                </button>
-                            </div>
-
-                            <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 relative overflow-hidden flex flex-col">
-                                <p className="text-slate-900 font-bold text-xs uppercase mb-3 tracking-wider">2. Datensatz</p>
-                                <textarea readOnly value={fullDataString} className="data-scroll w-full flex-1 bg-white border border-slate-200 rounded-lg p-2 font-mono text-xs text-slate-600 mb-3 resize-none focus:outline-none" style={{height: '80px'}} onClick={(e) => e.target.select()}></textarea>
-                                <button onClick={copyData} className={`w-full py-2 rounded-lg font-bold text-sm transition-colors flex items-center justify-center gap-2 ${copiedData ? 'bg-green-500 text-white' : 'bg-slate-800 text-white hover:bg-slate-700'}`}>
-                                    {copiedData ? "Kopiert!" : "Datensatz kopieren"} <Icon path={paths.copy} className="w-4 h-4"/>
-                                </button>
-                            </div>
-                        </div>
+                    <div className="bg-white p-8 rounded-2xl shadow-xl border-l-4 border-red-500">
+                        <h2 className="text-xl font-bold text-red-700 mb-2">Test-Modus (Kein Link)</h2>
+                        <p className="text-gray-600 mb-4">Code für manuelle Eingabe:</p>
+                        <input readOnly value={surveyCode} className="w-full bg-gray-100 border border-gray-300 rounded p-2 font-mono text-center font-bold"/>
                     </div>
                 </div>
             );
@@ -435,6 +382,9 @@
             const [groupID, setGroupID] = useState(0);
             const [finalData, setFinalData] = useState({});
             
+            // NEU: Wir speichern den Return-Link ("r") direkt beim Start, damit er nicht verloren geht.
+            const [returnLink, setReturnLink] = useState(null);
+
             const timers = useRef({ blogStart: 0, bannerStart: 0, formStart: 0 });
             const [times, setTimes] = useState({ blogTime: 0, cookieTime: 0, registrationTime: 0 });
 
@@ -445,6 +395,10 @@
                 const params = new URLSearchParams(window.location.search);
                 const g = parseInt(params.get('g')) || 0;
                 setGroupID(g);
+                
+                // HIER: 'r' sofort auslesen und speichern
+                const r = params.get('r');
+                if (r) setReturnLink(r);
                 
                 audioRef.current = new Audio('sound.mp3'); 
                 audioRef.current.volume = 0.5;
@@ -521,7 +475,8 @@
                     {step === 'register' && (
                         <RegistrationForm onSubmit={handleRegistrationSubmit} group={groupID} audioObject={audioManRef.current} />
                     )}
-                    {step === 'end' && <EndScreen groupID={groupID} cookieChoice={cookieChoice} data={finalData} />}
+                    {/* HIER: Wir geben returnLink an den EndScreen weiter */}
+                    {step === 'end' && <EndScreen groupID={groupID} cookieChoice={cookieChoice} data={finalData} returnLink={returnLink} />}
                 </div>
             );
         }
@@ -529,5 +484,3 @@
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
-</body>
-</html>
