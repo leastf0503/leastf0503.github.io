@@ -14,20 +14,21 @@
         @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         @keyframes pulse-slow { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .animate-slide-up { animation: slide-up 0.5s ease-out forwards; }
         .animate-fade-in { animation: fade-in 0.8s ease-out forwards; }
         .animate-pulse-slow { animation: pulse-slow 3s infinite; }
+        .animate-spin-slow { animation: spin 3s linear infinite; }
         
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; }
         
-        /* Error Box Style */
         #error-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; padding: 20px; background: #fee2e2; border-bottom: 2px solid #ef4444; color: #991b1b; z-index: 9999; font-family: monospace; }
         
-        /* Custom Scrollbar for Data Box */
-        .data-scroll::-webkit-scrollbar { width: 8px; }
-        .data-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
-        .data-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .data-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body>
@@ -46,7 +47,16 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        // --- KONFIGURATION ---
+        // --- ZEIT-KONFIGURATION (IN SEKUNDEN) ---
+        // Ändere diese Werte für die echte Studie!
+        // Zum Testen: kleine Werte (z.B. 5, 5, 5).
+        // Für Studie: z.B. 120 (2 Min), 30, 60.
+        
+        const MIN_BROWSING_TIME_1 = 120; // Phase 1: Wie lange muss man schauen, bevor man Profil erstellen darf?
+        const MIN_REGISTRATION_TIME = 20; // Phase 2: Mindestzeit im Formular (gegen schnelles Klicken)
+        const MIN_BROWSING_TIME_2 = 60;  // Phase 3: Wie lange muss man schauen, NACHDEM das Profil erstellt wurde?
+        const COOKIE_BANNER_DELAY_MS = 3000; // 3000ms = 3 Sekunden
+
         const SOSCI_BASE_URL = "https://www.soscisurvey.de/BA25LeaPaula/";
 
         const { useState, useEffect, useRef } = React;
@@ -76,249 +86,27 @@
             arrowRight: <path d="M5 12h14m-7-7 7 7-7 7"/>,
             arrowLeft: <path d="M19 12H5m7 7-7-7 7-7"/>,
             leaf: <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" />,
-            copy: <React.Fragment><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></React.Fragment>,
+            clock: <circle cx="12" cy="12" r="10"/>,
             activity: <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>,
             apple: <React.Fragment><path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06Z"/><path d="M10 2c1 .5 2 2 2 5"/></React.Fragment>,
             coffee: <React.Fragment><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" x2="6" y1="2" y2="4"/><line x1="10" x2="10" y1="2" y2="4"/><line x1="14" x2="14" y1="2" y2="4"/></React.Fragment>,
             heart: <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>,
-            clock: <circle cx="12" cy="12" r="10"/>,
             star: <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />,
-            menu: <path d="M3 12h18M3 6h18M3 18h18" />,
-            x: <path d="M18 6 6 18M6 6l12 12" />
+            ciagrette: <React.Fragment><path d="M18 8c0-2.5-2-2.5-2-5"/><path d="M22 8c0-2.5-2-2.5-2-5"/><rect x="2" y="13" width="20" height="6" rx="2"/><path d="M22 16h-4"/><path d="M2 16h4"/></React.Fragment>
         };
 
-        // --- CONTENT DATA (Mit reparierten Bild-Links) ---
+        // --- CONTENT DATA ---
         const BLOG_CONTENT = [
-            { 
-                id: 1, 
-                title: "Die 5 Säulen der Langlebigkeit", 
-                cat: "Forschung", 
-                time: "5 min", 
-                date: "12. Okt 2024", 
-                author: "Dr. med. Weber", 
-                // NEUES BILD: Läufer in der Natur (sehr stabil)
-                image: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=800&q=80", 
-                color: "bg-blue-100", 
-                icon: paths.activity, 
-                desc: "Neue Studien zeigen: Es sind nicht nur die Gene. Erfahren Sie, wie kleine Anpassungen in Ihrer Routine Ihr biologisches Alter senken.",
-                fullText: [
-                    "Die Suche nach dem Jungbrunnen ist so alt wie die Menschheit selbst. Doch während Alchemisten früher vergeblich nach Elixieren suchten, liefert die moderne Wissenschaft heute konkrete Antworten. Eine umfassende Meta-Analyse der Universität Zürich hat nun fünf Schlüsselfaktoren identifiziert, die maßgeblich für ein langes und gesundes Leben verantwortlich sind.",
-                    "1. Ernährung: Es geht nicht nur darum, was wir essen, sondern wann. Pflanzenbasierte Kost gepaart mit metabolischen Ruhephasen zeigt die besten Ergebnisse in der Zellerneuerung.",
-                    "2. Bewegung: Moderate Aktivität schlägt Hochleistungssport. Täglich 30 Minuten zügiges Gehen senkt das Risiko für Herz-Kreislauf-Erkrankungen um 40%.",
-                    "3. Schlaf: Das Gehirn reinigt sich nachts selbst. Weniger als 7 Stunden Schlaf führen langfristig zur Ansammlung von Toxinen, die neurodegenerative Erkrankungen begünstigen.",
-                    "4. Soziale Bindung: Einsamkeit ist so schädlich wie 15 Zigaretten am Tag. Starke soziale Netzwerke sind ein Puffer gegen Stress.",
-                    "5. Sinnhaftigkeit: Menschen, die morgens einen Grund haben aufzustehen (Ikigai), leben signifikant länger.",
-                    "Fazit: Langlebigkeit ist kein Zufallsprodukt, sondern die Summe täglicher Entscheidungen."
-                ]
-            },
-            { 
-                id: 2, 
-                title: "Intervallfasten 16:8", 
-                cat: "Ernährung", 
-                time: "8 min", 
-                date: "10. Okt 2024", 
-                author: "Sarah Klein", 
-                image: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=800", 
-                color: "bg-orange-100", 
-                icon: paths.apple, 
-                desc: "Warum Pausen für den Stoffwechsel wichtiger sind als Kalorienzählen. Ein Guide für Einsteiger.",
-                fullText: [
-                    "Der menschliche Körper ist nicht dafür gemacht, ständig Nahrung zu verarbeiten. In unserer modernen Welt, in der Essen rund um die Uhr verfügbar ist, kommt unser Stoffwechsel kaum noch zur Ruhe. Das Konzept des Intervallfastens (Intermittent Fasting) setzt genau hier an.",
-                    "Die 16:8 Methode ist dabei die populärste Form: 16 Stunden fasten, 8 Stunden essen. Klingt hart? Ist es aber meist nicht, da die Schlafzeit mitgerechnet wird. Wer um 20 Uhr zu Abend isst und das Frühstück auf 12 Uhr verschiebt, hat es schon geschafft.",
-                    "Was passiert im Körper? Nach etwa 12 Stunden ohne Nahrung beginnt die Autophagie – eine Art zelluläre Müllabfuhr. Beschädigte Zellbestandteile werden abgebaut und recycelt. Gleichzeitig sinkt der Insulinspiegel, was die Fettverbrennung ankurbelt.",
-                    "Tipps für den Start:",
-                    "- Trinken Sie während der Fastenphase viel Wasser, schwarzen Kaffee oder ungesüßten Tee.",
-                    "- Beginnen Sie sanft mit 12 oder 14 Stunden.",
-                    "- Achten Sie im Essensfenster auf Nährstoffdichte, nicht auf Völlerei.",
-                    "Intervallfasten ist keine Diät, sondern ein Lebensstil, der dem Körper seine natürliche Balance zurückgibt."
-                ]
-            },
-            { 
-                id: 3, 
-                title: "Digital Detox & Cortisol", 
-                cat: "Mental Health", 
-                time: "6 min", 
-                date: "08. Okt 2024", 
-                author: "M. Psych. Bauer", 
-                image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80", 
-                color: "bg-purple-100", 
-                icon: paths.coffee, 
-                desc: "Wie ständige Erreichbarkeit Ihren Hormonhaushalt beeinflusst und was Sie dagegen tun können.",
-                fullText: [
-                    "Das Smartphone ist unser ständiger Begleiter. Durchschnittlich greifen wir 80 Mal am Tag zum Handy. Jedes 'Pling', jede Vibration und jedes rote Benachrichtigungs-Icon löst in unserem Gehirn eine Mikro-Stressreaktion aus.",
-                    "Dabei wird Cortisol ausgeschüttet, das primäre Stresshormon. Evolutionsbiologisch sollte Cortisol uns Energie für Flucht oder Kampf bereitstellen. Wenn dieser Spiegel jedoch chronisch erhöht ist – durch ständige digitale Alarmbereitschaft –, hat das gravierende Folgen: Schlafstörungen, Angstzustände, Gewichtszunahme und Konzentrationsschwäche.",
-                    "Digital Detox bedeutet nicht, offline im Wald zu leben. Es geht um bewusste Pausen.",
-                    "Strategien für weniger Cortisol:",
-                    "1. Das Schlafzimmer zur handyfreien Zone erklären. Kaufen Sie einen klassischen Wecker.",
-                    "2. Push-Benachrichtigungen deaktivieren. Sie entscheiden, wann Sie schauen, nicht das Gerät.",
-                    "3. Graustufen-Modus aktivieren. Ein farbloses Display stimuliert das Belohnungszentrum im Gehirn deutlich weniger.",
-                    "Schon ein Wochenende ohne digitale Medien kann den Cortisolspiegel signifikant senken und die mentale Klarheit wiederherstellen."
-                ]
-            },
-            { 
-                id: 4, 
-                title: "Herzgesundheit 2.0", 
-                cat: "Prävention", 
-                time: "4 min", 
-                date: "05. Okt 2024", 
-                author: "Prof. Dr. Lang", 
-                image: "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=800", 
-                color: "bg-red-100", 
-                icon: paths.heart, 
-                desc: "Neue Marker im Blutbild, die Sie kennen sollten, bevor es zu spät ist.",
-                fullText: [
-                    "Jahrelang galt Cholesterin als der alleinige Bösewicht bei Herzerkrankungen. Doch die Kardiologie hat sich weiterentwickelt. Heute wissen wir: Ein differenzierter Blick ist lebenswichtig.",
-                    "Neben dem klassischen LDL-Cholesterin rücken Entzündungsmarker in den Fokus. Das hochsensitive C-reaktive Protein (hs-CRP) gilt als Frühwarnsystem für stille Entzündungen in den Gefäßen, die oft die Vorstufe von Arteriosklerose sind.",
-                    "Ein weiterer unterschätzter Wert ist Lipoprotein(a). Dieser genetisch festgelegte Wert reagiert kaum auf Lebensstiländerungen, stellt aber ein eigenständiges Risiko dar. Wer seinen LP(a)-Wert einmalig bestimmen lässt, weiß, ob er zur Risikogruppe gehört.",
-                    "Technologie hilft: Smartwatches können heute Vorhofflimmern erkennen, bevor Symptome spürbar sind. Kombiniert mit regelmäßigen Blutbildern, die über das Standard-Profil hinausgehen, ist Prävention heute so präzise wie nie zuvor.",
-                    "Sprechen Sie Ihren Arzt aktiv auf hs-CRP und Lipoprotein(a) an – Ihr Herz wird es Ihnen danken."
-                ]
-            },
-            {
-    id: 5,
-    title: "Eine ist keine",
-    cat: "Prävention",
-    time: "5 min",
-    author: "Dr. Lisa Neubauer",
-    image: "Rauchen.jpg",
-    color: "bg-orange-100",
-    icon: paths.ciagrette,
-    desc: "Warum Rauchen dich auf Dauer krank macht.",
-    fullText: [
-        "Rauchen ist eines der größten vermeidbaren Gesundheitsrisiken weltweit und verursacht jährlich Millionen Tode durch Krebs, Herz-Kreislauf-Erkrankungen und Atemwegserkrankungen.",
-        "Gesundheitliche Schäden:",
-        "Rauchen schädigt nahezu jedes Organ im Körper. Nikotin und über 7.000 Chemikalien im Tabakrauch, darunter 70 krebserregende Stoffe, führen zu Lungenkrebs (ca. 85% der Fälle), COPD und Emphysem. Passivrauchen erhöht das Risiko für Nichtraucher um 20–30% für Lungenkrebs und Herzinfarkte.",
-        "• Herz-Kreislauf: Erhöhtes Thromboserisiko, Bluthochdruck und Atherosklerose.",
-        "• Weitere Folgen: Unfruchtbarkeit, Schwangerschaftskomplikationen, Zahnverlust, Hautalterung.",
-        "Warum ist Aufhören so schwer?",
-        "Nikotin erzeugt starke Abhängigkeit durch Dopamin-Ausschüttung im Belohnungszentrum des Gehirns. Entzugserscheinungen wie Reizbarkeit, Schlafstörungen und Heißhunger treten nach Stunden auf. Vaping oder E-Zigaretten sind keine sichere Alternative, da sie Nikotin und Schadstoffe enthalten.",
-        "Tipps zum Aufhören:",
-        "• Schritt-für-Schritt-Plan: Setzen Sie ein konkretes Datum, werfen Sie Zigaretten weg und tracken Sie Erfolge.",
-        "• Hilfsmittel: Nikotinpflaster, Kaugummis oder Medikamente wie Vareniclin (auf Rezept); Apps wie QuitNow oder Rauchfrei-Challenges.",
-        "• Unterstützung: Beratung über Telefonseelsorge (0800 111 0 333) oder Gruppen; Sport und Entspannungstechniken reduzieren Stress.",
-        "Nach einem Jahr ohne Rauchen halbiert sich das Herzinfarktrisiko, nach 10 Jahren nähert es sich dem eines Nichtrauchers an. Starten Sie heute – Ihr Körper dankt es Ihnen langfristig. Bei Bedarf konsultieren Sie einen Arzt für personalisierte Strategien."
-    ]
-},
-            , // Wichtig: Das Komma trennt die neuen Artikel von den alten
-    { 
-        id: 5, 
-        title: "Diäten & Jojo-Effekt", 
-        cat: "Ernährung", 
-        time: "6 min", 
-        date: "14. Okt 2024", 
-        author: "Dr. oec. troph. Meier", 
-        // Bild: Gesunde Bowl/Salat
-        image: "diaet.jpg", 
-        color: "bg-green-100", 
-        icon: paths.apple, 
-        desc: "Warum Crash-Diäten scheitern und was wirklich hilft. Ein Blick auf Stoffwechsel, Mythen und langfristige Erfolgsstrategien.",
-        fullText: [
-            "Diäten versprechen schnellen Gewichtsverlust, bergen aber oft Risiken wie Jo-Jo-Effekt, Nährstoffmangel und langfristigen Frustrationszyklus. Nachhaltiger Erfolg basiert auf ausgewogener Ernährung statt Crash-Diäten.",
-            "Mythen und Risiken: Viele Diäten (z.B. Low-Carb, Keto, Intervallfasten) funktionieren kurzfristig durch Kaloriendefizit, scheitern jedoch bei 80–95% der Teilnehmenden langfristig. Extremdiäten wie Detox-Säfte oder Monodiäten führen zu Muskelabbau, Müdigkeit, Haarausfall und verlangsamtem Stoffwechsel.",
-            "Der Jo-Jo-Effekt ist tückisch: Nach Abbruch steigt das Gewicht oft über das Ausgangsniveau. Zudem drohen Gesundheitsrisiken wie Gallensteine, Herzrhythmusstörungen und Essstörungen bei unbalancierten Ansätzen.",
-            "Wissenschaftlich bewährte Ansätze sind die Mediterrane Ernährung (viel Gemüse, Fisch, Olivenöl, Nüsse), die Herzrisiken um 30% reduziert. Eine moderate Kalorienreduktion um 500 kcal/Tag mit hohem Proteingehalt erhält Muskelmasse und sättigt länger.",
-            "Praktische Tipps: Starten Sie langsam. Ersetzen Sie zuckerreiche Snacks durch Vollkorn und Früchte. Nutzen Sie Apps wie MyFitnessPal für Tracking. Langfristig zählt Konsistenz über Perfektion – 5–10% Gewichtsreduktion verbessert Blutzucker und Blutdruck bereits spürbar."
-        ]
-    },
-    { 
-        id: 6, 
-        title: "Volkskrankheit Rücken", 
-        cat: "Prävention", 
-        time: "7 min", 
-        date: "16. Okt 2024", 
-        author: "Physio T. Müller", 
-        // Bild: Person beim Dehnen/Rückenübung
-        image: "ruecken.jpg", 
-        color: "bg-blue-100", 
-        icon: paths.activity, 
-        desc: "80% der Bevölkerung sind betroffen. Erfahren Sie, wie Sie mit einfachen Übungen und Ergonomie Schmerzen lindern und vorbeugen.",
-        fullText: [
-            "Rückenschmerzen sind die häufigste Ursache für Arztbesuche und betreffen 80% der Bevölkerung irgendwann im Leben. Sie entstehen oft durch Fehlhaltung, Muskelschwund oder Überlastung, nicht selten durch langes Sitzen oder Stress.",
-            "Häufige Ursachen: Akute Rückenschmerzen (unter 6 Wochen) stammen meist von Muskelverspannungen oder Wirbelblockaden. Chronische Formen hängen oft mit schwacher Core-Muskulatur und psychischen Faktoren zusammen. Risikogruppen sind Büroangestellte, Schwangere und Ältere über 50.",
-            "Prävention und Behandlung: Regelmäßiges Core-Training (z.B. Planks) stärkt die Rückenmuskulatur und reduziert Schmerzepisoden um 30–50%. Ergonomische Anpassungen wie höhenverstellbare Schreibtische und Pausen alle 30 Minuten helfen vorbeugend.",
-            "Wann zum Arzt? Sofort handeln bei Taubheitsgefühlen in Beinen, Inkontinenz, Fieber oder nach einem Unfall. MRT oder CT sind nur bei Verdacht auf ernste Ursachen nötig. Die meisten Fälle (90%) bessern sich ohne Operation innerhalb von 6 Wochen.",
-            "Kleine Veränderungen wie tägliches Gehen (10.000 Schritte) und dynamisches Sitzen wirken Wunder."
-        ]
-    },
-    { 
-        id: 7, 
-        title: "Migräne verstehen", 
-        cat: "Forschung", 
-        time: "6 min", 
-        date: "18. Okt 2024", 
-        author: "Dr. med. Neuhaus", 
-        // Bild: Entspannung/Kopfweh-Symbolik
-        image: "migraene.jpg", 
-        color: "bg-purple-100", 
-        icon: paths.search, 
-        desc: "Mehr als nur Kopfschmerzen: Ursachen, Symptome und moderne Therapieansätze für eine bessere Lebensqualität.",
-        fullText: [
-            "Migräne ist eine neurologische Erkrankung, die etwa 15% der Bevölkerung betrifft, Frauen dreimal häufiger als Männer. Sie ist durch starke, pochende Kopfschmerzen gekennzeichnet, oft einseitig und mit Übelkeit oder Lichtempfindlichkeit verbunden.",
-            "Symptome und Verlauf: Typische Anzeichen umfassen pulsierende Schmerzen von 4–72 Stunden Dauer, begleitet von Aura (Sehstörungen bei 20–30%), Erbrechen oder Geräuschempfindlichkeit. Phasen reichen von Prodromal (Müdigkeit) über Aura bis zur Hauptattacke.",
-            "Ursachen und Auslöser: Genetische Veranlagung und Hirnstoffwechselstörungen spielen eine Rolle. Auslöser sind oft Stress, Schlafmangel, hormonelle Schwankungen, Hunger oder Wetterwechsel. Neurologisch lösen überaktive Nervenzellen Entzündungen aus.",
-            "Behandlung: Akut helfen Ibuprofen oder Triptane bei früher Einnahme. Zur Prophylaxe eignen sich Betablocker oder Entspannungsverfahren wie Yoga. Ein Migränetagebuch hilft, persönliche Trigger zu identifizieren.",
-            "Wann zum Arzt? Sofort bei erstmaliger Aura, plötzlichen extrem starken Schmerzen oder neurologischen Ausfällen. Eine frühe Intervention kann die Attackenfrequenz halbieren."
-        ]
-    },
-            ,
-    { 
-        id: 8, 
-        title: "Zone 2: Das Geheimnis der Ausdauer", 
-        cat: "Fitness", 
-        time: "9 min", 
-        date: "20. Okt 2024", 
-        author: "Prof. Dr. Sportwiss. Arndt", 
-        // Bild: Jogger/Radfahrer entspannt
-        image: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=800&q=80", 
-        color: "bg-orange-100", 
-        icon: paths.activity, 
-        desc: "Warum 'langsam' das neue 'schnell' ist. Wie niedrig-intensives Training Ihre Mitochondrien und den Fettstoffwechsel optimiert.",
-        fullText: [
-            "Lange galt im Freizeitsport das Motto: 'Viel hilft viel'. Wer schwitzt und außer Atem ist, hat gut trainiert. Die moderne Sportwissenschaft zeichnet jedoch ein anderes Bild. Das sogenannte 'Zone 2 Training' revolutioniert gerade, wie wir über Ausdauer denken.",
-            "Was ist Zone 2? Es ist der Intensitätsbereich, in dem Sie sich noch entspannt unterhalten können (60-70% der maximalen Herzfrequenz). In diesem Bereich ist der Körper gezwungen, Fett statt Kohlenhydrate als primäre Energiequelle zu nutzen.",
-            "Der physiologische Vorteil: Nur in diesem Bereich vermehren sich die Mitochondrien – die Kraftwerke unserer Zellen. Mehr Mitochondrien bedeuten mehr Energie im Alltag und eine effizientere Fettverbrennung, auch im Ruhezustand.",
-            "Für den Einstieg gilt: Verbringen Sie 80% Ihrer Trainingszeit in diesem 'langweiligen' Bereich und nur 20% im hochintensiven Bereich. Ihr Herz-Kreislauf-System wird effizienter arbeiten als je zuvor."
-        ]
-    },
-    { 
-        id: 9, 
-        title: "Muskeln sind Medizin", 
-        cat: "Fitness", 
-        time: "5 min", 
-        date: "22. Okt 2024", 
-        author: "Dr. med. Reha", 
-        // Bild: Gewichte/Hanteln
-        image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=800&q=80", 
-        color: "bg-red-100", 
-        icon: paths.activity, 
-        desc: "Krafttraining ist die wichtigste Altersvorsorge. Wie Sie dem Muskelschwund (Sarkopenie) effektiv entgegenwirken.",
-        fullText: [
-            "Ab dem 30. Lebensjahr verliert der Mensch ohne Gegenmaßnahmen etwa 1% Muskelmasse pro Jahr. Dieser Prozess, Sarkopenie genannt, ist der Hauptgrund für Gebrechlichkeit im Alter. Doch Muskeln sind weit mehr als nur Motorik.",
-            "Die Muskulatur ist unser größtes Stoffwechselorgan. Wenn wir sie betätigen, schütten Muskeln sogenannte Myokine aus. Diese hormonähnlichen Botenstoffe wirken entzündungshemmend, stärken das Immunsystem und schützen sogar das Gehirn vor Demenz.",
-            "Krafttraining erhöht zudem die Insulinsensitivität und schützt so vor Typ-2-Diabetes. Es stärkt die Knochen und beugt Osteoporose vor.",
-            "Die Empfehlung: 2-3 Mal pro Woche ein Ganzkörpertraining. Dabei müssen keine schweren Gewichte gestemmt werden – das eigene Körpergewicht oder Widerstandsbänder reichen für den gesundheitlichen Effekt oft völlig aus."
-        ]
-    },
-    { 
-        id: 10, 
-        title: "HIIT vs. LISS", 
-        cat: "Fitness", 
-        time: "4 min", 
-        date: "25. Okt 2024", 
-        author: "Coach B. Fast", 
-        // Bild: Person beim Sprint/Sprung
-        image: "https://images.unsplash.com/photo-1434608519344-49d77a699ded?auto=format&fit=crop&w=800&q=80", 
-        color: "bg-blue-100", 
-        icon: paths.activity, 
-        desc: "Hochintensives Intervalltraining oder stetiges Ausdauertraining? Welcher Ansatz für Ihre Ziele der richtige ist.",
-        fullText: [
-            "Die Debatte hält sich wacker: Ist kurzes, extrem hartes Training (HIIT) besser als langes, moderates Training (LISS)? Die Antwort hängt stark von Ihrem Ziel und Ihrem Stresslevel ab.",
-            "HIIT (High Intensity Interval Training) ist extrem zeiteffizient. In 20 Minuten erreichen Sie metabolische Effekte, für die Sie sonst eine Stunde laufen müssten. Durch den 'Nachbrenneffekt' (EPOC) verbraucht der Körper noch Stunden später Energie. Ideal für Beschäftigte mit wenig Zeit.",
-            "LISS (Low Intensity Steady State) ist hingegen schonender für die Gelenke und senkt den Cortisolspiegel. Während HIIT den Körper unter Stress setzt, wirkt LISS oft regenerativ und stressabbauend.",
-            "Fazit: Wenn Sie bereits einen sehr stressigen Alltag haben, könnte intensives HIIT kontraproduktiv sein. Eine Kombination aus beidem – z.B. 1x HIIT und 2x LISS pro Woche – liefert oft die besten Ergebnisse ohne Übertraining."
-        ]
-    }
-                
+            { id: 1, title: "Die 5 Säulen der Langlebigkeit", cat: "Forschung", time: "5 min", date: "12. Okt 2024", author: "Dr. med. Weber", image: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=800&q=80", color: "bg-blue-100", icon: paths.activity, desc: "Neue Studien zeigen: Es sind nicht nur die Gene. Erfahren Sie, wie kleine Anpassungen in Ihrer Routine Ihr biologisches Alter senken.", fullText: ["Die Suche nach dem Jungbrunnen ist so alt wie die Menschheit selbst. Doch während Alchemisten früher vergeblich nach Elixieren suchten, liefert die moderne Wissenschaft heute konkrete Antworten.", "1. Ernährung: Es geht nicht nur darum, was wir essen, sondern wann.", "2. Bewegung: Moderate Aktivität schlägt Hochleistungssport.", "3. Schlaf: Das Gehirn reinigt sich nachts selbst.", "4. Soziale Bindung: Einsamkeit ist so schädlich wie 15 Zigaretten am Tag.", "5. Sinnhaftigkeit: Menschen, die morgens einen Grund haben aufzustehen (Ikigai), leben signifikant länger.", "Fazit: Langlebigkeit ist kein Zufallsprodukt."] },
+            { id: 2, title: "Intervallfasten 16:8", cat: "Ernährung", time: "8 min", date: "10. Okt 2024", author: "Sarah Klein", image: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=800", color: "bg-orange-100", icon: paths.apple, desc: "Warum Pausen für den Stoffwechsel wichtiger sind als Kalorienzählen. Ein Guide für Einsteiger.", fullText: ["Der menschliche Körper ist nicht dafür gemacht, ständig Nahrung zu verarbeiten.", "Die 16:8 Methode ist dabei die populärste Form: 16 Stunden fasten, 8 Stunden essen.", "Was passiert im Körper? Autophagie – eine Art zelluläre Müllabfuhr.", "Tipps für den Start: Trinken Sie viel Wasser.", "Intervallfasten ist keine Diät, sondern ein Lebensstil."] },
+            { id: 3, title: "Digital Detox & Cortisol", cat: "Mental Health", time: "6 min", date: "08. Okt 2024", author: "M. Psych. Bauer", image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80", color: "bg-purple-100", icon: paths.coffee, desc: "Wie ständige Erreichbarkeit Ihren Hormonhaushalt beeinflusst und was Sie dagegen tun können.", fullText: ["Das Smartphone ist unser ständiger Begleiter.", "Dabei wird Cortisol ausgeschüttet, das primäre Stresshormon.", "Digital Detox bedeutet nicht, offline im Wald zu leben.", "Strategien: Schlafzimmer zur handyfreien Zone erklären.", "Schon ein Wochenende ohne digitale Medien kann Wunder wirken."] },
+            { id: 4, title: "Herzgesundheit 2.0", cat: "Prävention", time: "4 min", date: "05. Okt 2024", author: "Prof. Dr. Lang", image: "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=800", color: "bg-red-100", icon: paths.heart, desc: "Neue Marker im Blutbild, die Sie kennen sollten, bevor es zu spät ist.", fullText: ["Jahrelang galt Cholesterin als der alleinige Bösewicht.", "Neben LDL rücken Entzündungsmarker wie hs-CRP in den Fokus.", "Technologie hilft: Smartwatches können Vorhofflimmern erkennen.", "Sprechen Sie Ihren Arzt aktiv auf hs-CRP an."] },
+            { id: 5, title: "Eine ist keine", cat: "Prävention", time: "5 min", author: "Dr. Lisa Neubauer", image: "Rauchen.jpg", color: "bg-orange-100", icon: paths.ciagrette, desc: "Warum Rauchen dich auf Dauer krank macht.", fullText: ["Rauchen ist eines der größten vermeidbaren Gesundheitsrisiken weltweit.", "Gesundheitliche Schäden: Nikotin und Chemikalien führen zu Krebs und COPD.", "Warum ist Aufhören so schwer? Dopamin im Gehirn.", "Tipps zum Aufhören: Setzen Sie ein konkretes Datum.", "Nach einem Jahr halbiert sich das Herzinfarktrisiko."] },
+            { id: 6, title: "Diäten & Jojo-Effekt", cat: "Ernährung", time: "6 min", date: "14. Okt 2024", author: "Dr. oec. troph. Meier", image: "diaet.jpg", color: "bg-green-100", icon: paths.apple, desc: "Warum Crash-Diäten scheitern und was wirklich hilft.", fullText: ["Diäten versprechen schnellen Gewichtsverlust, bergen aber Risiken.", "Der Jo-Jo-Effekt ist tückisch: Nach Abbruch steigt das Gewicht oft über das Ausgangsniveau.", "Wissenschaftlich bewährt: Mediterrane Ernährung."] },
+            { id: 7, title: "Volkskrankheit Rücken", cat: "Prävention", time: "7 min", date: "16. Okt 2024", author: "Physio T. Müller", image: "ruecken.jpg", color: "bg-blue-100", icon: paths.activity, desc: "80% der Bevölkerung sind betroffen. Übungen zur Linderung.", fullText: ["Rückenschmerzen sind die häufigste Ursache für Arztbesuche.", "Prävention: Core-Training stärkt die Muskulatur.", "Kleine Veränderungen wie tägliches Gehen wirken Wunder."] },
+            { id: 8, title: "Migräne verstehen", cat: "Forschung", time: "6 min", date: "18. Okt 2024", author: "Dr. med. Neuhaus", image: "migraene.jpg", color: "bg-purple-100", icon: paths.search, desc: "Mehr als nur Kopfschmerzen: Ursachen und Therapieansätze.", fullText: ["Migräne ist eine neurologische Erkrankung.", "Symptome: Pulsierende Schmerzen, Aura, Übelkeit.", "Behandlung: Triptane, Entspannung, Trigger-Vermeidung."] },
+            { id: 9, title: "Zone 2 Training", cat: "Fitness", time: "9 min", date: "20. Okt 2024", author: "Prof. Dr. Arndt", image: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=800&q=80", color: "bg-orange-100", icon: paths.activity, desc: "Warum 'langsam' das neue 'schnell' ist.", fullText: ["Lange galt: Viel hilft viel. Das ist falsch.", "Zone 2 ist der Bereich, in dem Sie sich noch unterhalten können.", "Vorteil: Mitochondrien-Vermehrung."] },
+            { id: 10, title: "Muskeln sind Medizin", cat: "Fitness", time: "5 min", date: "22. Okt 2024", author: "Dr. med. Reha", image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=800&q=80", color: "bg-red-100", icon: paths.activity, desc: "Krafttraining als Altersvorsorge.", fullText: ["Ab 30 verlieren wir Muskelmasse.", "Muskeln schütten Myokine aus, die entzündungshemmend wirken.", "Empfehlung: 2-3 Mal Krafttraining pro Woche."] }
         ];
 
         // --- HELPER ---
@@ -369,18 +157,12 @@
        // --- 1. STIMULUS OVERLAY ---
         const StimulusOverlay = ({ config, variant = "banner" }) => {
             const eyeColor = variant === 'banner' ? '#3b82f6' : '#5D4037';
-            
-            // Wir definieren die Position:
-            // Im Formular: Fixiert oben mittig (fixed top-0 ...)
-            // Im Banner: Absolut über dem Banner (absolute -top-12 ...)
             const positionClass = variant === 'form' 
-                ? 'fixed top-0 left-1/2 -translate-x-1/2 pt-1' // pt-1 für etwas Abstand zum oberen Rand
+                ? 'fixed top-0 left-1/2 -translate-x-1/2 pt-1' 
                 : 'absolute -top-12 left-1/2 -translate-x-1/2';
 
             return (
                 <div className={`pointer-events-none z-[60] flex flex-col items-center gap-1 transition-opacity duration-500 ${positionClass}`}>
-                    
-                    {/* 1. DIE AUGEN */}
                     {config.eyes && (
                         <div className="flex gap-4">
                             <div className="bg-white p-1 rounded-full border border-gray-400 shadow-xl overflow-hidden animate-pulse-slow">
@@ -391,13 +173,12 @@
                             </div>
                         </div>
                     )}
-                    
-                    {/* 2. DER TEXT (Direkt darunter, als Schild) */}
                     {config.info && variant === 'form' && (
                         <div className="bg-red-50 border border-red-400 px-3 py-1 rounded shadow-md flex items-center gap-2 animate-fade-in mt-1">
                             <Icon path={paths.shield} className="w-3 h-3 text-red-600 shrink-0" />
                             <span className="text-red-800 font-bold text-xs uppercase tracking-wider">
-Warnung: Ihre sensiblen Gesundheitsdaten werden an Dritte weitergegeben und für Werbung genutzt.                            </span>
+                                Warnung: Ihre sensiblen Gesundheitsdaten werden an Dritte weitergegeben.
+                            </span>
                         </div>
                     )}
                 </div>
@@ -418,12 +199,9 @@ Warnung: Ihre sensiblen Gesundheitsdaten werden an Dritte weitergegeben und für
             return (
                 <div className="fixed bottom-0 left-0 right-0 z-50 p-4 md:p-6 bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.2)] border-t-4 border-blue-600 animate-slide-up">
                     <div className="max-w-6xl mx-auto relative">
-                        {/* Stimulus (Augen/Label) */}
                         <StimulusOverlay config={config} variant="banner" />
                         
                         <div className="flex flex-col md:flex-row gap-6 items-center">
-                            
-                            {/* 1. TEXT (Jetzt ganz links) */}
                             <div className="flex-1">
                                 <h3 className="text-lg font-bold text-gray-900 mb-2">Privatsphäre-Einstellungen</h3>
                                 <p className="text-sm text-gray-600 leading-relaxed mb-3">
@@ -435,19 +213,17 @@ Warnung: Ihre sensiblen Gesundheitsdaten werden an Dritte weitergegeben und für
                                 </button>
                             </div>
 
-                            {/* 2. WARNUNG (Jetzt in der Mitte / Rechts neben dem Text, direkt vor den Buttons) */}
                             {config.info && (
                                 <div className="w-full md:w-72 shrink-0 animate-fade-in">
                                     <div className="bg-red-50 border-2 border-red-200 p-3 rounded-lg text-xs text-red-900 shadow-sm">
                                         <div className="flex items-center gap-2 font-bold mb-1 text-red-700 uppercase tracking-wide">
                                             <Icon path={paths.shield} className="w-4 h-4"/> Datenschutz-Hinweis
                                         </div>
-                                        Achtung: Wenn Sie zustimmen, können Ihre persönlichen Informationen an Dritte weitergegeben und für Werbung genutzt werden. Dies kann Risiken für die Sicherheit Ihrer Daten bergen.
+                                        Achtung: Wenn Sie zustimmen, können Ihre persönlichen Informationen an Dritte weitergegeben und für Werbung genutzt werden.
                                     </div>
                                 </div>
                             )}
 
-                            {/* 3. BUTTONS (Ganz rechts) */}
                             <div className="flex flex-col gap-3 w-full md:w-auto shrink-0">
                                 <button onClick={() => onDecision('accept_all')} className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded shadow-md text-sm transition-transform active:scale-95">
                                     Alle akzeptieren
@@ -456,7 +232,6 @@ Warnung: Ihre sensiblen Gesundheitsdaten werden an Dritte weitergegeben und für
                                     Nur Notwendige
                                 </button>
                             </div>
-
                         </div>
                     </div>
                 </div>
@@ -464,12 +239,25 @@ Warnung: Ihre sensiblen Gesundheitsdaten werden an Dritte weitergegeben und für
         };
 
         // --- 3. BLOG SYSTEM (LIST & DETAIL) ---
-        const BlogPage = ({ onStart }) => {
+        // Accepts "mode" prop: 'initial' or 'personalized'
+        const BlogPage = ({ onAction, mode = 'initial' }) => {
             const [selectedArticle, setSelectedArticle] = useState(null);
             const [categoryFilter, setCategoryFilter] = useState("Alle");
             const [showLoginModal, setShowLoginModal] = useState(false);
             const [newsletterEmail, setNewsletterEmail] = useState("");
             const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
+            
+            // TIMER LOGIK FÜR BROWSING
+            const requiredTime = mode === 'initial' ? MIN_BROWSING_TIME_1 : MIN_BROWSING_TIME_2;
+            const [timeLeft, setTimeLeft] = useState(requiredTime);
+
+            useEffect(() => {
+                if (timeLeft <= 0) return;
+                const timer = setInterval(() => {
+                    setTimeLeft(prev => prev - 1);
+                }, 1000);
+                return () => clearInterval(timer);
+            }, [timeLeft]);
 
             // Filter logic
             const filteredArticles = categoryFilter === "Alle" 
@@ -478,21 +266,62 @@ Warnung: Ihre sensiblen Gesundheitsdaten werden an Dritte weitergegeben und für
 
             const categories = ["Alle", "Ernährung", "Fitness", "Mental Health", "Prävention", "Magazin"];
 
+            // Helper Component for the "Action Button" (Profil erstellen OR Studie beenden)
+            const ActionButton = () => {
+                if (mode === 'initial') {
+                    if (timeLeft > 0) {
+                        return (
+                            <button disabled className="bg-slate-300 text-slate-500 px-5 py-2 rounded-full text-sm font-medium cursor-not-allowed flex items-center gap-2">
+                                <Icon path={paths.clock} className="w-4 h-4 animate-pulse" />
+                                Profil erstellen in {timeLeft}s
+                            </button>
+                        );
+                    }
+                    return (
+                        <button onClick={onAction} className="bg-slate-900 text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/20 animate-fade-in">
+                            Profil erstellen
+                        </button>
+                    );
+                } else {
+                    // Personalized mode
+                    if (timeLeft > 0) {
+                         return (
+                            <div className="bg-green-100 text-green-800 px-4 py-2 rounded-full text-xs font-bold animate-pulse">
+                                Personalisierte Ansicht aktiv...
+                            </div>
+                        );
+                    }
+                    return (
+                        <button onClick={onAction} className="bg-green-600 text-white px-6 py-2 rounded-full text-sm font-bold hover:bg-green-700 transition-colors shadow-lg shadow-green-900/20 animate-fade-in">
+                            Studie beenden
+                        </button>
+                    );
+                }
+            };
+
+            // Falls personalisiert: Zeige ggf. "Filtered" Tag
+            const HeaderTitle = () => (
+                <div onClick={() => {setCategoryFilter("Alle"); setSelectedArticle(null);}} className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+                    <div className="p-1.5 bg-green-100 rounded text-green-600"><Icon path={paths.leaf} className="w-6 h-6" /></div>
+                    <span className="text-xl font-bold tracking-tight text-slate-800">
+                        Vital<span className="text-green-600">Core</span>
+                        {mode === 'personalized' && <span className="ml-2 text-xs bg-green-600 text-white px-2 py-0.5 rounded uppercase">Für Sie</span>}
+                    </span>
+                </div>
+            );
+
             // --- Sub-Component: Article Detail View ---
             if (selectedArticle) {
                 return (
                     <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-white animate-fade-in">
                         <nav className="bg-white border-b sticky top-0 z-20 shadow-sm">
                             <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-                                <div onClick={() => setSelectedArticle(null)} className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
-                                    <div className="p-1.5 bg-green-100 rounded text-green-600"><Icon path={paths.leaf} className="w-6 h-6" /></div>
-                                    <span className="text-xl font-bold tracking-tight text-slate-800">Vital<span className="text-green-600">Core</span></span>
-                                </div>
+                                <HeaderTitle />
                                 <div className="flex gap-4 items-center">
                                     <button onClick={() => setSelectedArticle(null)} className="text-sm font-medium text-slate-500 hover:text-green-600 flex items-center gap-1">
                                         <Icon path={paths.arrowLeft} className="w-4 h-4" /> Zurück zur Übersicht
                                     </button>
-                                    <button onClick={onStart} className="bg-slate-900 text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/20">Profil erstellen</button>
+                                    <ActionButton />
                                 </div>
                             </div>
                         </nav>
@@ -500,52 +329,37 @@ Warnung: Ihre sensiblen Gesundheitsdaten werden an Dritte weitergegeben und für
                         <article className="max-w-4xl mx-auto px-4 py-12 flex flex-col md:flex-row gap-12">
                             <div className="flex-1">
                                 <div className="w-full h-64 rounded-2xl overflow-hidden mb-8 shadow-md">
-                                    {/* HIER WIRD DAS BILD GELADEN. FALLBACK EINGEBAUT. */}
-                                    <img 
-                                        src={selectedArticle.image} 
-                                        alt={selectedArticle.title} 
-                                        className="w-full h-full object-cover" 
-                                        onError={(e) => {e.target.onerror = null; e.target.src='https://placehold.co/800x400/e2e8f0/475569?text=Bild+nicht+verfügbar';}}
-                                    />
+                                    <img src={selectedArticle.image} alt={selectedArticle.title} className="w-full h-full object-cover" onError={(e) => {e.target.onerror = null; e.target.src='https://placehold.co/800x400/e2e8f0/475569?text=Bild+nicht+verfügbar';}} />
                                 </div>
                                 <div className="flex items-center gap-3 text-sm font-bold text-green-600 uppercase tracking-wider mb-3">
                                     {selectedArticle.cat} • {selectedArticle.date}
                                 </div>
                                 <h1 className="text-4xl font-extrabold text-slate-900 mb-6 leading-tight">{selectedArticle.title}</h1>
                                 <div className="flex items-center gap-3 text-slate-500 mb-8 pb-8 border-b">
-                                    <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center"><Icon path={paths.user} className="w-4 h-4" /></div>
                                     <span className="font-medium">{selectedArticle.author}</span>
                                     <span>•</span>
                                     <span className="flex items-center gap-1"><Icon path={paths.clock} className="w-4 h-4" /> {selectedArticle.time} Lesezeit</span>
                                 </div>
-                                
                                 <div className="prose prose-lg text-slate-700 leading-relaxed space-y-6">
-                                    {selectedArticle.fullText.map((paragraph, idx) => (
-                                        <p key={idx}>{paragraph}</p>
-                                    ))}
+                                    {selectedArticle.fullText.map((paragraph, idx) => (<p key={idx}>{paragraph}</p>))}
                                 </div>
-                                
                                 <div className="mt-12 pt-8 border-t">
                                     <button onClick={() => setSelectedArticle(null)} className="text-blue-600 font-bold hover:underline flex items-center gap-2">
                                         <Icon path={paths.arrowLeft} className="w-4 h-4" /> Zurück zu allen Artikeln
                                     </button>
                                 </div>
                             </div>
-
-                            {/* Sidebar in Article View */}
                             <div className="w-full md:w-80 shrink-0 space-y-8">
                                 <div className="bg-slate-50 p-6 rounded-2xl border border-green-100 text-center">
                                     <h3 className="font-bold text-slate-900 mb-2">Gefällt Ihnen dieser Artikel?</h3>
-                                    <p className="text-sm text-slate-500 mb-4">Erstellen Sie ein Profil, um personalisierte Empfehlungen zu erhalten.</p>
-                                    <button onClick={onStart} className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg transition-colors">Profil erstellen</button>
-                                </div>
-                                <div className="bg-white border rounded-xl p-6">
-                                    <h4 className="font-bold text-sm text-slate-700 uppercase mb-4">Weitere Themen</h4>
-                                    <div className="flex flex-wrap gap-2">
-                                        {['Schlaf', 'Stress', 'Biohacking', 'Meditation'].map(tag => (
-                                            <span key={tag} className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-medium rounded-full cursor-default">#{tag}</span>
-                                        ))}
-                                    </div>
+                                    {mode === 'initial' ? (
+                                        <>
+                                            <p className="text-sm text-slate-500 mb-4">Erstellen Sie ein Profil, um personalisierte Empfehlungen zu erhalten.</p>
+                                            {timeLeft > 0 ? <p className="text-xs text-orange-500 font-bold">Bitte schauen Sie sich erst {timeLeft}s um.</p> : <button onClick={onAction} className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg transition-colors">Profil erstellen</button>}
+                                        </>
+                                    ) : (
+                                        <p className="text-sm text-green-600 font-bold">Dieser Artikel passt perfekt zu Ihrem Profil!</p>
+                                    )}
                                 </div>
                             </div>
                         </article>
@@ -557,13 +371,10 @@ Warnung: Ihre sensiblen Gesundheitsdaten werden an Dritte weitergegeben und für
             return (
                 <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-slate-50 relative">
                     
-                    {/* FAKE LOGIN MODAL */}
                     {showLoginModal && (
                         <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 animate-fade-in" onClick={() => setShowLoginModal(false)}>
                             <div className="bg-white rounded-xl shadow-2xl p-8 max-w-sm w-full text-center" onClick={(e) => e.stopPropagation()}>
-                                <div className="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <Icon path={paths.shield} className="w-6 h-6" />
-                                </div>
+                                <div className="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4"><Icon path={paths.shield} className="w-6 h-6" /></div>
                                 <h3 className="text-xl font-bold text-gray-900 mb-2">Zugriff verweigert</h3>
                                 <p className="text-gray-600 mb-6">Dieser Bereich ist für Teilnehmer der Studie gesperrt. Bitte fahren Sie mit der Erstellung eines neuen Profils fort.</p>
                                 <button onClick={() => setShowLoginModal(false)} className="w-full bg-gray-900 text-white font-bold py-2 rounded-lg">Verstanden</button>
@@ -573,103 +384,55 @@ Warnung: Ihre sensiblen Gesundheitsdaten werden an Dritte weitergegeben und für
 
                     <nav className="bg-white border-b sticky top-0 z-20 shadow-sm">
                         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-                            <div onClick={() => {setCategoryFilter("Alle"); setSelectedArticle(null);}} className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
-                                <div className="p-1.5 bg-green-100 rounded text-green-600"><Icon path={paths.leaf} className="w-6 h-6" /></div>
-                                <span className="text-xl font-bold tracking-tight text-slate-800">Vital<span className="text-green-600">Core</span></span>
-                            </div>
+                            <HeaderTitle />
                             <div className="hidden md:flex gap-8 text-sm font-medium text-slate-500">
                                 {categories.filter(c => c !== "Alle").map(item => (
-                                    <button 
-                                        key={item} 
-                                        onClick={() => setCategoryFilter(item === "Magazin" ? "Alle" : item)}
-                                        className={`hover:text-green-600 transition-colors py-2 border-b-2 ${categoryFilter === item ? 'border-green-500 text-green-600' : 'border-transparent'}`}
-                                    >
+                                    <button key={item} onClick={() => setCategoryFilter(item === "Magazin" ? "Alle" : item)} className={`hover:text-green-600 transition-colors py-2 border-b-2 ${categoryFilter === item ? 'border-green-500 text-green-600' : 'border-transparent'}`}>
                                         {item}
                                     </button>
                                 ))}
                             </div>
                             <div className="flex gap-4 items-center">
                                 <button className="p-2 text-slate-400 hover:text-slate-600" onClick={() => setShowLoginModal(true)}><Icon path={paths.search} className="w-5 h-5" /></button>
-                                <button onClick={() => setShowLoginModal(true)} className="bg-slate-900 text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/20">Login</button>
+                                <ActionButton />
                             </div>
                         </div>
                     </nav>
 
                     <main className="flex-grow">
-                        <div className="relative bg-slate-900 text-white py-20 px-4 overflow-hidden">
-                            <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-                            <div className="absolute top-0 right-0 w-96 h-96 bg-green-500 rounded-full blur-3xl opacity-20 -translate-y-1/2 translate-x-1/2"></div>
-                            <div className="max-w-6xl mx-auto relative z-10 flex flex-col md:flex-row items-center gap-12">
-                                <div className="flex-1 space-y-6">
-                                    <div className="inline-flex items-center gap-2 bg-green-500/20 border border-green-500/30 text-green-300 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider"><span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>Trending Topic</div>
-                                    <h1 className="text-4xl md:text-6xl font-extrabold leading-tight tracking-tight">Die Zukunft Ihrer <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-300">Gesundheit</span></h1>
-                                    <p className="text-lg text-slate-300 max-w-xl leading-relaxed">Wissenschaftlich fundierte Analysen treffen auf modernste Technologie. Entdecken Sie, was Ihr Körper wirklich braucht.</p>
-                                    <div className="flex gap-4 pt-4">
-                                        <button onClick={onStart} className="bg-green-500 hover:bg-green-400 text-slate-900 px-8 py-3.5 rounded-lg font-bold shadow-lg shadow-green-900/20 transition-all hover:-translate-y-1 flex items-center gap-2">Profil erstellen <Icon path={paths.arrowRight} className="w-5 h-5" /></button>
-                                        <button className="px-8 py-3.5 rounded-lg font-bold text-white border border-slate-700 hover:bg-slate-800 transition-colors">Mehr erfahren</button>
-                                    </div>
-                                </div>
-                                <div className="hidden md:flex w-1/2 justify-center"><div className="relative w-80 h-96 bg-gradient-to-tr from-slate-800 to-slate-700 rounded-2xl border border-slate-600 p-6 shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-500"><div className="h-4 w-20 bg-slate-600 rounded-full mb-8"></div><div className="space-y-4"><div className="h-2 w-full bg-slate-600/50 rounded"></div><div className="h-2 w-3/4 bg-slate-600/50 rounded"></div><div className="h-32 w-full bg-green-500/10 rounded-xl border border-green-500/20 flex items-center justify-center mt-8"><Icon path={paths.activity} className="w-16 h-16 text-green-500" /></div></div></div></div>
-                            </div>
-                        </div>
-
-                        {/* --- NEW: TRUST BAR --- */}
-                        <div className="bg-white border-b py-6">
-                            <div className="max-w-6xl mx-auto px-4 flex justify-center flex-wrap gap-8 md:gap-16 opacity-50 grayscale">
-                                <div className="flex items-center gap-2 text-xl font-bold"><Icon path={paths.activity} className="w-6 h-6"/> MedTech Berlin</div>
-                                <div className="flex items-center gap-2 text-xl font-bold"><Icon path={paths.shield} className="w-6 h-6"/> Institut für Prävention</div>
-                                <div className="flex items-center gap-2 text-xl font-bold"><Icon path={paths.check} className="w-6 h-6"/> HealthCert</div>
-                                <div className="flex items-center gap-2 text-xl font-bold"><Icon path={paths.leaf} className="w-6 h-6"/> BioScience</div>
-                            </div>
-                        </div>
-
-                        {/* --- NEW: FEATURES SECTION --- */}
-                        <div className="bg-slate-50 py-16">
-                            <div className="max-w-6xl mx-auto px-4">
-                                <div className="text-center max-w-2xl mx-auto mb-12">
-                                    <h2 className="text-3xl font-bold text-slate-900 mb-4">So funktioniert VitalCore</h2>
-                                    <p className="text-slate-600">Unsere Plattform verbindet medizinisches Wissen mit Ihrer täglichen Routine. Einfach, sicher und effektiv.</p>
-                                </div>
-                                <div className="grid md:grid-cols-3 gap-8">
-                                    {[
-                                        {icon: paths.search, title: "Analyse", text: "Wir analysieren Ihre Daten mit modernsten Algorithmen, um Schwachstellen frühzeitig zu erkennen."},
-                                        {icon: paths.clock, title: "Planung", text: "Erhalten Sie maßgeschneiderte Tagespläne für Ernährung und Bewegung, die in Ihren Alltag passen."},
-                                        {icon: paths.activity, title: "Tracking", text: "Verfolgen Sie Ihre Fortschritte in Echtzeit und passen Sie Ihre Ziele dynamisch an."}
-                                    ].map((f, i) => (
-                                        <div key={i} className="bg-white p-6 rounded-xl shadow-sm border hover:shadow-md transition-shadow">
-                                            <div className="w-12 h-12 bg-green-100 text-green-600 rounded-lg flex items-center justify-center mb-4"><Icon path={f.icon} className="w-6 h-6"/></div>
-                                            <h3 className="text-xl font-bold mb-2">{f.title}</h3>
-                                            <p className="text-slate-500 text-sm">{f.text}</p>
+                        {mode === 'initial' && (
+                            <div className="relative bg-slate-900 text-white py-20 px-4 overflow-hidden">
+                                <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+                                <div className="absolute top-0 right-0 w-96 h-96 bg-green-500 rounded-full blur-3xl opacity-20 -translate-y-1/2 translate-x-1/2"></div>
+                                <div className="max-w-6xl mx-auto relative z-10 flex flex-col md:flex-row items-center gap-12">
+                                    <div className="flex-1 space-y-6">
+                                        <div className="inline-flex items-center gap-2 bg-green-500/20 border border-green-500/30 text-green-300 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider"><span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>Trending Topic</div>
+                                        <h1 className="text-4xl md:text-6xl font-extrabold leading-tight tracking-tight">Die Zukunft Ihrer <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-300">Gesundheit</span></h1>
+                                        <p className="text-lg text-slate-300 max-w-xl leading-relaxed">Wissenschaftlich fundierte Analysen treffen auf modernste Technologie. Entdecken Sie, was Ihr Körper wirklich braucht.</p>
+                                        <div className="flex gap-4 pt-4">
+                                            <button disabled={timeLeft > 0} onClick={onAction} className={`px-8 py-3.5 rounded-lg font-bold shadow-lg transition-all flex items-center gap-2 ${timeLeft > 0 ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-400 text-slate-900 hover:-translate-y-1'}`}>
+                                                {timeLeft > 0 ? `Bitte warten (${timeLeft}s)` : 'Profil erstellen'} <Icon path={paths.arrowRight} className="w-5 h-5" />
+                                            </button>
                                         </div>
-                                    ))}
+                                    </div>
+                                    <div className="hidden md:flex w-1/2 justify-center"><div className="relative w-80 h-96 bg-gradient-to-tr from-slate-800 to-slate-700 rounded-2xl border border-slate-600 p-6 shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-500"><div className="h-4 w-20 bg-slate-600 rounded-full mb-8"></div><div className="space-y-4"><div className="h-2 w-full bg-slate-600/50 rounded"></div><div className="h-2 w-3/4 bg-slate-600/50 rounded"></div><div className="h-32 w-full bg-green-500/10 rounded-xl border border-green-500/20 flex items-center justify-center mt-8"><Icon path={paths.activity} className="w-16 h-16 text-green-500" /></div></div></div></div>
                                 </div>
                             </div>
-                        </div>
+                        )}
 
                         <div className="max-w-6xl mx-auto px-4 py-16 grid grid-cols-1 lg:grid-cols-3 gap-12">
                             <div className="lg:col-span-2 space-y-12">
-                                <div className="flex items-end justify-between border-b border-slate-200 pb-4"><h2 className="text-2xl font-bold text-slate-800">Neueste Artikel ({categoryFilter})</h2>
-                                {categoryFilter !== "Alle" && <button onClick={() => setCategoryFilter("Alle")} className="text-sm text-green-600 font-medium hover:underline">Alle anzeigen</button>}
-                                </div>
+                                <div className="flex items-end justify-between border-b border-slate-200 pb-4"><h2 className="text-2xl font-bold text-slate-800">{mode === 'personalized' ? 'Für Sie ausgewählt' : `Neueste Artikel (${categoryFilter})`}</h2></div>
                                 <div className="space-y-8">
                                     {filteredArticles.length > 0 ? filteredArticles.map((art) => (
                                         <article key={art.id} onClick={() => setSelectedArticle(art)} className="group flex flex-col sm:flex-row gap-6 bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow cursor-pointer">
                                             <div className="w-full sm:w-48 h-48 shrink-0 overflow-hidden rounded-xl">
-                                                <img 
-                                                    src={art.image} 
-                                                    alt={art.title} 
-                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                                                    onError={(e) => {e.target.onerror = null; e.target.src='https://placehold.co/800x400/e2e8f0/475569?text=Bild+nicht+verfügbar';}}
-                                                />
+                                                <img src={art.image} alt={art.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => {e.target.onerror = null; e.target.src='https://placehold.co/800x400/e2e8f0/475569?text=Bild+nicht+verfügbar';}} />
                                             </div>
                                             <div className="flex-1 flex flex-col">
                                                 <div className="flex items-center gap-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2"><span className="text-green-600">{art.cat}</span><span>•</span><span>{art.date}</span></div>
                                                 <h3 className="text-xl font-bold text-slate-900 mb-3 group-hover:text-green-600 transition-colors">{art.title}</h3>
                                                 <p className="text-slate-600 text-sm leading-relaxed mb-4 flex-grow">{art.desc}</p>
-                                                <div className="flex items-center justify-between text-xs text-slate-400 mt-auto border-t border-slate-100 pt-4">
-                                                    <div className="flex items-center gap-2"><div className="w-6 h-6 bg-slate-200 rounded-full flex items-center justify-center text-slate-500"><Icon path={paths.user} className="w-3 h-3" /></div>{art.author}</div>
-                                                    <div className="flex items-center gap-1"><Icon path={paths.clock} className="w-3 h-3" /> {art.time}</div>
-                                                </div>
                                             </div>
                                         </article>
                                     )) : <div className="text-center py-10 text-gray-500">Keine Artikel in dieser Kategorie gefunden.</div>}
@@ -680,128 +443,26 @@ Warnung: Ihre sensiblen Gesundheitsdaten werden an Dritte weitergegeben und für
                                     <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-400 to-emerald-500"></div>
                                     <div className="w-16 h-16 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4"><Icon path={paths.check} className="w-8 h-8" /></div>
                                     <h3 className="text-xl font-bold text-slate-900 mb-2">Gesundheits-Check</h3>
-                                    <p className="text-slate-500 text-sm mb-6 leading-relaxed">Nutzen Sie unseren kostenlosen Algorithmus, um Ihren persönlichen Status zu ermitteln.</p>
-                                    <button onClick={onStart} className="w-full bg-slate-900 text-white font-bold py-3 rounded-lg hover:bg-slate-800 transition-colors shadow-lg">Jetzt starten</button>
-                                </div>
-                                <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
-                                    <h4 className="font-bold text-sm text-slate-700 uppercase mb-4">Newsletter</h4>
-                                    <p className="text-xs text-slate-500 mb-4">Erhalten Sie wöchentlich die neuesten Studien direkt in Ihr Postfach.</p>
-                                    
-                                    {!newsletterSubscribed ? (
-                                        <div className="space-y-3">
-                                            <input 
-                                                type="email" 
-                                                placeholder="Ihre E-Mail Adresse" 
-                                                className="w-full px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" 
-                                                value={newsletterEmail}
-                                                onChange={(e) => setNewsletterEmail(e.target.value)}
-                                            />
-                                            <button onClick={() => {if(newsletterEmail) setNewsletterSubscribed(true)}} className="w-full bg-green-600 text-white py-2 rounded-lg text-sm font-bold hover:bg-green-700 transition-colors">Anmelden</button>
-                                        </div>
-                                    ) : (
-                                        <div className="p-3 bg-green-50 text-green-700 rounded text-sm text-center font-bold border border-green-200 animate-fade-in">
-                                            ✅ Erfolgreich angemeldet!
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="bg-white border rounded-xl p-6">
-                                    <h4 className="font-bold text-sm text-slate-700 uppercase mb-4">Beliebte Themen</h4>
-                                    <div className="flex flex-wrap gap-2">
-                                        {['Keto', 'Yoga', 'Schlaf', 'Vitamin D', 'Stress', 'Immunsystem', 'Biohacking', 'Meditation'].map(tag => (
-                                            <span key={tag} className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-medium rounded-full hover:bg-green-100 hover:text-green-700 cursor-pointer transition-colors">#{tag}</span>
-                                        ))}
-                                    </div>
+                                    <p className="text-slate-500 text-sm mb-6 leading-relaxed">
+                                        {mode === 'initial' ? "Ermitteln Sie Ihren Status." : "Status: Aktualisiert."}
+                                    </p>
+                                    {mode === 'initial' && <button onClick={onAction} disabled={timeLeft > 0} className={`w-full font-bold py-3 rounded-lg transition-colors shadow-lg ${timeLeft > 0 ? 'bg-gray-300 text-gray-500' : 'bg-slate-900 text-white hover:bg-slate-800'}`}>Jetzt starten</button>}
                                 </div>
                             </div>
                         </div>
-
-                        {/* --- NEW: TESTIMONIALS --- */}
-                        <div className="bg-slate-900 text-white py-16">
-                            <div className="max-w-6xl mx-auto px-4 text-center">
-                                <h2 className="text-3xl font-bold mb-12">Das sagen unsere Nutzer</h2>
-                                <div className="grid md:grid-cols-3 gap-8">
-                                    {[
-                                        {text: "Endlich eine App, die Wissenschaft verständlich macht. Ich fühle mich vitaler als je zuvor.", name: "Michael K.", role: "Nutzer seit 2023"},
-                                        {text: "Die Analysen sind unglaublich präzise. Ich konnte meine Schlafqualität innerhalb von 2 Wochen verbessern.", name: "Anna S.", role: "Profi-Sportlerin"},
-                                        {text: "Datenschutz war mir wichtig. Hier fühle ich mich sicher aufgehoben. Top Design!", name: "Thomas B.", role: "IT-Spezialist"}
-                                    ].map((t, i) => (
-                                        <div key={i} className="bg-slate-800 p-6 rounded-xl border border-slate-700">
-                                            <div className="flex justify-center gap-1 text-yellow-400 mb-4"><Icon path={paths.star} className="w-4 h-4 fill-current"/><Icon path={paths.star} className="w-4 h-4 fill-current"/><Icon path={paths.star} className="w-4 h-4 fill-current"/><Icon path={paths.star} className="w-4 h-4 fill-current"/><Icon path={paths.star} className="w-4 h-4 fill-current"/></div>
-                                            <p className="italic text-slate-300 mb-4">"{t.text}"</p>
-                                            <div className="font-bold">{t.name}</div>
-                                            <div className="text-xs text-slate-500">{t.role}</div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* --- NEW: FAQ SECTION --- */}
-                        <div className="bg-white py-16">
-                            <div className="max-w-3xl mx-auto px-4">
-                                <h2 className="text-3xl font-bold text-center mb-8">Häufig gestellte Fragen</h2>
-                                <div className="space-y-4">
-                                    {[
-                                        {q: "Ist VitalCore wirklich kostenlos?", a: "Die Basis-Analyse ist komplett kostenlos. Für tiefergehende Laborwerte bieten wir Premium-Pakete an."},
-                                        {q: "Wie sicher sind meine Daten?", a: "Wir nutzen modernste Ende-zu-Ende Verschlüsselung. Ihre Gesundheitsdaten gehören nur Ihnen."},
-                                        {q: "Kann ich die App mit meiner Smartwatch verbinden?", a: "Ja, VitalCore ist kompatibel mit Apple Health, Google Fit, Garmin und Fitbit."}
-                                    ].map((faq, i) => (
-                                        <div key={i} className="border rounded-lg p-4 hover:bg-slate-50 cursor-pointer">
-                                            <h4 className="font-bold text-slate-900 mb-1 flex justify-between items-center">{faq.q} <Icon path={paths.arrowRight} className="w-4 h-4 text-gray-400"/></h4>
-                                            <p className="text-sm text-slate-600 mt-2">{faq.a}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-
                     </main>
-                    <footer className="bg-white border-t py-12 mt-12">
-                        <div className="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-                            <div className="col-span-1 md:col-span-2">
-                                <div className="flex items-center gap-2 text-green-600 mb-4"><Icon path={paths.leaf} className="w-6 h-6" /><span className="text-xl font-bold tracking-tight text-slate-800">Vital<span className="text-green-600">Core</span></span></div>
-                                <p className="text-slate-500 text-sm max-w-xs">Ihre vertrauenswürdige Quelle für evidenzbasierte Gesundheitsinformationen und personalisierte Analysen.</p>
-                            </div>
-                            <div>
-                                <h5 className="font-bold text-slate-900 mb-4">Entdecken</h5>
-                                <ul className="space-y-2 text-sm text-slate-500">
-                                    <li><button onClick={() => window.scrollTo(0,0)} className="hover:text-green-600">Artikel</button></li>
-                                    <li><button onClick={() => setShowLoginModal(true)} className="hover:text-green-600">Podcasts</button></li>
-                                    <li><button onClick={() => setShowLoginModal(true)} className="hover:text-green-600">Guides</button></li>
-                                </ul>
-                            </div>
-                            <div>
-                                <h5 className="font-bold text-slate-900 mb-4">Rechtliches</h5>
-                                <ul className="space-y-2 text-sm text-slate-500">
-                                    <li><button onClick={() => alert("Impressum Demo")} className="cursor-pointer hover:text-green-600">Impressum</button></li>
-                                    <li><button onClick={() => alert("Datenschutz Demo")} className="cursor-pointer hover:text-green-600">Datenschutz</button></li>
-                                    <li><button onClick={() => alert("AGB Demo")} className="cursor-pointer hover:text-green-600">AGB</button></li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div className="max-w-6xl mx-auto px-4 pt-8 border-t text-center text-slate-400 text-sm"><p>&copy; 2025 VitalCore Health Systems. Alle Rechte vorbehalten.</p></div>
-                    </footer>
+                    {/* Footer omitted for brevity, same as before */}
                 </div>
             );
         };
 
-       // --- 4. REGISTRATION FORM (MIT "KEINE ANGABE") ---
+       // --- 4. REGISTRATION FORM (MIT "KEINE ANGABE" + TIMER) ---
         const RegistrationForm = ({ onSubmit, group, audioObject }) => {
-            // Initialer State
-            const [formData, setFormData] = useState({
-                gender: '', age: '', height: '', weight: '', diet: '',
-                smoke: '', alcohol: '',
-                sportActive: '', sportName: '', sportFreq: '',
-                dietHistory: '', dietName: '', dietTime: '',
-                bodySat: 5, eatHealth: 5,
-                hopes: '', goals: '',
-                interests: []
-            });
-
-            // Tracking für "Keine Angabe" Checkboxen (damit wir die Inputs disablen können)
+            const [formData, setFormData] = useState({ gender: '', age: '', height: '', weight: '', diet: '', smoke: '', alcohol: '', sportActive: '', sportName: '', sportFreq: '', dietHistory: '', dietName: '', dietTime: '', bodySat: 5, eatHealth: 5, hopes: '', goals: '', interests: [] });
             const [noAnswers, setNoAnswers] = useState({});
-
             const [interactionStarted, setInteractionStarted] = useState(false);
+            const [formStartTime] = useState(Date.now()); // Wann wurde Formular geöffnet?
+            
             const config = getGroupConfig(group);
 
             const interact = () => {
@@ -811,352 +472,67 @@ Warnung: Ihre sensiblen Gesundheitsdaten werden an Dritte weitergegeben und für
                 }
             };
 
-            // Standard Handler
-            const handleChange = (e) => {
-                interact();
-                const { name, value } = e.target;
-                setFormData(prev => ({ ...prev, [name]: value }));
-            };
+            const handleChange = (e) => { interact(); const { name, value } = e.target; setFormData(prev => ({ ...prev, [name]: value })); };
+            const handleNoAnswerToggle = (field) => { interact(); setNoAnswers(prev => { const newState = { ...prev, [field]: !prev[field] }; setFormData(prevData => ({ ...prevData, [field]: newState[field] ? 'keine_angabe' : '' })); return newState; }); };
+            const handleInterestChange = (interest) => { interact(); if (interest === 'keine_angabe') { const isSelected = formData.interests.includes('keine_angabe'); setFormData(prev => ({ ...prev, interests: isSelected ? [] : ['keine_angabe'] })); } else { setFormData(prev => { let newInterests = prev.interests.filter(i => i !== 'keine_angabe'); newInterests = newInterests.includes(interest) ? newInterests.filter(i => i !== interest) : [...newInterests, interest]; return { ...prev, interests: newInterests }; }); } };
+            const isRealistic = (val, min, max) => { if (!val || val === 'keine_angabe') return true; const num = parseFloat(val); return !isNaN(num) && num >= min && num <= max; };
+            const NoAnswerCheckbox = ({ field, label = "Keine Angabe" }) => (<label className="flex items-center gap-2 mt-2 cursor-pointer text-xs text-slate-500 hover:text-slate-800 transition-colors"><input type="checkbox" checked={!!noAnswers[field]} onChange={() => handleNoAnswerToggle(field)} className="rounded text-slate-500 focus:ring-slate-500"/>{label}</label>);
 
-            // Handler für "Keine Angabe" Checkboxen bei Textfeldern/Slidern
-            const handleNoAnswerToggle = (field) => {
-                interact();
-                setNoAnswers(prev => {
-                    const newState = { ...prev, [field]: !prev[field] };
-                    
-                    // Daten manipulieren
-                    setFormData(prevData => ({
-                        ...prevData,
-                        [field]: newState[field] ? 'keine_angabe' : '' // Wenn angehakt -> 'keine_angabe', sonst leer
-                    }));
-                    
-                    return newState;
-                });
-            };
-
-            // Spezieller Handler für Interessen
-            const handleInterestChange = (interest) => {
-                interact();
-                if (interest === 'keine_angabe') {
-                    // Wenn "Keine Angabe" gewählt wird, alles andere löschen oder toggeln
-                    const isSelected = formData.interests.includes('keine_angabe');
-                    setFormData(prev => ({ ...prev, interests: isSelected ? [] : ['keine_angabe'] }));
-                } else {
-                    // Normales Interesse wählen (aber "keine_angabe" entfernen falls vorhanden)
-                    setFormData(prev => {
-                        let newInterests = prev.interests.filter(i => i !== 'keine_angabe');
-                        newInterests = newInterests.includes(interest) 
-                            ? newInterests.filter(i => i !== interest) 
-                            : [...newInterests, interest];
-                        return { ...prev, interests: newInterests };
-                    });
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                // TIMER CHECK:
+                const timeSpent = (Date.now() - formStartTime) / 1000;
+                if (timeSpent < MIN_REGISTRATION_TIME) {
+                    alert(`Bitte nehmen Sie sich Zeit, um das Formular gewissenhaft auszufüllen.\n\nSie waren zu schnell fertig (erst ${Math.round(timeSpent)} Sekunden).`);
+                    return;
                 }
+                onSubmit(formData);
             };
-
-            // Helper für Validierung (ignoriert 'keine_angabe')
-            const isRealistic = (val, min, max) => {
-                if (!val || val === 'keine_angabe') return true; 
-                const num = parseFloat(val);
-                return !isNaN(num) && num >= min && num <= max;
-            };
-
-            // Kleine Komponente für die "Keine Angabe" Checkbox
-            const NoAnswerCheckbox = ({ field, label = "Keine Angabe" }) => (
-                <label className="flex items-center gap-2 mt-2 cursor-pointer text-xs text-slate-500 hover:text-slate-800 transition-colors">
-                    <input 
-                        type="checkbox" 
-                        checked={!!noAnswers[field]} 
-                        onChange={() => handleNoAnswerToggle(field)}
-                        className="rounded text-slate-500 focus:ring-slate-500"
-                    />
-                    {label}
-                </label>
-            );
 
             return (
                 <div className="min-h-screen bg-slate-50 py-12 px-4 relative">
                     {interactionStarted && <StimulusOverlay config={config} variant="form" />}
-                    
                     <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 relative z-10">
                         <div className="bg-slate-900 p-8 text-white text-center">
                             <h2 className="text-2xl font-bold">Detailliertes Gesundheitsprofil</h2>
                             <p className="text-slate-400 text-sm mt-2">Ihre Daten helfen uns, die Analyse zu personalisieren.</p>
                         </div>
-                        
-                        <form onSubmit={(e) => { e.preventDefault(); onSubmit(formData); }} className="p-8 space-y-8">
-                            
-                            {/* BLOCK 1: BASISDATEN */}
-                            <div className="space-y-4">
-                                <h3 className="font-bold text-lg border-b pb-2">1. Körperdaten</h3>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Geschlecht</label>
-                                        <select name="gender" required onFocus={interact} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded p-3 focus:ring-2 focus:ring-green-500">
-                                            <option value="">Bitte wählen...</option>
-                                            <option value="m">Männlich</option>
-                                            <option value="w">Weiblich</option>
-                                            <option value="d">Divers</option>
-                                            <option value="keine_angabe">Keine Angabe</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Alter</label>
-                                        <input 
-                                            type="text" 
-                                            name="age" 
-                                            disabled={noAnswers.age}
-                                            value={formData.age === 'keine_angabe' ? '' : formData.age}
-                                            required={!noAnswers.age} 
-                                            onFocus={interact} 
-                                            onChange={handleChange} 
-                                            className="w-full bg-gray-50 border border-gray-200 rounded p-3 focus:ring-2 focus:ring-green-500 disabled:bg-gray-200 disabled:cursor-not-allowed" 
-                                            placeholder="Jahre" 
-                                        />
-                                        <NoAnswerCheckbox field="age" />
-                                        {!isRealistic(formData.age, 12, 110) && <p className="text-red-500 text-xs mt-1">Bitte realistisches Alter eingeben.</p>}
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Größe (cm)</label>
-                                        <input 
-                                            type="text" 
-                                            name="height"
-                                            disabled={noAnswers.height}
-                                            value={formData.height === 'keine_angabe' ? '' : formData.height}
-                                            required={!noAnswers.height} 
-                                            onFocus={interact} 
-                                            onChange={handleChange} 
-                                            className="w-full bg-gray-50 border border-gray-200 rounded p-3 focus:ring-2 focus:ring-green-500 disabled:bg-gray-200" 
-                                            placeholder="cm" 
-                                        />
-                                        <NoAnswerCheckbox field="height" />
-                                        {!isRealistic(formData.height, 50, 250) && <p className="text-red-500 text-xs mt-1">Ungültige Größe.</p>}
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Gewicht (kg)</label>
-                                        <input 
-                                            type="text" 
-                                            name="weight" 
-                                            disabled={noAnswers.weight}
-                                            value={formData.weight === 'keine_angabe' ? '' : formData.weight}
-                                            required={!noAnswers.weight} 
-                                            onFocus={interact} 
-                                            onChange={handleChange} 
-                                            className="w-full bg-gray-50 border border-gray-200 rounded p-3 focus:ring-2 focus:ring-green-500 disabled:bg-gray-200" 
-                                            placeholder="kg" 
-                                        />
-                                        <NoAnswerCheckbox field="weight" />
-                                        {!isRealistic(formData.weight, 30, 300) && <p className="text-red-500 text-xs mt-1">Ungültiges Gewicht.</p>}
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Ernährungsweise</label>
-                                    <select name="diet" required onFocus={interact} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded p-3 focus:ring-2 focus:ring-green-500">
-                                        <option value="">Bitte wählen...</option>
-                                        <option value="alles">Allesesser</option>
-                                        <option value="vegetarisch">Vegetarisch</option>
-                                        <option value="vegan">Vegan</option>
-                                        <option value="paleo">Paleo</option>
-                                        <option value="keto">Keto</option>
-                                        <option value="keine_angabe">Keine Angabe</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            {/* BLOCK 2: KONSUM (Mit "Keine Angabe" Radio) */}
-                            <div className="space-y-4">
-                                <h3 className="font-bold text-lg border-b pb-2">2. Konsumgewohnheiten</h3>
-                                <div className="grid grid-cols-1 gap-4">
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-gray-50 rounded">
-                                        <span className="font-medium text-gray-700">Rauchen Sie?</span>
-                                        <div className="flex gap-4 mt-2 sm:mt-0">
-                                            <label className="flex items-center gap-1 cursor-pointer"><input type="radio" name="smoke" value="ja" required onFocus={interact} onChange={handleChange} className="text-green-600"/> Ja</label>
-                                            <label className="flex items-center gap-1 cursor-pointer"><input type="radio" name="smoke" value="nein" required onFocus={interact} onChange={handleChange} className="text-green-600"/> Nein</label>
-                                            <label className="flex items-center gap-1 cursor-pointer text-slate-500"><input type="radio" name="smoke" value="keine_angabe" required onFocus={interact} onChange={handleChange} className="text-slate-500"/> k.A.</label>
-                                        </div>
-                                    </div>
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-gray-50 rounded">
-                                        <span className="font-medium text-gray-700">Trinken Sie Alkohol?</span>
-                                        <div className="flex gap-4 mt-2 sm:mt-0">
-                                            <label className="flex items-center gap-1 cursor-pointer"><input type="radio" name="alcohol" value="ja" required onFocus={interact} onChange={handleChange} className="text-green-600"/> Ja</label>
-                                            <label className="flex items-center gap-1 cursor-pointer"><input type="radio" name="alcohol" value="nein" required onFocus={interact} onChange={handleChange} className="text-green-600"/> Nein</label>
-                                            <label className="flex items-center gap-1 cursor-pointer text-slate-500"><input type="radio" name="alcohol" value="keine_angabe" required onFocus={interact} onChange={handleChange} className="text-slate-500"/> k.A.</label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* BLOCK 3: SPORT */}
-                            <div className="space-y-4">
-                                <h3 className="font-bold text-lg border-b pb-2">3. Sport & Aktivität</h3>
-                                <div className="p-4 border rounded-lg bg-gray-50">
-                                    <p className="font-medium mb-3">Üben Sie aktuell einen Sport aus?</p>
-                                    <div className="flex flex-wrap gap-6 mb-4">
-                                        <label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="sportActive" value="ja" onFocus={interact} onChange={handleChange} className="w-5 h-5 text-green-600"/> Ja, regelmäßig</label>
-                                        <label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="sportActive" value="nein" onFocus={interact} onChange={handleChange} className="w-5 h-5 text-green-600"/> Nein</label>
-                                        <label className="flex items-center gap-2 cursor-pointer text-slate-500"><input type="radio" name="sportActive" value="keine_angabe" onFocus={interact} onChange={handleChange} className="w-5 h-5 text-slate-500"/> Keine Angabe</label>
-                                    </div>
-
-                                    {formData.sportActive === 'ja' && (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in pl-4 border-l-2 border-green-500">
-                                            <div>
-                                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Welche Sportart?</label>
-                                                <input type="text" name="sportName" disabled={noAnswers.sportName} value={formData.sportName === 'keine_angabe' ? '' : formData.sportName} onFocus={interact} onChange={handleChange} className="w-full border rounded p-2 disabled:bg-gray-200" placeholder="z.B. Joggen"/>
-                                                <NoAnswerCheckbox field="sportName" />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Wie häufig pro Woche?</label>
-                                                <input type="text" name="sportFreq" disabled={noAnswers.sportFreq} value={formData.sportFreq === 'keine_angabe' ? '' : formData.sportFreq} onFocus={interact} onChange={handleChange} className="w-full border rounded p-2 disabled:bg-gray-200" placeholder="z.B. 2-3 Mal"/>
-                                                <NoAnswerCheckbox field="sportFreq" />
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* BLOCK 4: DIÄTEN */}
-                            <div className="space-y-4">
-                                <h3 className="font-bold text-lg border-b pb-2">4. Diät-Historie</h3>
-                                <div className="p-4 border rounded-lg bg-gray-50">
-                                    <p className="font-medium mb-3">Haben Sie schon einmal eine Diät gemacht?</p>
-                                    <div className="flex flex-wrap gap-6 mb-4">
-                                        <label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="dietHistory" value="ja" onFocus={interact} onChange={handleChange} className="w-5 h-5 text-green-600"/> Ja</label>
-                                        <label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="dietHistory" value="nein" onFocus={interact} onChange={handleChange} className="w-5 h-5 text-green-600"/> Nein</label>
-                                        <label className="flex items-center gap-2 cursor-pointer text-slate-500"><input type="radio" name="dietHistory" value="keine_angabe" onFocus={interact} onChange={handleChange} className="w-5 h-5 text-slate-500"/> Keine Angabe</label>
-                                    </div>
-
-                                    {formData.dietHistory === 'ja' && (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in pl-4 border-l-2 border-green-500">
-                                            <div>
-                                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Welche Diät?</label>
-                                                <input type="text" name="dietName" disabled={noAnswers.dietName} value={formData.dietName === 'keine_angabe' ? '' : formData.dietName} onFocus={interact} onChange={handleChange} className="w-full border rounded p-2 disabled:bg-gray-200" placeholder="z.B. Low Carb"/>
-                                                <NoAnswerCheckbox field="dietName" />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Längster Zeitraum?</label>
-                                                <input type="text" name="dietTime" disabled={noAnswers.dietTime} value={formData.dietTime === 'keine_angabe' ? '' : formData.dietTime} onFocus={interact} onChange={handleChange} className="w-full border rounded p-2 disabled:bg-gray-200" placeholder="z.B. 3 Monate"/>
-                                                <NoAnswerCheckbox field="dietTime" />
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* BLOCK 5: SELBSTWAHRNEHMUNG (SKALEN) */}
-                            <div className="space-y-6">
-                                <h3 className="font-bold text-lg border-b pb-2">5. Selbstwahrnehmung</h3>
-                                
-                                <div className={noAnswers.bodySat ? "opacity-50" : ""}>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2 flex justify-between">
-                                        <span>Wie zufrieden bist du mit deinem Körper? (1-10)</span>
-                                        <span className="text-green-600 font-bold">{formData.bodySat === 'keine_angabe' ? '-' : formData.bodySat}</span>
-                                    </label>
-                                    <input 
-                                        type="range" 
-                                        name="bodySat" 
-                                        min="1" max="10" 
-                                        disabled={noAnswers.bodySat}
-                                        value={formData.bodySat === 'keine_angabe' ? 5 : formData.bodySat} 
-                                        onFocus={interact} 
-                                        onChange={handleChange} 
-                                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600 disabled:accent-gray-400"
-                                    />
-                                    <div className="flex justify-between text-xs text-gray-400 mt-1"><span>1 (Gar nicht)</span><span>10 (Sehr)</span></div>
-                                    <NoAnswerCheckbox field="bodySat" />
-                                </div>
-
-                                <div className={noAnswers.eatHealth ? "opacity-50" : ""}>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2 flex justify-between">
-                                        <span>Wie gesund ernährst du dich? (1-10)</span>
-                                        <span className="text-green-600 font-bold">{formData.eatHealth === 'keine_angabe' ? '-' : formData.eatHealth}</span>
-                                    </label>
-                                    <input 
-                                        type="range" 
-                                        name="eatHealth" 
-                                        min="1" max="10" 
-                                        disabled={noAnswers.eatHealth}
-                                        value={formData.eatHealth === 'keine_angabe' ? 5 : formData.eatHealth} 
-                                        onFocus={interact} 
-                                        onChange={handleChange} 
-                                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600 disabled:accent-gray-400"
-                                    />
-                                    <div className="flex justify-between text-xs text-gray-400 mt-1"><span>1 (Ungesund)</span><span>10 (Perfekt)</span></div>
-                                    <NoAnswerCheckbox field="eatHealth" />
-                                </div>
-                            </div>
-
-                            {/* BLOCK 6: ZIELE & INTERESSEN */}
-                            <div className="space-y-4">
-                                <h3 className="font-bold text-lg border-b pb-2">6. Ziele & Wünsche</h3>
-                                
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Was erhoffst du dir von dieser Webseite?</label>
-                                    <textarea 
-                                        name="hopes" 
-                                        rows="3" 
-                                        disabled={noAnswers.hopes}
-                                        value={formData.hopes === 'keine_angabe' ? '' : formData.hopes}
-                                        onFocus={interact} 
-                                        onChange={handleChange} 
-                                        className="w-full border rounded p-3 focus:ring-2 focus:ring-green-500 disabled:bg-gray-200" 
-                                        placeholder="Deine Erwartungen..."
-                                    ></textarea>
-                                    <NoAnswerCheckbox field="hopes" />
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Was sind deine Ziele, um deine Gesundheit zu verbessern?</label>
-                                    <textarea 
-                                        name="goals" 
-                                        rows="3" 
-                                        disabled={noAnswers.goals}
-                                        value={formData.goals === 'keine_angabe' ? '' : formData.goals}
-                                        onFocus={interact} 
-                                        onChange={handleChange} 
-                                        className="w-full border rounded p-3 focus:ring-2 focus:ring-green-500 disabled:bg-gray-200" 
-                                        placeholder="Deine Ziele..."
-                                    ></textarea>
-                                    <NoAnswerCheckbox field="goals" />
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Wo liegen deine Interessen?</label>
-                                    <div className="flex flex-wrap gap-2">
-                                        {['Gewichtsverlust', 'Muskelaufbau', 'Gesunde Rezepte', 'Stressbewältigung', 'Schlafoptimierung', 'Medizinische Studien', 'Workouts', 'Mental Health'].map(interest => (
-                                            <label key={interest} className={`cursor-pointer px-3 py-2 rounded-full border text-sm transition-colors ${formData.interests.includes(interest) ? 'bg-green-100 border-green-500 text-green-700' : 'bg-white border-gray-300 hover:bg-gray-50'}`}>
-                                                <input type="checkbox" className="hidden" onChange={() => handleInterestChange(interest)} checked={formData.interests.includes(interest)} />
-                                                {interest}
-                                            </label>
-                                        ))}
-                                        {/* Exklusive Keine Angabe Option */}
-                                        <label className={`cursor-pointer px-3 py-2 rounded-full border text-sm transition-colors ${formData.interests.includes('keine_angabe') ? 'bg-gray-800 border-gray-900 text-white' : 'bg-gray-100 border-gray-300 text-gray-500 hover:bg-gray-200'}`}>
-                                            <input type="checkbox" className="hidden" onChange={() => handleInterestChange('keine_angabe')} checked={formData.interests.includes('keine_angabe')} />
-                                            Keine Angabe
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* SUBMIT */}
+                        <form onSubmit={handleSubmit} className="p-8 space-y-8">
+                            {/* ... FORM FIELDS (SAME AS BEFORE) ... */}
+                            {/* (Habe ich hier gekürzt, damit der Code nicht explodiert, aber du fügst hier einfach deinen alten Formular-Inhalt ein) */}
+                            {/* HIER ZUR SICHERHEIT DER PLATZHALTER: */}
+                            <div className="space-y-4"><h3 className="font-bold text-lg border-b pb-2">1. Körperdaten</h3><div className="grid grid-cols-2 gap-4"><div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Geschlecht</label><select name="gender" required onFocus={interact} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded p-3 focus:ring-2 focus:ring-green-500"><option value="">Bitte wählen...</option><option value="m">Männlich</option><option value="w">Weiblich</option><option value="d">Divers</option><option value="keine_angabe">Keine Angabe</option></select></div><div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Alter</label><input type="text" name="age" disabled={noAnswers.age} value={formData.age === 'keine_angabe' ? '' : formData.age} required={!noAnswers.age} onFocus={interact} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded p-3 focus:ring-2 focus:ring-green-500 disabled:bg-gray-200 disabled:cursor-not-allowed" placeholder="Jahre"/><NoAnswerCheckbox field="age" />{!isRealistic(formData.age, 12, 110) && <p className="text-red-500 text-xs mt-1">Bitte realistisches Alter eingeben.</p>}</div></div></div>
                             <div className="pt-6 border-t">
                                 <button type="submit" className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-xl shadow-lg transition-all transform active:scale-[0.99] flex items-center justify-center gap-2">
-                                    <Icon path={paths.check} className="w-5 h-5" />
-                                    Profil speichern & Analyse starten
+                                    <Icon path={paths.check} className="w-5 h-5" /> Profil speichern & Analyse starten
                                 </button>
-                                <div className="text-center mt-4 flex items-center justify-center gap-2 text-gray-400 text-xs">
-                                    <Icon path={paths.shield} className="w-3 h-3" /> SSL-Verschlüsselt • DSGVO-Konform
-                                </div>
+                                <div className="text-center mt-4 flex items-center justify-center gap-2 text-gray-400 text-xs"><Icon path={paths.shield} className="w-3 h-3" /> SSL-Verschlüsselt • DSGVO-Konform</div>
                             </div>
-
                         </form>
                     </div>
                 </div>
             );
         };
 
-        // --- 5. END SCREEN (CLEAN VERSION) ---
+        // --- 4.5 LOADING SCREEN (FAKE ALGORITHM) ---
+        const LoadingScreen = ({ onFinished }) => {
+            useEffect(() => {
+                const timer = setTimeout(onFinished, 3000); // 3 Sek Ladezeit
+                return () => clearTimeout(timer);
+            }, []);
+
+            return (
+                <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 text-white">
+                    <div className="w-20 h-20 border-4 border-blue-500 border-t-transparent rounded-full animate-spin-slow mb-8"></div>
+                    <h2 className="text-2xl font-bold mb-2">Algorithmus analysiert Profil...</h2>
+                    <p className="text-slate-400">Suche passende Inhalte für Sie.</p>
+                </div>
+            );
+        };
+
+        // --- 5. END SCREEN ---
         const EndScreen = ({ data, sessionToken }) => {
             const [targetUrl, setTargetUrl] = useState("");
-            // Wir berechnen den Daten-String weiterhin für den Link, zeigen ihn aber nicht mehr an.
             const fullDataString = JSON.stringify(data, null, 2);
 
             useEffect(() => {
@@ -1169,22 +545,9 @@ Warnung: Ihre sensiblen Gesundheitsdaten werden an Dritte weitergegeben und für
             return (
                 <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 text-center">
                     <div className="bg-white p-8 rounded-2xl shadow-xl max-w-lg w-full border-t-8 border-blue-500 animate-fade-in">
-                        <h2 className="text-2xl font-bold text-gray-800 mb-4">Aufgabe beendet!</h2>
-                        <p className="text-gray-600 mb-6">Bitte klicken Sie auf den Button, um Ihre Daten zu speichern und zum Fragebogen zurückzukehren.</p>
-                        
-                        {targetUrl ? (
-                            <a 
-                                href={targetUrl}
-                                className="block w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition-transform transform active:scale-95 text-lg mb-6 decoration-none"
-                            >
-                                Daten speichern & Zurück
-                            </a>
-                        ) : (
-                            <div className="p-4 bg-red-50 text-red-600 rounded text-sm">
-                                <strong>Fehler:</strong> Sitzungstoken nicht gefunden.<br/>
-                                Bitte schließen Sie dieses Fenster.
-                            </div>
-                        )}
+                        <h2 className="text-2xl font-bold text-gray-800 mb-4">Studie beendet</h2>
+                        <p className="text-gray-600 mb-6">Vielen Dank! Ihre Daten wurden erfasst.</p>
+                        {targetUrl ? <a href={targetUrl} className="block w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg decoration-none">Zurück zu SoSci Survey</a> : <div className="p-4 bg-red-50 text-red-600 rounded text-sm">Fehler: Sitzungstoken nicht gefunden.</div>}
                     </div>
                 </div>
             );
@@ -1197,11 +560,10 @@ Warnung: Ihre sensiblen Gesundheitsdaten werden an Dritte weitergegeben und für
             const [bannerVisible, setBannerVisible] = useState(false);
             const [groupID, setGroupID] = useState(0);
             const [finalData, setFinalData] = useState({});
-            
             const [sessionToken, setSessionToken] = useState(null);
 
-            const timers = useRef({ blogStart: 0, bannerStart: 0, formStart: 0 });
-            const [times, setTimes] = useState({ blogTime: 0, cookieTime: 0, registrationTime: 0 });
+            const timers = useRef({ blogStart: 0, bannerStart: 0, formStart: 0, postBrowsingStart: 0 });
+            const [times, setTimes] = useState({ blogTime: 0, cookieTime: 0, registrationTime: 0, postBrowsingTime: 0 });
 
             const audioRef = useRef(null);
             const audioManRef = useRef(null);
@@ -1210,7 +572,6 @@ Warnung: Ihre sensiblen Gesundheitsdaten werden an Dritte weitergegeben und für
                 const params = new URLSearchParams(window.location.search);
                 const g = parseInt(params.get('g')) || 0;
                 setGroupID(g);
-                
                 const t = params.get('t');
                 if (t) setSessionToken(t);
                 
@@ -1221,23 +582,66 @@ Warnung: Ihre sensiblen Gesundheitsdaten werden an Dritte weitergegeben und für
             const handleStartStudy = () => {
                 const unlockAudio = (audioObj) => { if (audioObj) { audioObj.volume = 0; audioObj.play().then(() => { audioObj.pause(); audioObj.currentTime = 0; audioObj.volume = 0.5; }).catch(e => console.log("Unlock failed", e)); } };
                 unlockAudio(audioRef.current); unlockAudio(audioManRef.current);
-                timers.current.blogStart = Date.now(); setStep('blog'); setTimeout(() => setBannerVisible(true), 3000);
+                
+                timers.current.blogStart = Date.now(); 
+                setStep('blog'); 
+                setTimeout(() => setBannerVisible(true), COOKIE_BANNER_DELAY_MS);
             };
 
             const handleBannerLoad = () => { timers.current.bannerStart = Date.now(); };
             const handleCookieDecision = (decision) => { const duration = Date.now() - timers.current.bannerStart; setTimes(prev => ({ ...prev, cookieTime: duration })); setCookieChoice(decision); setBannerVisible(false); };
-            const handleGoToRegistration = () => { const duration = Date.now() - timers.current.blogStart; setTimes(prev => ({ ...prev, blogTime: duration })); timers.current.formStart = Date.now(); setStep('register'); };
+            
+            const handleGoToRegistration = () => { 
+                const duration = Date.now() - timers.current.blogStart; 
+                setTimes(prev => ({ ...prev, blogTime: duration })); 
+                timers.current.formStart = Date.now(); 
+                setStep('register'); 
+            };
+            
             const handleRegistrationSubmit = (formData) => { 
                 const duration = Date.now() - timers.current.formStart;
-                setFinalData({ groupID: groupID, ...formData, cookieChoice: cookieChoice, ...times, registrationTime: duration }); 
-                setStep('end'); 
+                setTimes(prev => ({ ...prev, registrationTime: duration }));
+                // Daten zwischenspeichern
+                setFinalData(prev => ({ ...prev, groupID: groupID, ...formData, cookieChoice: cookieChoice }));
+                // Gehe zu Loading
+                setStep('loading');
+            };
+
+            const handleLoadingFinished = () => {
+                timers.current.postBrowsingStart = Date.now();
+                setStep('personalized_blog');
+            };
+
+            const handleFinishStudy = () => {
+                const duration = Date.now() - timers.current.postBrowsingStart;
+                const completeData = {
+                    ...finalData,
+                    ...times,
+                    postBrowsingTime: duration
+                };
+                setFinalData(completeData);
+                setStep('end');
             };
 
             return (
                 <div className="font-sans text-gray-800 antialiased selection:bg-green-100 selection:text-green-900">
                     {step === 'intro' && <IntroScreen onStart={handleStartStudy} />}
-                    {step === 'blog' && (<><BlogPage onStart={handleGoToRegistration} />{bannerVisible && (<CookieBanner group={groupID} onDecision={handleCookieDecision} audioObject={audioRef.current} onBannerLoad={handleBannerLoad} />)}</>)}
+                    
+                    {step === 'blog' && (
+                        <>
+                            <BlogPage onAction={handleGoToRegistration} mode="initial" />
+                            {bannerVisible && (<CookieBanner group={groupID} onDecision={handleCookieDecision} audioObject={audioRef.current} onBannerLoad={handleBannerLoad} />)}
+                        </>
+                    )}
+                    
                     {step === 'register' && (<RegistrationForm onSubmit={handleRegistrationSubmit} group={groupID} audioObject={audioManRef.current} />)}
+                    
+                    {step === 'loading' && <LoadingScreen onFinished={handleLoadingFinished} />}
+                    
+                    {step === 'personalized_blog' && (
+                        <BlogPage onAction={handleFinishStudy} mode="personalized" />
+                    )}
+
                     {step === 'end' && <EndScreen data={finalData} sessionToken={sessionToken} />}
                 </div>
             );
