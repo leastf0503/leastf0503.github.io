@@ -184,18 +184,21 @@
 // --- STIMULUS OVERLAY (Augen / Warnschild) ---
         const StimulusOverlay = ({ config, variant = "banner" }) => {
             const eyeColor = variant === 'banner' ? '#3b82f6' : '#5D4037';
-            // Positionierung: Im Formular fixiert oben, beim Banner absolut darüber
+            
+            // Positionierung:
+            // Im Formular: Fixiert oben, zentriert.
+            // Im Banner: Absolut positioniert über dem Banner.
             const positionClass = variant === 'form' 
-                ? 'fixed top-0 left-1/2 -translate-x-1/2 pt-1' 
-                : 'absolute -top-16 left-1/2 -translate-x-1/2'; // Etwas höher gesetzt (-top-16), da sie größer sind
+                ? 'fixed top-0 left-1/2 -translate-x-1/2 pt-2' 
+                : 'absolute -top-16 left-1/2 -translate-x-1/2'; 
 
             return (
-                <div className={`pointer-events-none z-[60] flex flex-col items-center gap-1 transition-opacity duration-500 ${positionClass}`}>
+                <div className={`pointer-events-none z-[60] flex flex-col items-center gap-2 transition-opacity duration-500 ${positionClass}`}>
+                    
+                    {/* 1. DIE AUGEN (Groß & Auffällig) */}
                     {config.eyes && (
                         <div className="flex gap-4 items-center justify-center filter drop-shadow-lg">
-                            {/* ÄNDERUNG HIER: p-2 für dickeren Rahmen, border-2 für fetteren Rand */}
                             <div className="bg-white p-2 rounded-full border-2 border-gray-300 shadow-2xl overflow-hidden animate-pulse-slow">
-                                {/* ÄNDERUNG HIER: w-20 h-12 macht die Augen deutlich größer */}
                                 <RealisticEye color={eyeColor} className="w-20 h-12" />
                             </div>
                             <div className="bg-white p-2 rounded-full border-2 border-gray-300 shadow-2xl overflow-hidden animate-pulse-slow">
@@ -203,13 +206,16 @@
                             </div>
                         </div>
                     )}
+
+                    {/* 2. DER TEXT (Jetzt identisch zum Cookie-Banner) */}
                     {config.info && variant === 'form' && (
-                        // mt-2 für etwas mehr Abstand zu den riesigen Augen
-                        <div className="bg-red-50 border-2 border-red-400 px-4 py-2 rounded-md shadow-md flex items-center gap-2 animate-fade-in mt-2">
-                            <Icon path={paths.shield} className="w-5 h-5 text-red-600 shrink-0" />
-                            <span className="text-red-900 font-bold text-sm uppercase tracking-wider">
-                                Warnung: Ihre sensiblen Gesundheitsdaten werden an Dritte weitergegeben.
-                            </span>
+                        <div className="bg-red-50 border-2 border-red-200 p-4 rounded-xl text-red-900 shadow-2xl mt-2 max-w-md text-center animate-fade-in backdrop-blur-sm bg-opacity-95">
+                            <div className="flex items-center justify-center gap-2 font-bold mb-2 text-red-700 uppercase tracking-wide text-sm">
+                                <Icon path={paths.shield} className="w-5 h-5"/> Datenschutz-Hinweis
+                            </div>
+                            <p className="text-xs leading-relaxed font-medium">
+                                Achtung: Wenn Sie zustimmen, können Ihre persönlichen Informationen an Dritte weitergegeben und für Werbung genutzt werden. Dies kann Risiken für die Sicherheit Ihrer Daten bergen.
+                            </p>
                         </div>
                     )}
                 </div>
