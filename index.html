@@ -34,6 +34,8 @@
 
     <div id="error-overlay">
         <strong>Systemfehler:</strong> <span id="error-msg">Unbekannter Fehler</span>
+        <br/><br/>
+        <small>Tipp: Falls hier "Script error" steht, versuche die Datei in einem anderen Browser (z.B. Firefox) zu öffnen oder stelle sicher, dass du mit dem Internet verbunden bist.</small>
     </div>
     <script>
         window.onerror = function(msg, url, line, col, error) {
@@ -47,19 +49,22 @@
 
     <script type="text/babel">
         // ==========================================
-        // 1. KONFIGURATION (HIER ZEITEN ÄNDERN!)
+        // 1. KONFIGURATION (ZEITEN & URL)
         // ==========================================
         
-        // Phase 1: Mindestzeit auf der Webseite VOR Registrierung
-        const MIN_BROWSING_TIME_1 = 15; // z.B. 120 Sekunden
+        // Phase 1: Mindestzeit auf der Webseite VOR Registrierung (in Sekunden)
+        const MIN_BROWSING_TIME_1 = 15; 
 
-        // Phase 2: Mindestzeit im Formular (gegen schnelles Klicken)
-        const MIN_REGISTRATION_TIME = 10; // z.B. 30 Sekunden
+        // Phase 2: Mindestzeit im Formular (in Sekunden)
+        const MIN_REGISTRATION_TIME = 10; 
 
-        // Phase 3: Mindestzeit auf der Webseite NACH Registrierung
-        const MIN_BROWSING_TIME_2 = 15;  // z.B. 60 Sekunden
+        // Phase 3: Mindestzeit auf der Webseite NACH Registrierung (in Sekunden)
+        const MIN_BROWSING_TIME_2 = 15;  
 
+        // Wann erscheint der Cookie-Banner (in Millisekunden)?
         const COOKIE_BANNER_DELAY_MS = 3000; 
+        
+        // Link zu SoSci Survey
         const SOSCI_BASE_URL = "https://www.soscisurvey.de/BA25LeaPaula/";
 
         const { useState, useEffect, useRef } = React;
@@ -101,7 +106,7 @@
         };
 
         // ==========================================
-        // 3. ERWEITERTE BLOG INHALTE
+        // 3. BLOG INHALTE
         // ==========================================
         const BLOG_CONTENT = [
             { id: 1, title: "Die 5 Säulen der Langlebigkeit", cat: "Forschung", time: "8 min", date: "Aktuell", author: "Dr. med. Weber", image: "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=800", desc: "Neue Studien zeigen: Es sind nicht nur die Gene. Erfahren Sie, wie kleine Anpassungen Ihr biologisches Alter senken.", fullText: ["Die Suche nach dem Jungbrunnen ist so alt wie die Menschheit selbst. Doch während Alchemisten früher vergeblich nach Elixieren suchten, liefert die moderne Wissenschaft heute konkrete Antworten.", "1. Ernährung: Es geht nicht nur darum, was wir essen, sondern wann. Pflanzenbasierte Kost gepaart mit metabolischen Ruhephasen zeigt die besten Ergebnisse.", "2. Bewegung: Moderate Aktivität schlägt Hochleistungssport. Täglich 30 Minuten zügiges Gehen senkt das Risiko für Herz-Kreislauf-Erkrankungen massiv.", "3. Schlaf: Das Gehirn reinigt sich nachts selbst. Weniger als 7 Stunden Schlaf führen langfristig zur Ansammlung von Toxinen.", "4. Soziale Bindung: Einsamkeit ist so schädlich wie 15 Zigaretten am Tag.", "5. Sinnhaftigkeit: Menschen, die morgens einen Grund haben aufzustehen (Ikigai), leben signifikant länger.", "Fazit: Langlebigkeit ist kein Zufallsprodukt, sondern die Summe täglicher Entscheidungen."] },
@@ -411,7 +416,7 @@
             );
         };
 
-        // 4. REGISTRATION FORM (MIT TIMER & GROßEN AUGEN)
+        // 4. REGISTRATION FORM (MIT TIMER & GROßEN AUGEN & GENAUEM TEXT)
         const RegistrationForm = ({ onSubmit, group, audioObject }) => {
             const [formData, setFormData] = useState({ gender: '', age: '', height: '', weight: '', diet: '', smoke: '', alcohol: '', sportActive: '', sportName: '', sportFreq: '', dietHistory: '', dietName: '', dietTime: '', bodySat: 5, eatHealth: 5, hopes: '', goals: '', interests: [] });
             const [noAnswers, setNoAnswers] = useState({});
