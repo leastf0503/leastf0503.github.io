@@ -23,14 +23,11 @@
         
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; }
         
-        /* Error Overlay falls Code abstürzt */
+        /* Hide scrollbar for category nav but keep functionality */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
         #error-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; padding: 20px; background: #fee2e2; border-bottom: 2px solid #ef4444; color: #991b1b; z-index: 9999; font-family: monospace; }
-        
-        /* Schöne Scrollbars */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body>
@@ -53,35 +50,29 @@
         // 1. KONFIGURATION (HIER ZEITEN ÄNDERN!)
         // ==========================================
         
-        // Phase 1: Wie lange muss man surfen, bevor man das Konto erstellen darf?
-        const MIN_BROWSING_TIME_1 = 15; // Sekunden (z.B. 120 für 2 Min)
+        // Phase 1: Mindestzeit auf der Webseite VOR Registrierung
+        const MIN_BROWSING_TIME_1 = 15; // z.B. 120 Sekunden
 
-        // Phase 2: Wie lange ist der "Speichern"-Button im Formular gesperrt?
-        const MIN_REGISTRATION_TIME = 10; // Sekunden (z.B. 20 oder 30)
+        // Phase 2: Mindestzeit im Formular (gegen schnelles Klicken)
+        const MIN_REGISTRATION_TIME = 10; // z.B. 30 Sekunden
 
-        // Phase 3: Wie lange muss man nach dem Konto-Erstellen surfen (personalisiert)?
-        const MIN_BROWSING_TIME_2 = 15;  // Sekunden (z.B. 60 für 1 Min)
+        // Phase 3: Mindestzeit auf der Webseite NACH Registrierung
+        const MIN_BROWSING_TIME_2 = 15;  // z.B. 60 Sekunden
 
-        // Wann erscheint der Cookie-Banner (in Millisekunden)?
-        const COOKIE_BANNER_DELAY_MS = 3000; // 3000ms = 3 Sekunden
-
-        // Basis-URL von SoSci Survey (für den Rücksprung)
+        const COOKIE_BANNER_DELAY_MS = 3000; 
         const SOSCI_BASE_URL = "https://www.soscisurvey.de/BA25LeaPaula/";
-
 
         const { useState, useEffect, useRef } = React;
 
         // ==========================================
         // 2. ICONS & ASSETS
         // ==========================================
-        
         const Icon = ({ path, className }) => (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
                 {path}
             </svg>
         );
 
-        // Das realistische Auge (SVG)
         const RealisticEye = ({ color, className }) => (
             <svg viewBox="0 0 100 60" className={className} preserveAspectRatio="xMidYMid meet">
                 <path d="M5,30 Q50,-15 95,30 Q50,75 5,30 Z" fill="#fff" stroke="#333" strokeWidth="2" />
@@ -102,100 +93,69 @@
             leaf: <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" />,
             clock: <circle cx="12" cy="12" r="10"/>,
             activity: <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>,
+            heart: <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>,
+            heartFilled: <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" fill="currentColor" stroke="none"/>,
+            ciagrette: <React.Fragment><path d="M18 8c0-2.5-2-2.5-2-5"/><path d="M22 8c0-2.5-2-2.5-2-5"/><rect x="2" y="13" width="20" height="6" rx="2"/><path d="M22 16h-4"/><path d="M2 16h4"/></React.Fragment>,
             apple: <React.Fragment><path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06Z"/><path d="M10 2c1 .5 2 2 2 5"/></React.Fragment>,
             coffee: <React.Fragment><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" x2="6" y1="2" y2="4"/><line x1="10" x2="10" y1="2" y2="4"/><line x1="14" x2="14" y1="2" y2="4"/></React.Fragment>,
-            heart: <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>,
-            star: <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />,
-            ciagrette: <React.Fragment><path d="M18 8c0-2.5-2-2.5-2-5"/><path d="M22 8c0-2.5-2-2.5-2-5"/><rect x="2" y="13" width="20" height="6" rx="2"/><path d="M22 16h-4"/><path d="M2 16h4"/></React.Fragment>,
-            menu: <path d="M3 12h18M3 6h18M3 18h18" />,
-            x: <path d="M18 6 6 18M6 6l12 12" />
         };
 
         // ==========================================
-        // 3. DATEN (BLOG INHALTE)
+        // 3. ERWEITERTE BLOG INHALTE
         // ==========================================
         const BLOG_CONTENT = [
-            { id: 1, title: "Die 5 Säulen der Langlebigkeit", cat: "Forschung", time: "5 min", date: "12. Okt 2024", author: "Dr. med. Weber", image: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=800&q=80", color: "bg-blue-100", icon: paths.activity, desc: "Neue Studien zeigen: Es sind nicht nur die Gene. Erfahren Sie, wie kleine Anpassungen in Ihrer Routine Ihr biologisches Alter senken.", fullText: ["Die Suche nach dem Jungbrunnen ist so alt wie die Menschheit selbst. Doch während Alchemisten früher vergeblich nach Elixieren suchten, liefert die moderne Wissenschaft heute konkrete Antworten.", "1. Ernährung: Es geht nicht nur darum, was wir essen, sondern wann.", "2. Bewegung: Moderate Aktivität schlägt Hochleistungssport.", "3. Schlaf: Das Gehirn reinigt sich nachts selbst.", "4. Soziale Bindung: Einsamkeit ist so schädlich wie 15 Zigaretten am Tag.", "5. Sinnhaftigkeit: Menschen, die morgens einen Grund haben aufzustehen (Ikigai), leben signifikant länger.", "Fazit: Langlebigkeit ist kein Zufallsprodukt."] },
-            { id: 2, title: "Intervallfasten 16:8", cat: "Ernährung", time: "8 min", date: "10. Okt 2024", author: "Sarah Klein", image: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=800", color: "bg-orange-100", icon: paths.apple, desc: "Warum Pausen für den Stoffwechsel wichtiger sind als Kalorienzählen. Ein Guide für Einsteiger.", fullText: ["Der menschliche Körper ist nicht dafür gemacht, ständig Nahrung zu verarbeiten.", "Die 16:8 Methode ist dabei die populärste Form: 16 Stunden fasten, 8 Stunden essen.", "Was passiert im Körper? Autophagie – eine Art zelluläre Müllabfuhr.", "Tipps für den Start: Trinken Sie viel Wasser.", "Intervallfasten ist keine Diät, sondern ein Lebensstil."] },
-            { id: 3, title: "Digital Detox & Cortisol", cat: "Mental Health", time: "6 min", date: "08. Okt 2024", author: "M. Psych. Bauer", image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80", color: "bg-purple-100", icon: paths.coffee, desc: "Wie ständige Erreichbarkeit Ihren Hormonhaushalt beeinflusst und was Sie dagegen tun können.", fullText: ["Das Smartphone ist unser ständiger Begleiter.", "Dabei wird Cortisol ausgeschüttet, das primäre Stresshormon.", "Digital Detox bedeutet nicht, offline im Wald zu leben.", "Strategien: Schlafzimmer zur handyfreien Zone erklären.", "Schon ein Wochenende ohne digitale Medien kann Wunder wirken."] },
-            { id: 4, title: "Herzgesundheit 2.0", cat: "Prävention", time: "4 min", date: "05. Okt 2024", author: "Prof. Dr. Lang", image: "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=800", color: "bg-red-100", icon: paths.heart, desc: "Neue Marker im Blutbild, die Sie kennen sollten, bevor es zu spät ist.", fullText: ["Jahrelang galt Cholesterin als der alleinige Bösewicht.", "Neben LDL rücken Entzündungsmarker wie hs-CRP in den Fokus.", "Technologie hilft: Smartwatches können Vorhofflimmern erkennen.", "Sprechen Sie Ihren Arzt aktiv auf hs-CRP an."] },
-            { id: 5, title: "Eine ist keine", cat: "Prävention", time: "5 min", author: "Dr. Lisa Neubauer", image: "Rauchen.jpg", color: "bg-orange-100", icon: paths.ciagrette, desc: "Warum Rauchen dich auf Dauer krank macht.", fullText: ["Rauchen ist eines der größten vermeidbaren Gesundheitsrisiken weltweit.", "Gesundheitliche Schäden: Nikotin und Chemikalien führen zu Krebs und COPD.", "Warum ist Aufhören so schwer? Dopamin im Gehirn.", "Tipps zum Aufhören: Setzen Sie ein konkretes Datum.", "Nach einem Jahr halbiert sich das Herzinfarktrisiko."] },
-            { id: 6, title: "Diäten & Jojo-Effekt", cat: "Ernährung", time: "6 min", date: "14. Okt 2024", author: "Dr. oec. troph. Meier", image: "diaet.jpg", color: "bg-green-100", icon: paths.apple, desc: "Warum Crash-Diäten scheitern und was wirklich hilft.", fullText: ["Diäten versprechen schnellen Gewichtsverlust, bergen aber Risiken.", "Der Jo-Jo-Effekt ist tückisch: Nach Abbruch steigt das Gewicht oft über das Ausgangsniveau.", "Wissenschaftlich bewährt: Mediterrane Ernährung."] },
-            { id: 7, title: "Volkskrankheit Rücken", cat: "Prävention", time: "7 min", date: "16. Okt 2024", author: "Physio T. Müller", image: "ruecken.jpg", color: "bg-blue-100", icon: paths.activity, desc: "80% der Bevölkerung sind betroffen. Übungen zur Linderung.", fullText: ["Rückenschmerzen sind die häufigste Ursache für Arztbesuche.", "Prävention: Core-Training stärkt die Muskulatur.", "Kleine Veränderungen wie tägliches Gehen wirken Wunder."] },
-            { id: 8, title: "Migräne verstehen", cat: "Forschung", time: "6 min", date: "18. Okt 2024", author: "Dr. med. Neuhaus", image: "migraene.jpg", color: "bg-purple-100", icon: paths.search, desc: "Mehr als nur Kopfschmerzen: Ursachen und Therapieansätze.", fullText: ["Migräne ist eine neurologische Erkrankung.", "Symptome: Pulsierende Schmerzen, Aura, Übelkeit.", "Behandlung: Triptane, Entspannung, Trigger-Vermeidung."] },
-            { id: 9, title: "Zone 2 Training", cat: "Fitness", time: "9 min", date: "20. Okt 2024", author: "Prof. Dr. Arndt", image: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=800&q=80", color: "bg-orange-100", icon: paths.activity, desc: "Warum 'langsam' das neue 'schnell' ist.", fullText: ["Lange galt: Viel hilft viel. Das ist falsch.", "Zone 2 ist der Bereich, in dem Sie sich noch unterhalten können.", "Vorteil: Mitochondrien-Vermehrung."] },
-            { id: 10, title: "Muskeln sind Medizin", cat: "Fitness", time: "5 min", date: "22. Okt 2024", author: "Dr. med. Reha", image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=800&q=80", color: "bg-red-100", icon: paths.activity, desc: "Krafttraining als Altersvorsorge.", fullText: ["Ab 30 verlieren wir Muskelmasse.", "Muskeln schütten Myokine aus, die entzündungshemmend wirken.", "Empfehlung: 2-3 Mal Krafttraining pro Woche."] }
+            { id: 1, title: "Die 5 Säulen der Langlebigkeit", cat: "Forschung", time: "8 min", date: "Aktuell", author: "Dr. med. Weber", image: "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=800", desc: "Neue Studien zeigen: Es sind nicht nur die Gene. Erfahren Sie, wie kleine Anpassungen Ihr biologisches Alter senken.", fullText: ["Die Suche nach dem Jungbrunnen ist so alt wie die Menschheit selbst. Doch während Alchemisten früher vergeblich nach Elixieren suchten, liefert die moderne Wissenschaft heute konkrete Antworten.", "1. Ernährung: Es geht nicht nur darum, was wir essen, sondern wann. Pflanzenbasierte Kost gepaart mit metabolischen Ruhephasen zeigt die besten Ergebnisse.", "2. Bewegung: Moderate Aktivität schlägt Hochleistungssport. Täglich 30 Minuten zügiges Gehen senkt das Risiko für Herz-Kreislauf-Erkrankungen massiv.", "3. Schlaf: Das Gehirn reinigt sich nachts selbst. Weniger als 7 Stunden Schlaf führen langfristig zur Ansammlung von Toxinen.", "4. Soziale Bindung: Einsamkeit ist so schädlich wie 15 Zigaretten am Tag.", "5. Sinnhaftigkeit: Menschen, die morgens einen Grund haben aufzustehen (Ikigai), leben signifikant länger.", "Fazit: Langlebigkeit ist kein Zufallsprodukt, sondern die Summe täglicher Entscheidungen."] },
+            { id: 2, title: "Intervallfasten 16:8", cat: "Ernährung", time: "6 min", date: "Gestern", author: "Sarah Klein", image: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=800", desc: "Warum Pausen für den Stoffwechsel wichtiger sind als Kalorienzählen. Ein Guide für Einsteiger.", fullText: ["Der menschliche Körper ist nicht dafür gemacht, ständig Nahrung zu verarbeiten. In unserer modernen Welt kommt unser Stoffwechsel kaum zur Ruhe.", "Die 16:8 Methode ist die populärste Form: 16 Stunden fasten, 8 Stunden essen. Das klingt hart, ist es aber meist nicht, da die Schlafzeit mitgerechnet wird.", "Was passiert im Körper? Nach etwa 12 Stunden ohne Nahrung beginnt die Autophagie – eine Art zelluläre Müllabfuhr.", "Tipp: Trinken Sie während der Fastenphase viel Wasser oder schwarzen Kaffee."] },
+            { id: 3, title: "Digital Detox & Cortisol", cat: "Mental Health", time: "5 min", date: "10. Okt", author: "M. Psych. Bauer", image: "https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=800", desc: "Wie ständige Erreichbarkeit Ihren Hormonhaushalt beeinflusst.", fullText: ["Jedes 'Pling' Ihres Smartphones löst eine Mikro-Stressreaktion aus. Dabei wird Cortisol ausgeschüttet.", "Wenn dieser Spiegel chronisch erhöht ist, hat das gravierende Folgen: Schlafstörungen, Angstzustände und Gewichtszunahme.", "Strategie: Erklären Sie das Schlafzimmer zur handyfreien Zone. Kaufen Sie einen klassischen Wecker.", "Schon ein Wochenende ohne digitale Medien kann den Cortisolspiegel signifikant senken."] },
+            { id: 4, title: "Herzgesundheit 2.0", cat: "Prävention", time: "4 min", date: "08. Okt", author: "Prof. Dr. Lang", image: "https://images.unsplash.com/photo-1628348068343-c6a848d2b6dd?auto=format&fit=crop&w=800", desc: "Neue Marker im Blutbild, die Sie kennen sollten.", fullText: ["Jahrelang galt Cholesterin als der alleinige Bösewicht. Heute wissen wir: Ein differenzierter Blick ist lebenswichtig.", "Neben dem klassischen LDL rücken Entzündungsmarker wie hs-CRP in den Fokus.", "Sprechen Sie Ihren Arzt aktiv auf Lipoprotein(a) an – ein genetischer Risikofaktor, den viele nicht kennen."] },
+            { id: 5, title: "Rauchen: Eine ist keine?", cat: "Prävention", time: "5 min", date: "05. Okt", author: "Dr. Lisa Neubauer", image: "https://images.unsplash.com/photo-1527777309916-249e057390d3?auto=format&fit=crop&w=800", desc: "Warum auch Gelegenheitsrauchen dich auf Dauer krank macht.", fullText: ["Es gibt keinen sicheren Konsum von Tabak. Auch wenige Zigaretten pro Woche erhöhen das Risiko für Herz-Kreislauf-Erkrankungen drastisch.", "Nikotin erzeugt starke Abhängigkeit durch Dopamin-Ausschüttung. Entzugserscheinungen treten oft schon nach Stunden auf.", "Die gute Nachricht: Nach einem Jahr ohne Rauchen halbiert sich das Herzinfarktrisiko bereits."] },
+            { id: 6, title: "Diäten & Jojo-Effekt", cat: "Ernährung", time: "7 min", date: "03. Okt", author: "Dr. Meier", image: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=800", desc: "Warum Crash-Diäten scheitern und was wirklich hilft.", fullText: ["Diäten versprechen schnellen Gewichtsverlust, führen aber oft in die Frustration.", "Der Körper interpretiert die Kalorienreduktion als Hungersnot und senkt den Grundumsatz. Sobald Sie wieder normal essen, speichern Sie Fett doppelt so schnell.", "Lösung: Keine Diät, sondern eine dauerhafte Ernährungsumstellung. Proteinreich und ballaststoffreich."] },
+            { id: 7, title: "Volkskrankheit Rücken", cat: "Prävention", time: "6 min", date: "01. Okt", author: "T. Müller", image: "https://images.unsplash.com/photo-1544367563-12123d896889?auto=format&fit=crop&w=800", desc: "80% sind betroffen. Einfache Übungen für den Alltag.", fullText: ["Rückenschmerzen sind oft unspezifisch, das heißt, es liegt kein Bandscheibenvorfall vor.", "Ursache ist meist Bewegungsmangel und verkümmerte Muskulatur.", "Die beste Medizin ist Bewegung, nicht Schonung. Tägliche Spaziergänge und leichtes Krafttraining wirken Wunder."] },
+            { id: 8, title: "Migräne verstehen", cat: "Forschung", time: "9 min", date: "28. Sep", author: "Dr. Neuhaus", image: "https://images.unsplash.com/photo-1515890435782-59a5bb6e0c15?auto=format&fit=crop&w=800", desc: "Mehr als nur Kopfschmerzen: Ursachen und moderne Therapieansätze.", fullText: ["Migräne ist eine komplexe neurologische Erkrankung.", "Typisch sind einseitige, pochende Schmerzen, oft begleitet von Übelkeit und Lichtempfindlichkeit.", "Neue Antikörper-Therapien bieten Hoffnung für chronische Patienten. Führen Sie unbedingt ein Kopfschmerztagebuch."] },
+            { id: 9, title: "Zone 2 Training", cat: "Fitness", time: "10 min", date: "25. Sep", author: "Prof. Arndt", image: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=800", desc: "Warum 'langsam' das neue 'schnell' ist.", fullText: ["Lange galt im Freizeitsport: Wer nicht schwitzt, hat nicht trainiert. Das ist physiologisch falsch.", "Zone 2 ist der Bereich, in dem Sie sich noch entspannt unterhalten können. Hier verbrennt der Körper fast ausschließlich Fett.", "Profisportler verbringen 80% ihrer Zeit in diesem Bereich, um ihre Mitochondrien zu vermehren."] },
+            { id: 10, title: "Muskeln sind Medizin", cat: "Fitness", time: "5 min", date: "22. Sep", author: "Dr. Reha", image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=800", desc: "Krafttraining ist die wichtigste Altersvorsorge.", fullText: ["Muskeln sind weit mehr als nur Motorik. Sie sind unser größtes Stoffwechselorgan.", "Bei Betätigung schütten sie Myokine aus – Botenstoffe, die Entzündungen im ganzen Körper bekämpfen.", "Ab dem 30. Lebensjahr verlieren wir Muskelmasse. Krafttraining wirkt dem entgegen."] },
+            { id: 11, title: "Schlafhygiene 101", cat: "Mental Health", time: "4 min", date: "20. Sep", author: "S. Schlaf", image: "https://images.unsplash.com/photo-1541781777631-fa182f3c4015?auto=format&fit=crop&w=800", desc: "Wie Sie Ihr Schlafzimmer in eine Erholungsoase verwandeln.", fullText: ["Dunkelheit ist essenziell für die Melatonin-Produktion.", "Halten Sie das Schlafzimmer kühl (ca. 18 Grad).", "Vermeiden Sie blaues Licht von Bildschirmen mindestens eine Stunde vor dem Bett."] },
+            { id: 12, title: "Zucker: Das süße Gift", cat: "Ernährung", time: "7 min", date: "18. Sep", author: "Dr. Sweet", image: "https://images.unsplash.com/photo-1582282577669-7c8e9663d272?auto=format&fit=crop&w=800", desc: "Was Zucker in Ihrem Gehirn anrichtet.", fullText: ["Zucker aktiviert das Belohnungszentrum im Gehirn ähnlich wie Drogen.", "Ein hoher Inselinspiegel blockiert die Fettverbrennung.", "Versteckter Zucker lauert oft in 'gesunden' Lebensmitteln wie Fruchtjoghurt oder Müsli."] },
+            { id: 13, title: "Eisbaden: Hype oder Hilfe?", cat: "Forschung", time: "5 min", date: "15. Sep", author: "Wim H.", image: "https://images.unsplash.com/photo-1520113645023-1d019446eb2d?auto=format&fit=crop&w=800", desc: "Die Wissenschaft hinter der Kälteexposition.", fullText: ["Kälte aktiviert braunes Fettgewebe, das Wärme produziert und Kalorien verbrennt.", "Der Dopaminspiegel steigt nach dem Eisbad um bis zu 250% an.", "Tasten Sie sich langsam heran: Beginnen Sie mit kalten Duschen."] },
+            { id: 14, title: "Meditation für Skeptiker", cat: "Mental Health", time: "6 min", date: "12. Sep", author: "Guru Bob", image: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=800", desc: "Warum Sie nicht spirituell sein müssen, um davon zu profitieren.", fullText: ["Meditation verändert nachweislich die Gehirnstruktur (Neuroplastizität).", "Es geht nicht darum, an nichts zu denken, sondern Gedanken zu beobachten.", "Schon 10 Minuten täglich reduzieren Stresshormone messbar."] },
+            { id: 15, title: "Vitamin D Mangel", cat: "Prävention", time: "4 min", date: "10. Sep", author: "Dr. Sonne", image: "https://images.unsplash.com/photo-1532446732738-466d79430c66?auto=format&fit=crop&w=800", desc: "Warum fast jeder im Winter supplementieren sollte.", fullText: ["In unseren Breitengraden ist die Sonne im Winter zu schwach für die Vitamin-D-Produktion.", "Ein Mangel schwächt das Immunsystem und die Knochen.", "Lassen Sie Ihren Spiegel beim Arzt messen, bevor Sie hochdosiert supplementieren."] }
         ];
 
         // ==========================================
-        // 4. HELFER FUNKTIONEN
+        // 4. HELFER FUNKTIONEN & COMPONENTS
         // ==========================================
         
-        // Zuweisung der Gruppen-IDs zu Konfigurationen (UVs)
         const getGroupConfig = (groupID) => {
             const map = {
-                0: { eyes: false, sound: false, info: false }, // Kontrollgruppe
-                1: { eyes: true,  sound: false, info: false }, // Nur Augen
-                2: { eyes: false, sound: true,  info: false }, // Nur Ton
-                3: { eyes: true,  sound: true,  info: false }, // Multimodal
-                5: { eyes: true,  sound: false, info: true  }, // Augen + Text
-                6: { eyes: false, sound: true,  info: true  }, // Ton + Text
-                7: { eyes: true,  sound: true,  info: true  }, // Alles + Text
+                0: { eyes: false, sound: false, info: false },
+                1: { eyes: true,  sound: false, info: false },
+                2: { eyes: false, sound: true,  info: false },
+                3: { eyes: true,  sound: true,  info: false },
+                5: { eyes: true,  sound: false, info: true  },
+                6: { eyes: false, sound: true,  info: true  },
+                7: { eyes: true,  sound: true,  info: true  },
             };
             return map[groupID] || map[0];
         };
 
-        // Audio abspielen
         const playSoundFile = (audioObj) => {
             if (!audioObj) return;
             audioObj.currentTime = 0;
             const playPromise = audioObj.play();
             if (playPromise !== undefined) {
-                playPromise.catch(error => console.log("Audio Error (User interaction needed):", error));
+                playPromise.catch(error => console.log("Audio Autoplay blocked", error));
             }
         };
 
-        // ==========================================
-        // 5. KOMPONENTEN
-        // ==========================================
-
-        // --- INTRO SCREEN ---
-        const IntroScreen = ({ onStart }) => (
-            <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-                <div className="bg-white max-w-md w-full p-8 rounded-2xl shadow-2xl text-center animate-fade-in">
-                    <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <Icon path={paths.activity} className="w-8 h-8" />
-                    </div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-4">Willkommen</h1>
-                    <p className="text-gray-600 mb-8">
-                        Bitte stellen Sie sicher, dass Ihr Ton eingeschaltet ist.<br/>
-                        Klicken Sie auf "Starten", um die Webseite zu laden.
-                    </p>
-                    <div className="text-xs text-gray-300 mt-2 mb-6">
-                        System-Check: {window.location.search.includes('t=') ? "✅ Token erkannt" : "❌ Kein Token gefunden"}
-                    </div>
-                    <button onClick={onStart} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition-transform transform active:scale-95 text-lg">
-                        Starten
-                    </button>
-                </div>
-            </div>
-        );
-
-// --- STIMULUS OVERLAY (Augen / Warnschild) ---
+        // 1. STIMULUS OVERLAY (AUGEN / TEXT)
         const StimulusOverlay = ({ config, variant = "banner" }) => {
             const eyeColor = variant === 'banner' ? '#3b82f6' : '#5D4037';
-            
-            // Positionierung:
-            // Im Formular: Fixiert oben, zentriert.
-            // Im Banner: Absolut positioniert über dem Banner.
             const positionClass = variant === 'form' 
                 ? 'fixed top-0 left-1/2 -translate-x-1/2 pt-2' 
                 : 'absolute -top-16 left-1/2 -translate-x-1/2'; 
 
             return (
                 <div className={`pointer-events-none z-[60] flex flex-col items-center gap-2 transition-opacity duration-500 ${positionClass}`}>
-                    
-                    {/* 1. DIE AUGEN (Groß & Auffällig) */}
                     {config.eyes && (
                         <div className="flex gap-4 items-center justify-center filter drop-shadow-lg">
                             <div className="bg-white p-2 rounded-full border-2 border-gray-300 shadow-2xl overflow-hidden animate-pulse-slow">
@@ -206,8 +166,6 @@
                             </div>
                         </div>
                     )}
-
-                    {/* 2. DER TEXT (Jetzt identisch zum Cookie-Banner) */}
                     {config.info && variant === 'form' && (
                         <div className="bg-red-50 border-2 border-red-200 p-4 rounded-xl text-red-900 shadow-2xl mt-2 max-w-md text-center animate-fade-in backdrop-blur-sm bg-opacity-95">
                             <div className="flex items-center justify-center gap-2 font-bold mb-2 text-red-700 uppercase tracking-wide text-sm">
@@ -222,22 +180,19 @@
             );
         };
 
-       // --- COOKIE BANNER ---
+        // 2. COOKIE BANNER
         const CookieBanner = ({ group, onDecision, audioObject, onBannerLoad }) => {
             const config = getGroupConfig(group);
-            
             useEffect(() => {
                 onBannerLoad();
                 if (config.sound && audioObject) playSoundFile(audioObject);
             }, []);
-
             const [details, setDetails] = useState(false);
 
             return (
                 <div className="fixed bottom-0 left-0 right-0 z-50 p-4 md:p-6 bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.2)] border-t-4 border-blue-600 animate-slide-up">
                     <div className="max-w-6xl mx-auto relative">
                         <StimulusOverlay config={config} variant="banner" />
-                        
                         <div className="flex flex-col md:flex-row gap-6 items-center">
                             <div className="flex-1">
                                 <h3 className="text-lg font-bold text-gray-900 mb-2">Privatsphäre-Einstellungen</h3>
@@ -245,29 +200,19 @@
                                     Wir nutzen Cookies und Tracking-Technologien, um Ihr Nutzererlebnis zu personalisieren und Marketingmaßnahmen zu verbessern. 
                                     {details && <span className="block mt-2 text-gray-500">Dabei werden Daten an Dritte übertragen, auch außerhalb der EU. Dies kann Risiken für die Sicherheit Ihrer Daten bergen.</span>}
                                 </p>
-                                <button onClick={() => setDetails(!details)} className="text-xs text-blue-600 underline font-medium hover:text-blue-800">
-                                    {details ? "Weniger Details" : "Mehr Informationen"}
-                                </button>
+                                <button onClick={() => setDetails(!details)} className="text-xs text-blue-600 underline font-medium hover:text-blue-800">{details ? "Weniger Details" : "Mehr Informationen"}</button>
                             </div>
-
                             {config.info && (
                                 <div className="w-full md:w-72 shrink-0 animate-fade-in">
                                     <div className="bg-red-50 border-2 border-red-200 p-3 rounded-lg text-xs text-red-900 shadow-sm">
-                                        <div className="flex items-center gap-2 font-bold mb-1 text-red-700 uppercase tracking-wide">
-                                            <Icon path={paths.shield} className="w-4 h-4"/> Datenschutz-Hinweis
-                                        </div>
+                                        <div className="flex items-center gap-2 font-bold mb-1 text-red-700 uppercase tracking-wide"><Icon path={paths.shield} className="w-4 h-4"/> Datenschutz-Hinweis</div>
                                         Achtung: Wenn Sie zustimmen, können Ihre persönlichen Informationen an Dritte weitergegeben und für Werbung genutzt werden.
                                     </div>
                                 </div>
                             )}
-
                             <div className="flex flex-col gap-3 w-full md:w-auto shrink-0">
-                                <button onClick={() => onDecision('accept_all')} className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded shadow-md text-sm transition-transform active:scale-95">
-                                    Alle akzeptieren
-                                </button>
-                                <button onClick={() => onDecision('reject_all')} className="px-8 py-3 bg-white hover:bg-gray-100 text-gray-700 font-medium border border-gray-300 rounded shadow-sm text-sm transition-colors">
-                                    Nur Notwendige
-                                </button>
+                                <button onClick={() => onDecision('accept_all')} className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded shadow-md text-sm transition-transform active:scale-95">Alle akzeptieren</button>
+                                <button onClick={() => onDecision('reject_all')} className="px-8 py-3 bg-white hover:bg-gray-100 text-gray-700 font-medium border border-gray-300 rounded shadow-sm text-sm transition-colors">Nur Notwendige</button>
                             </div>
                         </div>
                     </div>
@@ -275,127 +220,91 @@
             );
         };
 
-        // --- BLOG PAGE (Home View & Detail View) ---
-        // 'mode' kann 'initial' oder 'personalized' sein
+        // 3. BLOG PAGE
         const BlogPage = ({ onAction, mode = 'initial' }) => {
             const [selectedArticle, setSelectedArticle] = useState(null);
-            const [categoryFilter, setCategoryFilter] = useState("Alle");
+            const [categoryFilter, setCategoryFilter] = useState("Alle Beiträge");
             const [showLoginModal, setShowLoginModal] = useState(false);
-            const [newsletterEmail, setNewsletterEmail] = useState("");
-            const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
+            const [likes, setLikes] = useState({}); // Fake Likes status
             
-            // TIMER LOGIK FÜR BROWSING
             const requiredTime = mode === 'initial' ? MIN_BROWSING_TIME_1 : MIN_BROWSING_TIME_2;
             const [timeLeft, setTimeLeft] = useState(requiredTime);
 
             useEffect(() => {
                 if (timeLeft <= 0) return;
-                const timer = setInterval(() => {
-                    setTimeLeft(prev => prev - 1);
-                }, 1000);
+                const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
                 return () => clearInterval(timer);
             }, [timeLeft]);
 
-            // Filter logic
-            const filteredArticles = categoryFilter === "Alle" 
+            // Filter
+            const filteredArticles = categoryFilter === "Alle Beiträge" 
                 ? BLOG_CONTENT 
-                : BLOG_CONTENT.filter(a => a.cat === categoryFilter || (categoryFilter === "Magazin" && true)); 
+                : BLOG_CONTENT.filter(a => a.cat === categoryFilter);
 
-            const categories = ["Alle", "Ernährung", "Fitness", "Mental Health", "Prävention", "Magazin"];
+            const categories = ["Alle Beiträge", "Forschung", "Ernährung", "Fitness", "Mental Health", "Prävention"];
 
-            // Helper: Der Button oben rechts und in der CTA Box
+            // Like toggle
+            const toggleLike = (e, id) => {
+                e.stopPropagation();
+                setLikes(prev => ({...prev, [id]: !prev[id]}));
+            };
+
             const ActionButton = ({inHeader}) => {
                 if (mode === 'initial') {
-                    if (timeLeft > 0) {
-                        return (
-                            <button disabled className={`bg-slate-300 text-slate-500 rounded-full font-medium cursor-not-allowed flex items-center gap-2 ${inHeader ? 'px-5 py-2 text-sm' : 'w-full py-3 justify-center'}`}>
-                                <Icon path={paths.clock} className="w-4 h-4 animate-pulse" />
-                                Profil erstellen in {timeLeft}s
-                            </button>
-                        );
-                    }
-                    return (
-                        <button onClick={onAction} className={`bg-slate-900 text-white rounded-full font-medium hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/20 animate-fade-in ${inHeader ? 'px-5 py-2 text-sm' : 'w-full py-3'}`}>
-                            Profil erstellen
-                        </button>
-                    );
+                    if (timeLeft > 0) return (<button disabled className={`bg-slate-300 text-slate-500 rounded-full font-medium cursor-not-allowed flex items-center gap-2 ${inHeader ? 'px-5 py-2 text-sm' : 'w-full py-3 justify-center'}`}><Icon path={paths.clock} className="w-4 h-4 animate-pulse" /> Profil erstellen in {timeLeft}s</button>);
+                    return (<button onClick={onAction} className={`bg-slate-900 text-white rounded-full font-medium hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/20 animate-fade-in ${inHeader ? 'px-5 py-2 text-sm' : 'w-full py-3'}`}>Profil erstellen</button>);
                 } else {
-                    // Personalized mode
-                    if (timeLeft > 0) {
-                         return (
-                            <div className={`bg-green-100 text-green-800 rounded-full text-xs font-bold animate-pulse ${inHeader ? 'px-4 py-2' : 'w-full py-3 text-center'}`}>
-                                Personalisierte Ansicht aktiv...
-                            </div>
-                        );
-                    }
-                    return (
-                        <button onClick={onAction} className={`bg-green-600 text-white rounded-full font-bold hover:bg-green-700 transition-colors shadow-lg shadow-green-900/20 animate-fade-in ${inHeader ? 'px-6 py-2 text-sm' : 'w-full py-3'}`}>
-                            Studie beenden
-                        </button>
-                    );
+                    if (timeLeft > 0) return (<div className={`bg-green-100 text-green-800 rounded-full text-xs font-bold animate-pulse ${inHeader ? 'px-4 py-2' : 'w-full py-3 text-center'}`}>Personalisierte Ansicht aktiv...</div>);
+                    return (<button onClick={onAction} className={`bg-green-600 text-white rounded-full font-bold hover:bg-green-700 transition-colors shadow-lg shadow-green-900/20 animate-fade-in ${inHeader ? 'px-6 py-2 text-sm' : 'w-full py-3'}`}>Studie beenden</button>);
                 }
             };
 
             const HeaderTitle = () => (
-                <div onClick={() => {setCategoryFilter("Alle"); setSelectedArticle(null);}} className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+                <div onClick={() => {setCategoryFilter("Alle Beiträge"); setSelectedArticle(null);}} className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
                     <div className="p-1.5 bg-green-100 rounded text-green-600"><Icon path={paths.leaf} className="w-6 h-6" /></div>
-                    <span className="text-xl font-bold tracking-tight text-slate-800">
-                        Vital<span className="text-green-600">Core</span>
-                        {mode === 'personalized' && <span className="ml-2 text-xs bg-green-600 text-white px-2 py-0.5 rounded uppercase">Für Sie</span>}
-                    </span>
+                    <span className="text-xl font-bold tracking-tight text-slate-800">Vital<span className="text-green-600">Core</span>{mode === 'personalized' && <span className="ml-2 text-xs bg-green-600 text-white px-2 py-0.5 rounded uppercase">Für Sie</span>}</span>
                 </div>
             );
 
-            // --- Sub-View: Artikel Details ---
+            // DETAIL VIEW
             if (selectedArticle) {
+                // Finde 3 zufällige "Related Articles"
+                const related = BLOG_CONTENT.filter(a => a.id !== selectedArticle.id).sort(() => 0.5 - Math.random()).slice(0, 3);
+
                 return (
                     <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-white animate-fade-in">
                         <nav className="bg-white border-b sticky top-0 z-20 shadow-sm">
                             <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
                                 <HeaderTitle />
                                 <div className="flex gap-4 items-center">
-                                    <button onClick={() => setSelectedArticle(null)} className="text-sm font-medium text-slate-500 hover:text-green-600 flex items-center gap-1">
-                                        <Icon path={paths.arrowLeft} className="w-4 h-4" /> Zurück zur Übersicht
-                                    </button>
+                                    <button onClick={() => setSelectedArticle(null)} className="text-sm font-medium text-slate-500 hover:text-green-600 flex items-center gap-1"><Icon path={paths.arrowLeft} className="w-4 h-4" /> Zurück</button>
                                     <ActionButton inHeader={true} />
                                 </div>
                             </div>
                         </nav>
-
-                        <article className="max-w-4xl mx-auto px-4 py-12 flex flex-col md:flex-row gap-12">
-                            <div className="flex-1">
-                                <div className="w-full h-64 rounded-2xl overflow-hidden mb-8 shadow-md">
-                                    <img src={selectedArticle.image} alt={selectedArticle.title} className="w-full h-full object-cover" onError={(e) => {e.target.onerror = null; e.target.src='https://placehold.co/800x400/e2e8f0/475569?text=Bild+nicht+verfügbar';}} />
-                                </div>
-                                <div className="flex items-center gap-3 text-sm font-bold text-green-600 uppercase tracking-wider mb-3">
-                                    {selectedArticle.cat} • {selectedArticle.date}
-                                </div>
-                                <h1 className="text-4xl font-extrabold text-slate-900 mb-6 leading-tight">{selectedArticle.title}</h1>
-                                <div className="flex items-center gap-3 text-slate-500 mb-8 pb-8 border-b">
-                                    <span className="font-medium">{selectedArticle.author}</span>
-                                    <span>•</span>
-                                    <span className="flex items-center gap-1"><Icon path={paths.clock} className="w-4 h-4" /> {selectedArticle.time} Lesezeit</span>
-                                </div>
-                                <div className="prose prose-lg text-slate-700 leading-relaxed space-y-6">
-                                    {selectedArticle.fullText.map((paragraph, idx) => (<p key={idx}>{paragraph}</p>))}
-                                </div>
-                                <div className="mt-12 pt-8 border-t">
-                                    <button onClick={() => setSelectedArticle(null)} className="text-blue-600 font-bold hover:underline flex items-center gap-2">
-                                        <Icon path={paths.arrowLeft} className="w-4 h-4" /> Zurück zu allen Artikeln
-                                    </button>
-                                </div>
+                        <article className="max-w-3xl mx-auto px-4 py-12">
+                            <div className="w-full h-80 rounded-2xl overflow-hidden mb-8 shadow-md">
+                                <img src={selectedArticle.image} className="w-full h-full object-cover" onError={(e) => {e.target.onerror = null; e.target.src='https://placehold.co/800x400/e2e8f0/475569?text=Bild+nicht+verfügbar';}} />
                             </div>
-                            <div className="w-full md:w-80 shrink-0 space-y-8">
-                                <div className="bg-slate-50 p-6 rounded-2xl border border-green-100 text-center">
-                                    <h3 className="font-bold text-slate-900 mb-2">Gefällt Ihnen dieser Artikel?</h3>
-                                    {mode === 'initial' ? (
-                                        <>
-                                            <p className="text-sm text-slate-500 mb-4">Erstellen Sie ein Profil, um personalisierte Empfehlungen zu erhalten.</p>
-                                            <ActionButton inHeader={false} />
-                                        </>
-                                    ) : (
-                                        <p className="text-sm text-green-600 font-bold">Dieser Artikel passt perfekt zu Ihrem Profil!</p>
-                                    )}
+                            <div className="flex items-center gap-3 text-sm font-bold text-green-600 uppercase tracking-wider mb-3">{selectedArticle.cat} • {selectedArticle.date}</div>
+                            <h1 className="text-4xl font-extrabold text-slate-900 mb-6 leading-tight">{selectedArticle.title}</h1>
+                            <div className="flex items-center gap-3 text-slate-500 mb-8 pb-8 border-b">
+                                <span className="font-medium">{selectedArticle.author}</span><span>•</span><span className="flex items-center gap-1"><Icon path={paths.clock} className="w-4 h-4" /> {selectedArticle.time} Lesezeit</span>
+                            </div>
+                            <div className="prose prose-lg text-slate-700 leading-relaxed space-y-6">
+                                {selectedArticle.fullText.map((p, i) => <p key={i}>{p}</p>)}
+                            </div>
+                            
+                            {/* RELATED ARTICLES */}
+                            <div className="mt-16 pt-8 border-t">
+                                <h3 className="text-xl font-bold mb-6">Das könnte Sie auch interessieren</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    {related.map(rel => (
+                                        <div key={rel.id} onClick={() => {window.scrollTo(0,0); setSelectedArticle(rel);}} className="cursor-pointer group">
+                                            <div className="h-32 rounded-lg overflow-hidden mb-3"><img src={rel.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform"/></div>
+                                            <h4 className="font-bold text-sm group-hover:text-green-600">{rel.title}</h4>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         </article>
@@ -403,287 +312,149 @@
                 );
             }
 
-            // --- Sub-View: Artikel Liste (Home) ---
+            // LIST VIEW
             return (
                 <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-slate-50 relative">
+                    <nav className="bg-white border-b sticky top-0 z-20 shadow-sm">
+                        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+                            <HeaderTitle />
+                            {/* SCROLLABLE CATEGORIES */}
+                            <div className="hidden md:flex gap-1 overflow-x-auto no-scrollbar mx-4">
+                                {categories.map(item => (
+                                    <button key={item} onClick={() => setCategoryFilter(item)} className={`whitespace-nowrap px-3 py-2 text-sm font-medium rounded-full transition-colors ${categoryFilter === item ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>
+                                        {item}
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="flex gap-4 items-center shrink-0">
+                                <button className="p-2 text-slate-400 hover:text-slate-600" onClick={() => setShowLoginModal(true)}><Icon path={paths.search} className="w-5 h-5" /></button>
+                                <ActionButton inHeader={true} />
+                            </div>
+                        </div>
+                        {/* Mobile Categories */}
+                        <div className="md:hidden flex gap-2 overflow-x-auto px-4 py-2 border-t no-scrollbar">
+                             {categories.map(item => (
+                                <button key={item} onClick={() => setCategoryFilter(item)} className={`whitespace-nowrap px-3 py-1 text-xs font-medium rounded-full transition-colors ${categoryFilter === item ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-600'}`}>{item}</button>
+                            ))}
+                        </div>
+                    </nav>
+
+                    <main className="flex-grow max-w-6xl mx-auto px-4 py-8 w-full">
+                        {/* HERO AREA (Nur Initial) */}
+                        {mode === 'initial' && categoryFilter === 'Alle Beiträge' && (
+                            <div className="bg-slate-900 rounded-3xl p-8 md:p-12 mb-12 text-white relative overflow-hidden flex flex-col md:flex-row items-center gap-8">
+                                <div className="absolute top-0 right-0 w-96 h-96 bg-green-500 rounded-full blur-3xl opacity-20 translate-x-1/3 -translate-y-1/3"></div>
+                                <div className="flex-1 relative z-10">
+                                    <span className="text-green-400 font-bold tracking-wider text-xs uppercase mb-2 block">Trending Topic</span>
+                                    <h2 className="text-3xl md:text-5xl font-extrabold mb-4 leading-tight">Wissenschaft trifft <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-300">Lebensqualität</span></h2>
+                                    <p className="text-slate-300 mb-6 max-w-lg">Entdecken Sie fundierte Artikel zu Langlebigkeit, Ernährung und mentaler Gesundheit.</p>
+                                    <button onClick={() => setCategoryFilter("Forschung")} className="bg-white/10 hover:bg-white/20 backdrop-blur border border-white/20 text-white px-6 py-2 rounded-lg font-medium transition-colors">Mehr erfahren</button>
+                                </div>
+                                <div className="w-full md:w-1/3 aspect-square bg-gradient-to-br from-slate-800 to-slate-700 rounded-2xl border border-slate-600 p-6 flex items-center justify-center relative z-10">
+                                    <Icon path={paths.activity} className="w-20 h-20 text-green-500" />
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-2xl font-bold text-slate-800">{categoryFilter}</h2>
+                            <span className="text-sm text-slate-400">{filteredArticles.length} Artikel</span>
+                        </div>
+
+                        {/* ARTICLE GRID */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {filteredArticles.map(art => (
+                                <article key={art.id} onClick={() => setSelectedArticle(art)} className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all cursor-pointer overflow-hidden group flex flex-col h-full">
+                                    <div className="h-48 overflow-hidden relative">
+                                        <img src={art.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => {e.target.onerror = null; e.target.src='https://placehold.co/800x400/e2e8f0/475569?text=Bild+nicht+verfügbar';}} />
+                                        <div className="absolute top-3 right-3">
+                                            <button onClick={(e) => toggleLike(e, art.id)} className={`p-2 rounded-full backdrop-blur-md transition-colors ${likes[art.id] ? 'bg-red-50 text-red-500' : 'bg-black/30 text-white hover:bg-black/50'}`}>
+                                                <Icon path={likes[art.id] ? paths.heartFilled : paths.heart} className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                        <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded font-medium">{art.cat}</div>
+                                    </div>
+                                    <div className="p-5 flex-1 flex flex-col">
+                                        <div className="text-xs text-slate-400 mb-2 flex justify-between"><span>{art.date}</span><span>{art.time}</span></div>
+                                        <h3 className="text-lg font-bold text-slate-900 mb-2 leading-tight group-hover:text-green-600 transition-colors">{art.title}</h3>
+                                        <p className="text-slate-600 text-sm line-clamp-3 mb-4 flex-1">{art.desc}</p>
+                                        <div className="flex items-center gap-2 pt-4 border-t border-slate-100">
+                                            <div className="w-6 h-6 bg-slate-200 rounded-full flex items-center justify-center text-slate-500 text-xs"><Icon path={paths.user} className="w-3 h-3"/></div>
+                                            <span className="text-xs font-bold text-slate-500">{art.author}</span>
+                                        </div>
+                                    </div>
+                                </article>
+                            ))}
+                        </div>
+                        
+                        {/* CTA BOX in Grid if few items */}
+                        {filteredArticles.length < 3 && (
+                            <div className="mt-8 p-8 bg-green-50 rounded-2xl text-center border border-green-100">
+                                <h3 className="font-bold text-green-900 text-lg mb-2">Keine passenden Artikel?</h3>
+                                <button onClick={() => setCategoryFilter("Alle Beiträge")} className="text-green-600 font-bold underline">Zeige alle Beiträge</button>
+                            </div>
+                        )}
+                    </main>
                     
+                    {/* FAKE LOGIN MODAL */}
                     {showLoginModal && (
                         <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 animate-fade-in" onClick={() => setShowLoginModal(false)}>
                             <div className="bg-white rounded-xl shadow-2xl p-8 max-w-sm w-full text-center" onClick={(e) => e.stopPropagation()}>
                                 <div className="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4"><Icon path={paths.shield} className="w-6 h-6" /></div>
                                 <h3 className="text-xl font-bold text-gray-900 mb-2">Zugriff verweigert</h3>
-                                <p className="text-gray-600 mb-6">Dieser Bereich ist für Teilnehmer der Studie gesperrt. Bitte fahren Sie mit der Erstellung eines neuen Profils fort.</p>
+                                <p className="text-gray-600 mb-6">Dieser Bereich ist für Teilnehmer der Studie gesperrt.</p>
                                 <button onClick={() => setShowLoginModal(false)} className="w-full bg-gray-900 text-white font-bold py-2 rounded-lg">Verstanden</button>
                             </div>
                         </div>
                     )}
-
-                    <nav className="bg-white border-b sticky top-0 z-20 shadow-sm">
-                        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-                            <HeaderTitle />
-                            <div className="hidden md:flex gap-8 text-sm font-medium text-slate-500">
-                                {categories.filter(c => c !== "Alle").map(item => (
-                                    <button key={item} onClick={() => setCategoryFilter(item === "Magazin" ? "Alle" : item)} className={`hover:text-green-600 transition-colors py-2 border-b-2 ${categoryFilter === item ? 'border-green-500 text-green-600' : 'border-transparent'}`}>
-                                        {item}
-                                    </button>
-                                ))}
-                            </div>
-                            <div className="flex gap-4 items-center">
-                                <button className="p-2 text-slate-400 hover:text-slate-600" onClick={() => setShowLoginModal(true)}><Icon path={paths.search} className="w-5 h-5" /></button>
-                                <ActionButton inHeader={true} />
-                            </div>
-                        </div>
-                    </nav>
-
-                    <main className="flex-grow">
-                        {mode === 'initial' && (
-                            <div className="relative bg-slate-900 text-white py-20 px-4 overflow-hidden">
-                                <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-                                <div className="absolute top-0 right-0 w-96 h-96 bg-green-500 rounded-full blur-3xl opacity-20 -translate-y-1/2 translate-x-1/2"></div>
-                                <div className="max-w-6xl mx-auto relative z-10 flex flex-col md:flex-row items-center gap-12">
-                                    <div className="flex-1 space-y-6">
-                                        <div className="inline-flex items-center gap-2 bg-green-500/20 border border-green-500/30 text-green-300 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider"><span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>Trending Topic</div>
-                                        <h1 className="text-4xl md:text-6xl font-extrabold leading-tight tracking-tight">Die Zukunft Ihrer <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-300">Gesundheit</span></h1>
-                                        <p className="text-lg text-slate-300 max-w-xl leading-relaxed">Wissenschaftlich fundierte Analysen treffen auf modernste Technologie. Entdecken Sie, was Ihr Körper wirklich braucht.</p>
-                                        <div className="flex gap-4 pt-4">
-                                            {timeLeft > 0 ? (
-                                                <button disabled className="px-8 py-3.5 rounded-lg font-bold shadow-lg bg-slate-700 text-slate-400 cursor-not-allowed flex items-center gap-2">
-                                                    Bitte warten ({timeLeft}s) <Icon path={paths.clock} className="w-5 h-5 animate-pulse" />
-                                                </button>
-                                            ) : (
-                                                <button onClick={onAction} className="bg-green-500 hover:bg-green-400 text-slate-900 px-8 py-3.5 rounded-lg font-bold shadow-lg shadow-green-900/20 transition-all hover:-translate-y-1 flex items-center gap-2">
-                                                    Profil erstellen <Icon path={paths.arrowRight} className="w-5 h-5" />
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="hidden md:flex w-1/2 justify-center"><div className="relative w-80 h-96 bg-gradient-to-tr from-slate-800 to-slate-700 rounded-2xl border border-slate-600 p-6 shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-500"><div className="h-4 w-20 bg-slate-600 rounded-full mb-8"></div><div className="space-y-4"><div className="h-2 w-full bg-slate-600/50 rounded"></div><div className="h-2 w-3/4 bg-slate-600/50 rounded"></div><div className="h-32 w-full bg-green-500/10 rounded-xl border border-green-500/20 flex items-center justify-center mt-8"><Icon path={paths.activity} className="w-16 h-16 text-green-500" /></div></div></div></div>
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="max-w-6xl mx-auto px-4 py-16 grid grid-cols-1 lg:grid-cols-3 gap-12">
-                            <div className="lg:col-span-2 space-y-12">
-                                <div className="flex items-end justify-between border-b border-slate-200 pb-4"><h2 className="text-2xl font-bold text-slate-800">{mode === 'personalized' ? 'Für Sie ausgewählt' : `Neueste Artikel (${categoryFilter})`}</h2></div>
-                                <div className="space-y-8">
-                                    {filteredArticles.length > 0 ? filteredArticles.map((art) => (
-                                        <article key={art.id} onClick={() => setSelectedArticle(art)} className="group flex flex-col sm:flex-row gap-6 bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow cursor-pointer">
-                                            <div className="w-full sm:w-48 h-48 shrink-0 overflow-hidden rounded-xl">
-                                                <img src={art.image} alt={art.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => {e.target.onerror = null; e.target.src='https://placehold.co/800x400/e2e8f0/475569?text=Bild+nicht+verfügbar';}} />
-                                            </div>
-                                            <div className="flex-1 flex flex-col">
-                                                <div className="flex items-center gap-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2"><span className="text-green-600">{art.cat}</span><span>•</span><span>{art.date}</span></div>
-                                                <h3 className="text-xl font-bold text-slate-900 mb-3 group-hover:text-green-600 transition-colors">{art.title}</h3>
-                                                <p className="text-slate-600 text-sm leading-relaxed mb-4 flex-grow">{art.desc}</p>
-                                            </div>
-                                        </article>
-                                    )) : <div className="text-center py-10 text-gray-500">Keine Artikel in dieser Kategorie gefunden.</div>}
-                                </div>
-                            </div>
-                            <div className="space-y-8">
-                                <div className="bg-white p-8 rounded-2xl shadow-lg border border-green-100 text-center relative overflow-hidden">
-                                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-400 to-emerald-500"></div>
-                                    <div className="w-16 h-16 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4"><Icon path={paths.check} className="w-8 h-8" /></div>
-                                    <h3 className="text-xl font-bold text-slate-900 mb-2">Gesundheits-Check</h3>
-                                    <p className="text-slate-500 text-sm mb-6 leading-relaxed">
-                                        {mode === 'initial' ? "Ermitteln Sie Ihren Status." : "Status: Aktualisiert."}
-                                    </p>
-                                    {mode === 'initial' && <button onClick={onAction} disabled={timeLeft > 0} className={`w-full font-bold py-3 rounded-lg transition-colors shadow-lg ${timeLeft > 0 ? 'bg-gray-300 text-gray-500' : 'bg-slate-900 text-white hover:bg-slate-800'}`}>Jetzt starten</button>}
-                                </div>
-                            </div>
-                        </div>
-                    </main>
-                    <footer className="bg-white border-t py-12 mt-12">
-                        <div className="max-w-6xl mx-auto px-4 pt-8 border-t text-center text-slate-400 text-sm"><p>&copy; 2025 VitalCore Health Systems. Alle Rechte vorbehalten.</p></div>
-                    </footer>
                 </div>
             );
         };
 
-        // --- REGISTRATION FORM (MIT TIMER AUF DEM BUTTON) ---
+        // 4. REGISTRATION FORM (MIT TIMER & GROßEN AUGEN)
         const RegistrationForm = ({ onSubmit, group, audioObject }) => {
-            const [formData, setFormData] = useState({
-                gender: '', age: '', height: '', weight: '', diet: '',
-                smoke: '', alcohol: '',
-                sportActive: '', sportName: '', sportFreq: '',
-                dietHistory: '', dietName: '', dietTime: '',
-                bodySat: 5, eatHealth: 5,
-                hopes: '', goals: '',
-                interests: []
-            });
-
+            const [formData, setFormData] = useState({ gender: '', age: '', height: '', weight: '', diet: '', smoke: '', alcohol: '', sportActive: '', sportName: '', sportFreq: '', dietHistory: '', dietName: '', dietTime: '', bodySat: 5, eatHealth: 5, hopes: '', goals: '', interests: [] });
             const [noAnswers, setNoAnswers] = useState({});
             const [interactionStarted, setInteractionStarted] = useState(false);
-            
-            // TIMER für Formular
             const [timeLeft, setTimeLeft] = useState(MIN_REGISTRATION_TIME);
 
             useEffect(() => {
                 if (timeLeft <= 0) return;
-                const timer = setInterval(() => {
-                    setTimeLeft(prev => prev - 1);
-                }, 1000);
+                const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
                 return () => clearInterval(timer);
             }, [timeLeft]);
 
             const config = getGroupConfig(group);
-
-            const interact = () => {
-                if (!interactionStarted) {
-                    setInteractionStarted(true);
-                    if (config.sound && audioObject) playSoundFile(audioObject);
-                }
-            };
-
+            const interact = () => { if (!interactionStarted) { setInteractionStarted(true); if (config.sound && audioObject) playSoundFile(audioObject); } };
             const handleChange = (e) => { interact(); const { name, value } = e.target; setFormData(prev => ({ ...prev, [name]: value })); };
             const handleNoAnswerToggle = (field) => { interact(); setNoAnswers(prev => { const newState = { ...prev, [field]: !prev[field] }; setFormData(prevData => ({ ...prevData, [field]: newState[field] ? 'keine_angabe' : '' })); return newState; }); };
             const handleInterestChange = (interest) => { interact(); if (interest === 'keine_angabe') { const isSelected = formData.interests.includes('keine_angabe'); setFormData(prev => ({ ...prev, interests: isSelected ? [] : ['keine_angabe'] })); } else { setFormData(prev => { let newInterests = prev.interests.filter(i => i !== 'keine_angabe'); newInterests = newInterests.includes(interest) ? newInterests.filter(i => i !== interest) : [...newInterests, interest]; return { ...prev, interests: newInterests }; }); } };
             const isRealistic = (val, min, max) => { if (!val || val === 'keine_angabe') return true; const num = parseFloat(val); return !isNaN(num) && num >= min && num <= max; };
             const NoAnswerCheckbox = ({ field, label = "Keine Angabe" }) => (<label className="flex items-center gap-2 mt-2 cursor-pointer text-xs text-slate-500 hover:text-slate-800 transition-colors"><input type="checkbox" checked={!!noAnswers[field]} onChange={() => handleNoAnswerToggle(field)} className="rounded text-slate-500 focus:ring-slate-500"/>{label}</label>);
-
-            const handleSubmit = (e) => {
-                e.preventDefault();
-                onSubmit(formData);
-            };
+            
+            const handleSubmit = (e) => { e.preventDefault(); onSubmit(formData); };
 
             return (
                 <div className="min-h-screen bg-slate-50 py-12 px-4 relative">
                     {interactionStarted && <StimulusOverlay config={config} variant="form" />}
-                    
                     <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 relative z-10">
                         <div className="bg-slate-900 p-8 text-white text-center">
                             <h2 className="text-2xl font-bold">Detailliertes Gesundheitsprofil</h2>
                             <p className="text-slate-400 text-sm mt-2">Ihre Daten helfen uns, die Analyse zu personalisieren.</p>
                         </div>
-                        
                         <form onSubmit={handleSubmit} className="p-8 space-y-8">
+                            <div className="space-y-4"><h3 className="font-bold text-lg border-b pb-2">1. Körperdaten</h3><div className="grid grid-cols-2 gap-4"><div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Geschlecht</label><select name="gender" required onFocus={interact} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded p-3 focus:ring-2 focus:ring-green-500"><option value="">Bitte wählen...</option><option value="m">Männlich</option><option value="w">Weiblich</option><option value="d">Divers</option><option value="keine_angabe">Keine Angabe</option></select></div><div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Alter</label><input type="text" name="age" disabled={noAnswers.age} value={formData.age === 'keine_angabe' ? '' : formData.age} required={!noAnswers.age} onFocus={interact} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded p-3 focus:ring-2 focus:ring-green-500 disabled:bg-gray-200 disabled:cursor-not-allowed" placeholder="Jahre"/><NoAnswerCheckbox field="age" />{!isRealistic(formData.age, 12, 110) && <p className="text-red-500 text-xs mt-1">Bitte realistisches Alter.</p>}</div><div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Größe (cm)</label><input type="text" name="height" disabled={noAnswers.height} value={formData.height === 'keine_angabe' ? '' : formData.height} required={!noAnswers.height} onFocus={interact} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded p-3 focus:ring-2 focus:ring-green-500 disabled:bg-gray-200" placeholder="cm"/><NoAnswerCheckbox field="height" />{!isRealistic(formData.height, 50, 250) && <p className="text-red-500 text-xs mt-1">Ungültig.</p>}</div><div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Gewicht (kg)</label><input type="text" name="weight" disabled={noAnswers.weight} value={formData.weight === 'keine_angabe' ? '' : formData.weight} required={!noAnswers.weight} onFocus={interact} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded p-3 focus:ring-2 focus:ring-green-500 disabled:bg-gray-200" placeholder="kg"/><NoAnswerCheckbox field="weight" />{!isRealistic(formData.weight, 30, 300) && <p className="text-red-500 text-xs mt-1">Ungültig.</p>}</div></div><div><label className="block text-xs font-bold text-gray-500 uppercase mb-2">Ernährungsweise</label><select name="diet" required onFocus={interact} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded p-3 focus:ring-2 focus:ring-green-500"><option value="">Bitte wählen...</option><option value="alles">Allesesser</option><option value="vegetarisch">Vegetarisch</option><option value="vegan">Vegan</option><option value="paleo">Paleo</option><option value="keto">Keto</option><option value="keine_angabe">Keine Angabe</option></select></div></div>
+                            <div className="space-y-4"><h3 className="font-bold text-lg border-b pb-2">2. Konsumgewohnheiten</h3><div className="grid grid-cols-1 gap-4"><div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-gray-50 rounded"><span className="font-medium text-gray-700">Rauchen Sie?</span><div className="flex gap-4 mt-2 sm:mt-0"><label className="flex items-center gap-1 cursor-pointer"><input type="radio" name="smoke" value="ja" required onFocus={interact} onChange={handleChange} className="text-green-600"/> Ja</label><label className="flex items-center gap-1 cursor-pointer"><input type="radio" name="smoke" value="nein" required onFocus={interact} onChange={handleChange} className="text-green-600"/> Nein</label><label className="flex items-center gap-1 cursor-pointer text-slate-500"><input type="radio" name="smoke" value="keine_angabe" required onFocus={interact} onChange={handleChange} className="text-slate-500"/> k.A.</label></div></div><div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-gray-50 rounded"><span className="font-medium text-gray-700">Trinken Sie Alkohol?</span><div className="flex gap-4 mt-2 sm:mt-0"><label className="flex items-center gap-1 cursor-pointer"><input type="radio" name="alcohol" value="ja" required onFocus={interact} onChange={handleChange} className="text-green-600"/> Ja</label><label className="flex items-center gap-1 cursor-pointer"><input type="radio" name="alcohol" value="nein" required onFocus={interact} onChange={handleChange} className="text-green-600"/> Nein</label><label className="flex items-center gap-1 cursor-pointer text-slate-500"><input type="radio" name="alcohol" value="keine_angabe" required onFocus={interact} onChange={handleChange} className="text-slate-500"/> k.A.</label></div></div></div></div>
+                            <div className="space-y-4"><h3 className="font-bold text-lg border-b pb-2">3. Sport & Aktivität</h3><div className="p-4 border rounded-lg bg-gray-50"><p className="font-medium mb-3">Üben Sie aktuell einen Sport aus?</p><div className="flex flex-wrap gap-6 mb-4"><label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="sportActive" value="ja" onFocus={interact} onChange={handleChange} className="w-5 h-5 text-green-600"/> Ja, regelmäßig</label><label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="sportActive" value="nein" onFocus={interact} onChange={handleChange} className="w-5 h-5 text-green-600"/> Nein</label><label className="flex items-center gap-2 cursor-pointer text-slate-500"><input type="radio" name="sportActive" value="keine_angabe" onFocus={interact} onChange={handleChange} className="w-5 h-5 text-slate-500"/> Keine Angabe</label></div>{formData.sportActive === 'ja' && (<div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in pl-4 border-l-2 border-green-500"><div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Welche Sportart?</label><input type="text" name="sportName" disabled={noAnswers.sportName} value={formData.sportName === 'keine_angabe' ? '' : formData.sportName} onFocus={interact} onChange={handleChange} className="w-full border rounded p-2 disabled:bg-gray-200" placeholder="z.B. Joggen"/><NoAnswerCheckbox field="sportName" /></div><div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Wie häufig pro Woche?</label><input type="text" name="sportFreq" disabled={noAnswers.sportFreq} value={formData.sportFreq === 'keine_angabe' ? '' : formData.sportFreq} onFocus={interact} onChange={handleChange} className="w-full border rounded p-2 disabled:bg-gray-200" placeholder="z.B. 2-3 Mal"/><NoAnswerCheckbox field="sportFreq" /></div></div>)}</div></div>
+                            <div className="space-y-4"><h3 className="font-bold text-lg border-b pb-2">4. Diät-Historie</h3><div className="p-4 border rounded-lg bg-gray-50"><p className="font-medium mb-3">Haben Sie schon einmal eine Diät gemacht?</p><div className="flex flex-wrap gap-6 mb-4"><label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="dietHistory" value="ja" onFocus={interact} onChange={handleChange} className="w-5 h-5 text-green-600"/> Ja</label><label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="dietHistory" value="nein" onFocus={interact} onChange={handleChange} className="w-5 h-5 text-green-600"/> Nein</label><label className="flex items-center gap-2 cursor-pointer text-slate-500"><input type="radio" name="dietHistory" value="keine_angabe" onFocus={interact} onChange={handleChange} className="w-5 h-5 text-slate-500"/> Keine Angabe</label></div>{formData.dietHistory === 'ja' && (<div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in pl-4 border-l-2 border-green-500"><div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Welche Diät?</label><input type="text" name="dietName" disabled={noAnswers.dietName} value={formData.dietName === 'keine_angabe' ? '' : formData.dietName} onFocus={interact} onChange={handleChange} className="w-full border rounded p-2 disabled:bg-gray-200" placeholder="z.B. Low Carb"/><NoAnswerCheckbox field="dietName" /></div><div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Längster Zeitraum?</label><input type="text" name="dietTime" disabled={noAnswers.dietTime} value={formData.dietTime === 'keine_angabe' ? '' : formData.dietTime} onFocus={interact} onChange={handleChange} className="w-full border rounded p-2 disabled:bg-gray-200" placeholder="z.B. 3 Monate"/><NoAnswerCheckbox field="dietTime" /></div></div>)}</div></div>
+                            <div className="space-y-6"><h3 className="font-bold text-lg border-b pb-2">5. Selbstwahrnehmung</h3><div className={noAnswers.bodySat ? "opacity-50" : ""}><label className="block text-sm font-bold text-gray-700 mb-2 flex justify-between"><span>Wie zufrieden bist du mit deinem Körper? (1-10)</span><span className="text-green-600 font-bold">{formData.bodySat === 'keine_angabe' ? '-' : formData.bodySat}</span></label><input type="range" name="bodySat" min="1" max="10" disabled={noAnswers.bodySat} value={formData.bodySat === 'keine_angabe' ? 5 : formData.bodySat} onFocus={interact} onChange={handleChange} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600 disabled:accent-gray-400"/><div className="flex justify-between text-xs text-gray-400 mt-1"><span>1 (Gar nicht)</span><span>10 (Sehr)</span></div><NoAnswerCheckbox field="bodySat" /></div><div className={noAnswers.eatHealth ? "opacity-50" : ""}><label className="block text-sm font-bold text-gray-700 mb-2 flex justify-between"><span>Wie gesund ernährst du dich? (1-10)</span><span className="text-green-600 font-bold">{formData.eatHealth === 'keine_angabe' ? '-' : formData.eatHealth}</span></label><input type="range" name="eatHealth" min="1" max="10" disabled={noAnswers.eatHealth} value={formData.eatHealth === 'keine_angabe' ? 5 : formData.eatHealth} onFocus={interact} onChange={handleChange} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600 disabled:accent-gray-400"/><div className="flex justify-between text-xs text-gray-400 mt-1"><span>1 (Ungesund)</span><span>10 (Perfekt)</span></div><NoAnswerCheckbox field="eatHealth" /></div></div>
+                            <div className="space-y-4"><h3 className="font-bold text-lg border-b pb-2">6. Ziele & Wünsche</h3><div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Was erhoffst du dir von dieser Webseite?</label><textarea name="hopes" rows="3" disabled={noAnswers.hopes} value={formData.hopes === 'keine_angabe' ? '' : formData.hopes} onFocus={interact} onChange={handleChange} className="w-full border rounded p-3 focus:ring-2 focus:ring-green-500 disabled:bg-gray-200" placeholder="Deine Erwartungen..."></textarea><NoAnswerCheckbox field="hopes" /></div><div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Was sind deine Ziele, um deine Gesundheit zu verbessern?</label><textarea name="goals" rows="3" disabled={noAnswers.goals} value={formData.goals === 'keine_angabe' ? '' : formData.goals} onFocus={interact} onChange={handleChange} className="w-full border rounded p-3 focus:ring-2 focus:ring-green-500 disabled:bg-gray-200" placeholder="Deine Ziele..."></textarea><NoAnswerCheckbox field="goals" /></div><div><label className="block text-xs font-bold text-gray-500 uppercase mb-2">Wo liegen deine Interessen?</label><div className="flex flex-wrap gap-2">{['Gewichtsverlust', 'Muskelaufbau', 'Gesunde Rezepte', 'Stressbewältigung', 'Schlafoptimierung', 'Medizinische Studien', 'Workouts', 'Mental Health'].map(interest => (<label key={interest} className={`cursor-pointer px-3 py-2 rounded-full border text-sm transition-colors ${formData.interests.includes(interest) ? 'bg-green-100 border-green-500 text-green-700' : 'bg-white border-gray-300 hover:bg-gray-50'}`}><input type="checkbox" className="hidden" onChange={() => handleInterestChange(interest)} checked={formData.interests.includes(interest)} />{interest}</label>))}<label className={`cursor-pointer px-3 py-2 rounded-full border text-sm transition-colors ${formData.interests.includes('keine_angabe') ? 'bg-gray-800 border-gray-900 text-white' : 'bg-gray-100 border-gray-300 text-gray-500 hover:bg-gray-200'}`}><input type="checkbox" className="hidden" onChange={() => handleInterestChange('keine_angabe')} checked={formData.interests.includes('keine_angabe')} />Keine Angabe</label></div></div></div>
                             
-                            {/* BLOCK 1: KÖRPERDATEN */}
-                            <div className="space-y-4">
-                                <h3 className="font-bold text-lg border-b pb-2">1. Körperdaten</h3>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Geschlecht</label>
-                                        <select name="gender" required onFocus={interact} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded p-3 focus:ring-2 focus:ring-green-500"><option value="">Bitte wählen...</option><option value="m">Männlich</option><option value="w">Weiblich</option><option value="d">Divers</option><option value="keine_angabe">Keine Angabe</option></select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Alter</label>
-                                        <input type="text" name="age" disabled={noAnswers.age} value={formData.age === 'keine_angabe' ? '' : formData.age} required={!noAnswers.age} onFocus={interact} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded p-3 focus:ring-2 focus:ring-green-500 disabled:bg-gray-200 disabled:cursor-not-allowed" placeholder="Jahre"/>
-                                        <NoAnswerCheckbox field="age" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Größe (cm)</label>
-                                        <input type="text" name="height" disabled={noAnswers.height} value={formData.height === 'keine_angabe' ? '' : formData.height} required={!noAnswers.height} onFocus={interact} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded p-3 focus:ring-2 focus:ring-green-500 disabled:bg-gray-200" placeholder="cm"/>
-                                        <NoAnswerCheckbox field="height" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Gewicht (kg)</label>
-                                        <input type="text" name="weight" disabled={noAnswers.weight} value={formData.weight === 'keine_angabe' ? '' : formData.weight} required={!noAnswers.weight} onFocus={interact} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded p-3 focus:ring-2 focus:ring-green-500 disabled:bg-gray-200" placeholder="kg"/>
-                                        <NoAnswerCheckbox field="weight" />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Ernährungsweise</label>
-                                    <select name="diet" required onFocus={interact} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded p-3 focus:ring-2 focus:ring-green-500"><option value="">Bitte wählen...</option><option value="alles">Allesesser</option><option value="vegetarisch">Vegetarisch</option><option value="vegan">Vegan</option><option value="paleo">Paleo</option><option value="keto">Keto</option><option value="keine_angabe">Keine Angabe</option></select>
-                                </div>
-                            </div>
-
-                            {/* BLOCK 2: KONSUM */}
-                            <div className="space-y-4">
-                                <h3 className="font-bold text-lg border-b pb-2">2. Konsumgewohnheiten</h3>
-                                <div className="grid grid-cols-1 gap-4">
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-gray-50 rounded"><span className="font-medium text-gray-700">Rauchen Sie?</span><div className="flex gap-4 mt-2 sm:mt-0"><label className="flex items-center gap-1 cursor-pointer"><input type="radio" name="smoke" value="ja" required onFocus={interact} onChange={handleChange} className="text-green-600"/> Ja</label><label className="flex items-center gap-1 cursor-pointer"><input type="radio" name="smoke" value="nein" required onFocus={interact} onChange={handleChange} className="text-green-600"/> Nein</label><label className="flex items-center gap-1 cursor-pointer text-slate-500"><input type="radio" name="smoke" value="keine_angabe" required onFocus={interact} onChange={handleChange} className="text-slate-500"/> k.A.</label></div></div>
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-gray-50 rounded"><span className="font-medium text-gray-700">Trinken Sie Alkohol?</span><div className="flex gap-4 mt-2 sm:mt-0"><label className="flex items-center gap-1 cursor-pointer"><input type="radio" name="alcohol" value="ja" required onFocus={interact} onChange={handleChange} className="text-green-600"/> Ja</label><label className="flex items-center gap-1 cursor-pointer"><input type="radio" name="alcohol" value="nein" required onFocus={interact} onChange={handleChange} className="text-green-600"/> Nein</label><label className="flex items-center gap-1 cursor-pointer text-slate-500"><input type="radio" name="alcohol" value="keine_angabe" required onFocus={interact} onChange={handleChange} className="text-slate-500"/> k.A.</label></div></div>
-                                </div>
-                            </div>
-
-                            {/* BLOCK 3: SPORT */}
-                            <div className="space-y-4">
-                                <h3 className="font-bold text-lg border-b pb-2">3. Sport & Aktivität</h3>
-                                <div className="p-4 border rounded-lg bg-gray-50">
-                                    <p className="font-medium mb-3">Üben Sie aktuell einen Sport aus?</p>
-                                    <div className="flex flex-wrap gap-6 mb-4">
-                                        <label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="sportActive" value="ja" onFocus={interact} onChange={handleChange} className="w-5 h-5 text-green-600"/> Ja, regelmäßig</label>
-                                        <label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="sportActive" value="nein" onFocus={interact} onChange={handleChange} className="w-5 h-5 text-green-600"/> Nein</label>
-                                        <label className="flex items-center gap-2 cursor-pointer text-slate-500"><input type="radio" name="sportActive" value="keine_angabe" onFocus={interact} onChange={handleChange} className="w-5 h-5 text-slate-500"/> Keine Angabe</label>
-                                    </div>
-                                    {formData.sportActive === 'ja' && (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in pl-4 border-l-2 border-green-500">
-                                            <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Welche Sportart?</label><input type="text" name="sportName" disabled={noAnswers.sportName} value={formData.sportName === 'keine_angabe' ? '' : formData.sportName} onFocus={interact} onChange={handleChange} className="w-full border rounded p-2 disabled:bg-gray-200" placeholder="z.B. Joggen"/><NoAnswerCheckbox field="sportName" /></div>
-                                            <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Wie häufig pro Woche?</label><input type="text" name="sportFreq" disabled={noAnswers.sportFreq} value={formData.sportFreq === 'keine_angabe' ? '' : formData.sportFreq} onFocus={interact} onChange={handleChange} className="w-full border rounded p-2 disabled:bg-gray-200" placeholder="z.B. 2-3 Mal"/><NoAnswerCheckbox field="sportFreq" /></div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* BLOCK 4: DIÄTEN */}
-                            <div className="space-y-4">
-                                <h3 className="font-bold text-lg border-b pb-2">4. Diät-Historie</h3>
-                                <div className="p-4 border rounded-lg bg-gray-50">
-                                    <p className="font-medium mb-3">Haben Sie schon einmal eine Diät gemacht?</p>
-                                    <div className="flex flex-wrap gap-6 mb-4">
-                                        <label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="dietHistory" value="ja" onFocus={interact} onChange={handleChange} className="w-5 h-5 text-green-600"/> Ja</label>
-                                        <label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="dietHistory" value="nein" onFocus={interact} onChange={handleChange} className="w-5 h-5 text-green-600"/> Nein</label>
-                                        <label className="flex items-center gap-2 cursor-pointer text-slate-500"><input type="radio" name="dietHistory" value="keine_angabe" onFocus={interact} onChange={handleChange} className="w-5 h-5 text-slate-500"/> Keine Angabe</label>
-                                    </div>
-                                    {formData.dietHistory === 'ja' && (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in pl-4 border-l-2 border-green-500">
-                                            <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Welche Diät?</label><input type="text" name="dietName" disabled={noAnswers.dietName} value={formData.dietName === 'keine_angabe' ? '' : formData.dietName} onFocus={interact} onChange={handleChange} className="w-full border rounded p-2 disabled:bg-gray-200" placeholder="z.B. Low Carb"/><NoAnswerCheckbox field="dietName" /></div>
-                                            <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Längster Zeitraum?</label><input type="text" name="dietTime" disabled={noAnswers.dietTime} value={formData.dietTime === 'keine_angabe' ? '' : formData.dietTime} onFocus={interact} onChange={handleChange} className="w-full border rounded p-2 disabled:bg-gray-200" placeholder="z.B. 3 Monate"/><NoAnswerCheckbox field="dietTime" /></div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* BLOCK 5: SELBSTWAHRNEHMUNG */}
-                            <div className="space-y-6">
-                                <h3 className="font-bold text-lg border-b pb-2">5. Selbstwahrnehmung</h3>
-                                <div className={noAnswers.bodySat ? "opacity-50" : ""}>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2 flex justify-between"><span>Wie zufrieden bist du mit deinem Körper? (1-10)</span><span className="text-green-600 font-bold">{formData.bodySat === 'keine_angabe' ? '-' : formData.bodySat}</span></label>
-                                    <input type="range" name="bodySat" min="1" max="10" disabled={noAnswers.bodySat} value={formData.bodySat === 'keine_angabe' ? 5 : formData.bodySat} onFocus={interact} onChange={handleChange} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600 disabled:accent-gray-400"/>
-                                    <div className="flex justify-between text-xs text-gray-400 mt-1"><span>1 (Gar nicht)</span><span>10 (Sehr)</span></div><NoAnswerCheckbox field="bodySat" />
-                                </div>
-                                <div className={noAnswers.eatHealth ? "opacity-50" : ""}>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2 flex justify-between"><span>Wie gesund ernährst du dich? (1-10)</span><span className="text-green-600 font-bold">{formData.eatHealth === 'keine_angabe' ? '-' : formData.eatHealth}</span></label>
-                                    <input type="range" name="eatHealth" min="1" max="10" disabled={noAnswers.eatHealth} value={formData.eatHealth === 'keine_angabe' ? 5 : formData.eatHealth} onFocus={interact} onChange={handleChange} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600 disabled:accent-gray-400"/>
-                                    <div className="flex justify-between text-xs text-gray-400 mt-1"><span>1 (Ungesund)</span><span>10 (Perfekt)</span></div><NoAnswerCheckbox field="eatHealth" />
-                                </div>
-                            </div>
-
-                            {/* BLOCK 6: ZIELE */}
-                            <div className="space-y-4">
-                                <h3 className="font-bold text-lg border-b pb-2">6. Ziele & Wünsche</h3>
-                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Was erhoffst du dir von dieser Webseite?</label><textarea name="hopes" rows="3" disabled={noAnswers.hopes} value={formData.hopes === 'keine_angabe' ? '' : formData.hopes} onFocus={interact} onChange={handleChange} className="w-full border rounded p-3 focus:ring-2 focus:ring-green-500 disabled:bg-gray-200" placeholder="Deine Erwartungen..."></textarea><NoAnswerCheckbox field="hopes" /></div>
-                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Was sind deine Ziele, um deine Gesundheit zu verbessern?</label><textarea name="goals" rows="3" disabled={noAnswers.goals} value={formData.goals === 'keine_angabe' ? '' : formData.goals} onFocus={interact} onChange={handleChange} className="w-full border rounded p-3 focus:ring-2 focus:ring-green-500 disabled:bg-gray-200" placeholder="Deine Ziele..."></textarea><NoAnswerCheckbox field="goals" /></div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Wo liegen deine Interessen?</label>
-                                    <div className="flex flex-wrap gap-2">
-                                        {['Gewichtsverlust', 'Muskelaufbau', 'Gesunde Rezepte', 'Stressbewältigung', 'Schlafoptimierung', 'Medizinische Studien', 'Workouts', 'Mental Health'].map(interest => (
-                                            <label key={interest} className={`cursor-pointer px-3 py-2 rounded-full border text-sm transition-colors ${formData.interests.includes(interest) ? 'bg-green-100 border-green-500 text-green-700' : 'bg-white border-gray-300 hover:bg-gray-50'}`}><input type="checkbox" className="hidden" onChange={() => handleInterestChange(interest)} checked={formData.interests.includes(interest)} />{interest}</label>
-                                        ))}
-                                        <label className={`cursor-pointer px-3 py-2 rounded-full border text-sm transition-colors ${formData.interests.includes('keine_angabe') ? 'bg-gray-800 border-gray-900 text-white' : 'bg-gray-100 border-gray-300 text-gray-500 hover:bg-gray-200'}`}><input type="checkbox" className="hidden" onChange={() => handleInterestChange('keine_angabe')} checked={formData.interests.includes('keine_angabe')} />Keine Angabe</label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* SUBMIT BUTTON MIT SICHTBAREM TIMER */}
                             <div className="pt-6 border-t">
                                 <button type="submit" disabled={timeLeft > 0} className={`w-full font-bold py-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 ${timeLeft > 0 ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-slate-900 hover:bg-slate-800 text-white transform active:scale-[0.99]'}`}>
-                                    {timeLeft > 0 ? (
-                                        <>
-                                            <Icon path={paths.clock} className="w-5 h-5 animate-pulse" />
-                                            <span>Bitte Daten eingeben ({timeLeft}s)</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Icon path={paths.check} className="w-5 h-5" />
-                                            <span>Profil speichern & Analyse starten</span>
-                                        </>
-                                    )}
+                                    {timeLeft > 0 ? (<><Icon path={paths.clock} className="w-5 h-5 animate-pulse" /><span>Bitte Daten eingeben ({timeLeft}s)</span></>) : (<><Icon path={paths.check} className="w-5 h-5" /><span>Profil speichern & Analyse starten</span></>)}
                                 </button>
-                                <div className="text-center mt-4 flex items-center justify-center gap-2 text-gray-400 text-xs">
-                                    <Icon path={paths.shield} className="w-3 h-3" /> SSL-Verschlüsselt • DSGVO-Konform
-                                </div>
+                                <div className="text-center mt-4 flex items-center justify-center gap-2 text-gray-400 text-xs"><Icon path={paths.shield} className="w-3 h-3" /> SSL-Verschlüsselt • DSGVO-Konform</div>
                             </div>
                         </form>
                     </div>
@@ -691,46 +462,19 @@
             );
         };
 
-        // --- LOADING SCREEN (FAKE ALGORITHMUS) ---
         const LoadingScreen = ({ onFinished }) => {
-            useEffect(() => {
-                const timer = setTimeout(onFinished, 3000); // 3 Sek Ladezeit
-                return () => clearTimeout(timer);
-            }, []);
-
-            return (
-                <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 text-white">
-                    <div className="w-20 h-20 border-4 border-blue-500 border-t-transparent rounded-full animate-spin-slow mb-8"></div>
-                    <h2 className="text-2xl font-bold mb-2">Algorithmus analysiert Profil...</h2>
-                    <p className="text-slate-400">Suche passende Inhalte für Sie.</p>
-                </div>
-            );
+            useEffect(() => { const timer = setTimeout(onFinished, 3000); return () => clearTimeout(timer); }, []);
+            return (<div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 text-white"><div className="w-20 h-20 border-4 border-blue-500 border-t-transparent rounded-full animate-spin-slow mb-8"></div><h2 className="text-2xl font-bold mb-2">Algorithmus analysiert Profil...</h2><p className="text-slate-400">Suche passende Inhalte für Sie.</p></div>);
         };
 
-        // --- END SCREEN ---
         const EndScreen = ({ data, sessionToken }) => {
             const [targetUrl, setTargetUrl] = useState("");
             const fullDataString = JSON.stringify(data, null, 2);
-
-            useEffect(() => {
-                if (sessionToken) {
-                    const finalUrl = `${SOSCI_BASE_URL}?i=${sessionToken}&mydata=${encodeURIComponent(fullDataString)}`;
-                    setTargetUrl(finalUrl);
-                }
-            }, [sessionToken, fullDataString]);
-
-            return (
-                <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 text-center">
-                    <div className="bg-white p-8 rounded-2xl shadow-xl max-w-lg w-full border-t-8 border-blue-500 animate-fade-in">
-                        <h2 className="text-2xl font-bold text-gray-800 mb-4">Studie beendet</h2>
-                        <p className="text-gray-600 mb-6">Vielen Dank! Ihre Daten wurden erfolgreich gespeichert.</p>
-                        {targetUrl ? <a href={targetUrl} className="block w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg decoration-none">Zurück zu SoSci Survey</a> : <div className="p-4 bg-red-50 text-red-600 rounded text-sm">Fehler: Sitzungstoken nicht gefunden. Bitte schließen Sie das Fenster.</div>}
-                    </div>
-                </div>
-            );
+            useEffect(() => { if (sessionToken) { const finalUrl = `${SOSCI_BASE_URL}?i=${sessionToken}&mydata=${encodeURIComponent(fullDataString)}`; setTargetUrl(finalUrl); } }, [sessionToken, fullDataString]);
+            return (<div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 text-center"><div className="bg-white p-8 rounded-2xl shadow-xl max-w-lg w-full border-t-8 border-blue-500 animate-fade-in"><h2 className="text-2xl font-bold text-gray-800 mb-4">Studie beendet</h2><p className="text-gray-600 mb-6">Vielen Dank! Ihre Daten wurden erfolgreich gespeichert.</p>{targetUrl ? <a href={targetUrl} className="block w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg decoration-none">Zurück zu SoSci Survey</a> : <div className="p-4 bg-red-50 text-red-600 rounded text-sm">Fehler: Sitzungstoken nicht gefunden.</div>}</div></div>);
         };
 
-        // --- HAUPT APP (ROUTER & STATE) ---
+        // --- HAUPT APP ---
         function App() {
             const [step, setStep] = useState('intro');
             const [cookieChoice, setCookieChoice] = useState(null);
@@ -738,10 +482,8 @@
             const [groupID, setGroupID] = useState(0);
             const [finalData, setFinalData] = useState({});
             const [sessionToken, setSessionToken] = useState(null);
-
             const timers = useRef({ blogStart: 0, bannerStart: 0, formStart: 0, postBrowsingStart: 0 });
             const [times, setTimes] = useState({ blogTime: 0, cookieTime: 0, registrationTime: 0, postBrowsingTime: 0 });
-
             const audioRef = useRef(null);
             const audioManRef = useRef(null);
 
@@ -751,7 +493,6 @@
                 setGroupID(g);
                 const t = params.get('t');
                 if (t) setSessionToken(t);
-                
                 audioRef.current = new Audio('sound.mp3'); audioRef.current.volume = 0.5;
                 audioManRef.current = new Audio('soundmann.mp3'); audioManRef.current.volume = 0.5;
             }, []);
@@ -759,64 +500,23 @@
             const handleStartStudy = () => {
                 const unlockAudio = (audioObj) => { if (audioObj) { audioObj.volume = 0; audioObj.play().then(() => { audioObj.pause(); audioObj.currentTime = 0; audioObj.volume = 0.5; }).catch(e => console.log("Unlock failed", e)); } };
                 unlockAudio(audioRef.current); unlockAudio(audioManRef.current);
-                
-                timers.current.blogStart = Date.now(); 
-                setStep('blog'); 
-                setTimeout(() => setBannerVisible(true), COOKIE_BANNER_DELAY_MS);
+                timers.current.blogStart = Date.now(); setStep('blog'); setTimeout(() => setBannerVisible(true), COOKIE_BANNER_DELAY_MS);
             };
 
             const handleBannerLoad = () => { timers.current.bannerStart = Date.now(); };
             const handleCookieDecision = (decision) => { const duration = Date.now() - timers.current.bannerStart; setTimes(prev => ({ ...prev, cookieTime: duration })); setCookieChoice(decision); setBannerVisible(false); };
-            
-            const handleGoToRegistration = () => { 
-                const duration = Date.now() - timers.current.blogStart; 
-                setTimes(prev => ({ ...prev, blogTime: duration })); 
-                timers.current.formStart = Date.now(); 
-                setStep('register'); 
-            };
-            
-            const handleRegistrationSubmit = (formData) => { 
-                const duration = Date.now() - timers.current.formStart;
-                setTimes(prev => ({ ...prev, registrationTime: duration }));
-                setFinalData(prev => ({ ...prev, groupID: groupID, ...formData, cookieChoice: cookieChoice }));
-                setStep('loading');
-            };
-
-            const handleLoadingFinished = () => {
-                timers.current.postBrowsingStart = Date.now();
-                setStep('personalized_blog');
-            };
-
-            const handleFinishStudy = () => {
-                const duration = Date.now() - timers.current.postBrowsingStart;
-                const completeData = {
-                    ...finalData,
-                    ...times,
-                    postBrowsingTime: duration
-                };
-                setFinalData(completeData);
-                setStep('end');
-            };
+            const handleGoToRegistration = () => { const duration = Date.now() - timers.current.blogStart; setTimes(prev => ({ ...prev, blogTime: duration })); timers.current.formStart = Date.now(); setStep('register'); };
+            const handleRegistrationSubmit = (formData) => { const duration = Date.now() - timers.current.formStart; setTimes(prev => ({ ...prev, registrationTime: duration })); setFinalData(prev => ({ ...prev, groupID: groupID, ...formData, cookieChoice: cookieChoice })); setStep('loading'); };
+            const handleLoadingFinished = () => { timers.current.postBrowsingStart = Date.now(); setStep('personalized_blog'); };
+            const handleFinishStudy = () => { const duration = Date.now() - timers.current.postBrowsingStart; const completeData = { ...finalData, ...times, postBrowsingTime: duration }; setFinalData(completeData); setStep('end'); };
 
             return (
                 <div className="font-sans text-gray-800 antialiased selection:bg-green-100 selection:text-green-900">
                     {step === 'intro' && <IntroScreen onStart={handleStartStudy} />}
-                    
-                    {step === 'blog' && (
-                        <>
-                            <BlogPage onAction={handleGoToRegistration} mode="initial" />
-                            {bannerVisible && (<CookieBanner group={groupID} onDecision={handleCookieDecision} audioObject={audioRef.current} onBannerLoad={handleBannerLoad} />)}
-                        </>
-                    )}
-                    
+                    {step === 'blog' && (<><BlogPage onAction={handleGoToRegistration} mode="initial" />{bannerVisible && (<CookieBanner group={groupID} onDecision={handleCookieDecision} audioObject={audioRef.current} onBannerLoad={handleBannerLoad} />)}</>)}
                     {step === 'register' && (<RegistrationForm onSubmit={handleRegistrationSubmit} group={groupID} audioObject={audioManRef.current} />)}
-                    
                     {step === 'loading' && <LoadingScreen onFinished={handleLoadingFinished} />}
-                    
-                    {step === 'personalized_blog' && (
-                        <BlogPage onAction={handleFinishStudy} mode="personalized" />
-                    )}
-
+                    {step === 'personalized_blog' && (<BlogPage onAction={handleFinishStudy} mode="personalized" />)}
                     {step === 'end' && <EndScreen data={finalData} sessionToken={sessionToken} />}
                 </div>
             );
