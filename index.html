@@ -84,13 +84,30 @@
             </svg>
         );
 
+        // HIER WURDE DAS AUGE MIT WIMPERN ERGÄNZT
         const RealisticEye = ({ color, className }) => (
-            <svg viewBox="0 0 100 60" className={className} preserveAspectRatio="xMidYMid meet">
-                <path d="M5,30 Q50,-15 95,30 Q50,75 5,30 Z" fill="#fff" stroke="#333" strokeWidth="2" />
-                <circle cx="50" cy="30" r="16" fill={color} />
-                <circle cx="50" cy="30" r="16" fill="none" stroke="rgba(0,0,0,0.2)" strokeWidth="1" />
-                <circle cx="50" cy="30" r="7" fill="#111" />
-                <circle cx="55" cy="24" r="3" fill="#fff" opacity="0.9" />
+            // Viewbox Höhe auf 70 erhöht für Platz nach oben
+            <svg viewBox="0 0 100 70" className={className} preserveAspectRatio="xMidYMid meet" style={{overflow: 'visible'}}>
+                 {/* Wimpern Gruppe */}
+                 <g stroke="#1a1a1a" strokeWidth="1.5" fill="none" strokeLinecap="round">
+                     {/* Links außen */}
+                     <path d="M15,28 Q10,15 5,12" />
+                     <path d="M25,23 Q20,10 15,8" />
+                     <path d="M35,20 Q32,8 28,5" />
+                     {/* Mitte */}
+                     <path d="M50,18 Q50,8 50,4" /> 
+                     {/* Rechts außen */}
+                     <path d="M65,20 Q68,8 72,5" />
+                     <path d="M75,23 Q80,10 85,8" />
+                     <path d="M85,28 Q90,15 95,12" />
+                </g>
+                
+                {/* Augapfel (etwas nach unten verschoben auf cy=35) */}
+                <path d="M5,35 Q50,-10 95,35 Q50,80 5,35 Z" fill="#fff" stroke="#333" strokeWidth="2" />
+                <circle cx="50" cy="35" r="16" fill={color} />
+                <circle cx="50" cy="35" r="16" fill="none" stroke="rgba(0,0,0,0.2)" strokeWidth="1" />
+                <circle cx="50" cy="35" r="7" fill="#111" />
+                <circle cx="55" cy="29" r="3" fill="#fff" opacity="0.9" />
             </svg>
         );
         
@@ -457,7 +474,7 @@
             return (
                 <div className={`pointer-events-none z-[60] flex flex-col items-center gap-2 transition-opacity duration-500 ${positionClass}`}>
                     
-                    {/* 1. DIE AUGEN (Groß & Auffällig: w-24 h-16) */}
+                    {/* 1. DIE AUGEN (Groß & Auffällig & MIT WIMPERN) */}
                     {config.eyes && (
                         <div className="flex gap-4 items-center justify-center filter drop-shadow-lg">
                             <div className="bg-white p-2 rounded-full border-2 border-gray-300 shadow-2xl overflow-hidden animate-pulse-slow">
@@ -469,7 +486,7 @@
                         </div>
                     )}
 
-                    {/* 2. DER TEXT (Jetzt identisch zum Cookie-Banner) */}
+                    {/* 2. DER TEXT (Identisch zum Cookie-Banner) */}
                     {config.info && variant === 'form' && (
                         <div className="bg-red-50 border-2 border-red-200 p-4 rounded-xl text-red-900 shadow-2xl mt-2 max-w-md text-center animate-fade-in backdrop-blur-sm bg-opacity-95">
                             <div className="flex items-center justify-center gap-2 font-bold mb-2 text-red-700 uppercase tracking-wide text-sm">
