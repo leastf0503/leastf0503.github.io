@@ -15,41 +15,6 @@
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         @keyframes pulse-slow { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        /* Blinzel-Effekt: 0% bis 90% offen, dann kurzes Schließen bei 95% */
-/* Schnelleres Blinzeln: Dauer auf 2.5s reduziert */
-@keyframes blink {
-  0%, 88%, 100% { transform: scaleY(1); }
-  92% { transform: scaleY(0.05); } /* Sehr schnelles "Zuklappen" */
-}
-
-.animate-blink-1 {
-  animation: blink 3s infinite;
-  transform-origin: 50% 50%; /* WICHTIG: Blinzeln von der Mitte aus */
-}
-
-.animate-blink-2 {
-  animation: blink 3s infinite;
-  animation-delay: 0.3s;
-  transform-origin: 50% 50%;
-}
-
-/* Erstes Auge */
-.animate-blink-1 {
-  animation: blink 2.5s infinite;
-  transform-origin: center;
-}
-
-/* Zweites Auge mit Verzögerung für mehr Realismus */
-.animate-blink-2 {
-  animation: blink 2.5s infinite;
-  animation-delay: 0.4s; /* Das zweite Auge blinzelt kurz nach dem ersten */
-  transform-origin: center;
-}
-
-.animate-blink {
-  animation: blink 4s infinite;
-  transform-origin: center;
-}
         
         .animate-slide-up { animation: slide-up 0.5s ease-out forwards; }
         .animate-fade-in { animation: fade-in 0.8s ease-out forwards; }
@@ -102,62 +67,21 @@
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{path}</svg>
         );
 
-        const RealisticEye = ({ color, className, hasLashes }) => {
-    // Einzigartige ID für die Gradients, damit sie sich nicht überschneiden
-    const gradId = React.useId().replace(/:/g, ""); 
-    
-    return (
-        <svg viewBox="0 0 100 70" className={className} preserveAspectRatio="xMidYMid meet" style={{ overflow: 'visible' }}>
-            <defs>
-                {/* Verlauf für den Augapfel (Sclera) - macht ihn rundlich */}
-                <radialGradient id={`whiteGrad-${gradId}`} cx="50%" cy="50%" r="50%" fx="50%" fy="30%">
-                    <stop offset="0%" stopColor="#ffffff" />
-                    <stop offset="80%" stopColor="#ffffff" />
-                    <stop offset="100%" stopColor="#d1d5db" />
-                </radialGradient>
-                
-                {/* Verlauf für die Iris - gibt ihr Tiefe und Struktur */}
-                <radialGradient id={`irisGrad-${gradId}`}>
-                    <stop offset="20%" stopColor="#111" />
-                    <stop offset="40%" stopColor={color} />
-                    <stop offset="100%" stopColor="#000" stopOpacity="0.8" />
-                </radialGradient>
-            </defs>
-
-            <g className="animate-blink-1">
-                {/* Wimpern (optional) */}
-                {hasLashes && (
-                    <g stroke="#1a1a1a" strokeWidth="1.2" fill="none" strokeLinecap="round" opacity="0.8">
+        const RealisticEye = ({ color, className, hasLashes }) => (
+            <svg viewBox="0 0 100 70" className={className} preserveAspectRatio="xMidYMid meet" style={{overflow: 'visible'}}>
+                 {hasLashes && (
+                    <g stroke="#1a1a1a" strokeWidth="1.5" fill="none" strokeLinecap="round">
                         <path d="M15,28 Q10,15 5,12" /><path d="M25,23 Q20,10 15,8" /><path d="M35,20 Q32,8 28,5" />
                         <path d="M50,18 Q50,8 50,4" /><path d="M65,20 Q68,8 72,5" /><path d="M75,23 Q80,10 85,8" /><path d="M85,28 Q90,15 95,12" />
                     </g>
-                )}
-
-                {/* Augapfel mit Schatten am Rand */}
-                <path d="M5,35 Q50,-12 95,35 Q50,82 5,35 Z" fill={`url(#whiteGrad-${gradId})`} stroke="#4b5563" strokeWidth="0.5" />
-                
-                {/* Iris mit Farbverlauf */}
-                <circle cx="50" cy="35" r="17" fill={`url(#irisGrad-${gradId})`} />
-                
-                {/* Subtile Linien in der Iris (Striae) */}
-                {[...Array(12)].map((_, i) => (
-                    <line 
-                        key={i} 
-                        x1="50" y1="35" x2={50 + 15 * Math.cos(i * 30 * Math.PI/180)} y2={35 + 15 * Math.sin(i * 30 * Math.PI/180)} 
-                        stroke="rgba(255,255,255,0.1)" strokeWidth="0.5" 
-                    />
-                ))}
-
-                {/* Pupille */}
-                <circle cx="50" cy="35" r="8" fill="#000" />
-                
-                {/* Lichtreflexe (Glanzpunkte) - Das Wichtigste für Realismus! */}
-                <circle cx="45" cy="30" r="3.5" fill="#fff" opacity="0.8" />
-                <circle cx="56" cy="40" r="1.5" fill="#fff" opacity="0.4" />
-            </g>
-        </svg>
-    );
-};
+                 )}
+                <path d="M5,35 Q50,-10 95,35 Q50,80 5,35 Z" fill="#fff" stroke="#333" strokeWidth="2" />
+                <circle cx="50" cy="35" r="16" fill={color} />
+                <circle cx="50" cy="35" r="16" fill="none" stroke="rgba(0,0,0,0.2)" strokeWidth="1" />
+                <circle cx="50" cy="35" r="7" fill="#111" />
+                <circle cx="55" cy="29" r="3" fill="#fff" opacity="0.9" />
+            </svg>
+        );
         
         const paths = {
             shield: <React.Fragment><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="M12 8v4"/><path d="M12 16h.01"/></React.Fragment>,
