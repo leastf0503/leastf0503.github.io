@@ -16,9 +16,23 @@
         @keyframes pulse-slow { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         /* Blinzel-Effekt: 0% bis 90% offen, dann kurzes Schließen bei 95% */
+/* Schnelleres Blinzeln: Dauer auf 2.5s reduziert */
 @keyframes blink {
-  0%, 90%, 100% { transform: scaleY(1); }
-  95% { transform: scaleY(0.1); }
+  0%, 85%, 100% { transform: scaleY(1); }
+  92% { transform: scaleY(0.05); } /* Noch etwas schmaler für einen "knackigen" Effekt */
+}
+
+/* Erstes Auge */
+.animate-blink-1 {
+  animation: blink 2.5s infinite;
+  transform-origin: center;
+}
+
+/* Zweites Auge mit Verzögerung für mehr Realismus */
+.animate-blink-2 {
+  animation: blink 2.5s infinite;
+  animation-delay: 0.4s; /* Das zweite Auge blinzelt kurz nach dem ersten */
+  transform-origin: center;
 }
 
 .animate-blink {
