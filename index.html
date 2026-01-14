@@ -422,153 +422,172 @@
         };
 
 const RegistrationForm = ({ onSubmit, group, audioObject }) => {
-            // 1. STATE: Alle Felder lückenlos definiert
-            const [formData, setFormData] = useState({ 
-                age: '', gender: '', height: '', weight: '',
-                diet: '', 
-                sportFreq: '', 
-                stressLevel: 5, mentalHealth: '',
-                chronicDiseases: [], medication: '', genetics: '',
-                drugs: '', alcohol: '',
-                sexOrientation: '', stis: '', libido: 5
-            });
+    // 1. STATE: Alle Felder (inkl. offener Textfelder) definiert
+    const [formData, setFormData] = useState({ 
+        age: '', gender: '', height: '', weight: '',
+        mentalHealth: '', 
+        medication: '', tattoos: '', 
+        drugs: '', alcohol: '',
+        sexActivity: '', sexOrientation: '', stis: ''
+    });
 
-            const [noAnswers, setNoAnswers] = useState({});
-            const [interactionStarted, setInteractionStarted] = useState(false);
-            const [timeLeft, setTimeLeft] = useState(MIN_REGISTRATION_TIME);
+    const [noAnswers, setNoAnswers] = useState({});
+    const [interactionStarted, setInteractionStarted] = useState(false);
+    const [timeLeft, setTimeLeft] = useState(MIN_REGISTRATION_TIME);
+    
+    useEffect(() => { 
+        const timer = setInterval(() => setTimeLeft(t => t > 0 ? t - 1 : 0), 1000); 
+        return () => clearInterval(timer); 
+    }, []);
+
+    const config = getGroupConfig(group);
+    
+    const interact = () => { 
+        if (!interactionStarted) { 
+            setInteractionStarted(true); 
+            if (config.sound && audioObject) audioObject.play().catch(()=>{}); 
+        } 
+    };
+
+    const handleChange = (e) => { 
+        interact(); 
+        const { name, value } = e.target;
+        setFormData(prev => ({...prev, [name]: value})); 
+    };
+
+    const handleNoAnswerToggle = (field) => { 
+        interact(); 
+        setNoAnswers(prev => ({ ...prev, [field]: !prev[field] }));
+        setFormData(prev => ({ ...prev, [field]: !noAnswers[field] ? 'keine_angabe' : '' }));
+    };
+
+    // Dezenter Baustein für "Keine Angabe"
+    const NoAnswer = ({ field }) => (
+        <label className="flex items-center gap-2 mt-2 cursor-pointer w-fit opacity-40 hover:opacity-100 transition-opacity">
+            <input 
+                type="checkbox" 
+                checked={!!noAnswers[field]} 
+                onChange={() => handleNoAnswerToggle(field)} 
+                className="w-3 h-3 rounded border-gray-300 text-blue-600"
+            />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Keine Angabe</span>
+        </label>
+    );
+
+    return (
+        <div className="min-h-screen bg-white py-20 px-4 relative text-slate-900">
+            {interactionStarted && <StimulusOverlay config={config} variant="form" />}
             
-            useEffect(() => { 
-                const timer = setInterval(() => setTimeLeft(t => t > 0 ? t - 1 : 0), 1000); 
-                return () => clearInterval(timer); 
-            }, []);
+            <div className="max-w-xl mx-auto relative z-10">
+                <header className="mb-20 text-center">
+                    <h2 className="text-2xl font-light tracking-[0.15em] uppercase text-slate-800">Klinisches Bio-Profiling</h2>
+                    <div className="h-0.5 w-12 bg-blue-600 mx-auto mt-4 rounded-full"></div>
+                </header>
 
-            const config = getGroupConfig(group);
-            
-            const interact = () => { 
-                if (!interactionStarted) { 
-                    setInteractionStarted(true); 
-                    if (config.sound && audioObject) audioObject.play().catch(()=>{}); 
-                } 
-            };
-
-            const handleChange = (e) => { 
-                interact(); 
-                const { name, value } = e.target;
-                setFormData(prev => ({...prev, [name]: value})); 
-            };
-
-            const toggleDisease = (d) => { 
-                interact(); 
-                setFormData(p => ({...p, chronicDiseases: p.chronicDiseases.includes(d) ? p.chronicDiseases.filter(x=>x!==d) : [...p.chronicDiseases, d]})); 
-            };
-
-            const handleNoAnswer = (f) => { interact(); setNoAnswers(p => ({...p, [f]: !p[f]})); };
-
-            return (
-                <div className="min-h-screen bg-slate-50 py-12 px-4 relative">
-                    {interactionStarted && <StimulusOverlay config={config} variant="form" />}
+                <form onSubmit={(e) => {e.preventDefault(); onSubmit(formData);}} className="space-y-20">
                     
-                    <div className="max-w-2xl mx-auto bg-white rounded-[32px] shadow-2xl overflow-hidden border border-gray-100 relative z-10">
-                        <div className="bg-slate-900 p-8 text-white text-center">
-                            <h2 className="text-2xl font-bold italic">VitalCore - Klinische Analyse</h2>
-                            <p className="text-slate-400 text-xs mt-2 uppercase tracking-widest">Vollständigkeit: {Math.round((Object.values(formData).filter(v => v !== '').length / 15) * 100)}%</p>
-                        </div>
-
-                        <form onSubmit={(e) => {e.preventDefault(); onSubmit(formData);}} className="p-8 space-y-10 text-black">
-                            
-                            {/* 1. BASISDATEN */}
-                            <section className="space-y-4">
-                                <h3 className="font-bold border-b pb-2 text-slate-800 uppercase text-xs tracking-widest">1. Biometrische Parameter</h3>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <input type="text" name="age" placeholder="Alter" onChange={handleChange} onFocus={interact} className="border p-3 rounded-xl bg-slate-50 w-full" required />
-                                    <select name="gender" onChange={handleChange} onFocus={interact} className="border p-3 rounded-xl bg-slate-50 w-full" required>
-                                        <option value="">Geschlecht</option><option value="m">Männlich</option><option value="w">Weiblich</option><option value="d">Divers</option>
-                                    </select>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <input type="text" name="height" placeholder="Größe (cm)" onChange={handleChange} onFocus={interact} className="border p-3 rounded-xl bg-slate-50 w-full" />
-                                    <input type="text" name="weight" placeholder="Gewicht (kg)" onChange={handleChange} onFocus={interact} className="border p-3 rounded-xl bg-slate-50 w-full" />
-                                </div>
-                            </section>
-
-                            {/* 2. ERNÄHRUNG */}
-                            <section className="space-y-4">
-                                <h3 className="font-bold border-b pb-2 text-slate-800 uppercase text-xs tracking-widest">2. Metabolisches Profil</h3>
-                                <select name="diet" onChange={handleChange} onFocus={interact} className="w-full border p-3 rounded-xl bg-slate-50">
-                                    <option value="">Ernährungsweise</option>
-                                    <option value="omnivor">Mischkost (Omnivor)</option><option value="veggie">Vegetarisch / Vegan</option><option value="keto">Low Carb / Keto</option>
+                    {/* SECTION 1: BASISDATEN */}
+                    <section className={noAnswers.age ? 'opacity-30' : ''}>
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 mb-8 border-b border-slate-100 pb-2">01 Biometrische Parameter</h3>
+                        <div className="grid grid-cols-2 gap-10">
+                            <div>
+                                <label className="text-[11px] text-slate-400 uppercase font-bold mb-1 block">Alter</label>
+                                <input type="text" name="age" disabled={noAnswers.age} placeholder="--" onChange={handleChange} onFocus={interact} className="w-full py-2 outline-none border-b border-slate-200 focus:border-blue-600 bg-transparent transition-all" required={!noAnswers.age} />
+                                <NoAnswer field="age" />
+                            </div>
+                            <div>
+                                <label className="text-[11px] text-slate-400 uppercase font-bold mb-1 block">Geschlecht</label>
+                                <select name="gender" disabled={noAnswers.age} onChange={handleChange} onFocus={interact} className="w-full py-2.5 outline-none border-b border-slate-200 focus:border-blue-600 bg-transparent transition-all">
+                                    <option value="">Wählen...</option><option value="m">Männlich</option><option value="w">Weiblich</option><option value="d">Divers</option>
                                 </select>
-                            </section>
+                            </div>
+                        </div>
+                    </section>
 
-                            {/* 3. MENTAL HEALTH */}
-                            <section className="space-y-4 p-6 bg-blue-50 border-l-8 border-blue-400 rounded-r-2xl shadow-inner">
-                                <h3 className="font-bold text-blue-900 italic">3. Psychosomatische Faktoren</h3>
-                                <p className="text-xs text-blue-700">Psychische Belastungen beeinflussen den Hormonhaushalt massiv. Bitte machen Sie ehrliche Angaben:</p>
-                                <textarea name="mentalHealth" placeholder="Bestehen psychische Diagnosen oder befinden Sie sich in Therapie? (z.B. Depression, Burnout, Angststörungen)..." onChange={handleChange} onFocus={interact} className="w-full border-blue-100 p-3 rounded-xl text-sm h-20 outline-none focus:ring-2 focus:ring-blue-400"></textarea>
-                            </section>
+                    {/* SECTION 2: PSYCHOSOMATIK */}
+                    <section className={noAnswers.mental ? 'opacity-30' : ''}>
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 mb-8 border-b border-slate-100 pb-2">02 Psychosomatische Analyse</h3>
+                        <p className="text-[11px] text-slate-500 mb-4 leading-relaxed italic">Psychische Belastungsfaktoren beeinflussen die metabolische Rate maßgeblich:</p>
+                        <textarea name="mentalHealth" disabled={noAnswers.mental} placeholder="Psychische Diagnosen, Therapien oder aktuelle Belastungszustände..." onChange={handleChange} onFocus={interact} className="w-full p-4 border rounded-xl border-slate-100 bg-slate-50 focus:bg-white focus:border-blue-200 outline-none h-24 resize-none transition-all"></textarea>
+                        <NoAnswer field="mental" />
+                    </section>
 
-                            {/* 4. MEDIZINISCHE HISTORIE */}
-                            <section className="space-y-4 p-6 bg-red-50 border-l-8 border-red-500 rounded-r-2xl">
-                                <h3 className="font-bold text-red-900 italic">4. Klinische Anamnese</h3>
-                                <div className="space-y-2">
-                                    <p className="text-xs text-red-700 font-bold">Vorerkrankungen & Infektionsstatus:</p>
-                                    <div className="flex flex-wrap gap-2">
-                                        {['HIV/AIDS', 'Krebs', 'Diabetes', 'Erbkrankheit', 'Autoimmun'].map(d => (
-                                            <button key={d} type="button" onClick={() => toggleDisease(d)} className={`px-4 py-2 rounded-full text-xs font-bold border transition-all ${formData.chronicDiseases.includes(d) ? 'bg-red-600 text-white' : 'bg-white text-red-600 border-red-200'}`}>{d}</button>
-                                        ))}
-                                    </div>
-                                    <textarea name="medication" placeholder="Dauerhafte Medikation (z.B. Antidepressiva, PrEP, Insulin)..." onChange={handleChange} onFocus={interact} className="w-full border-red-100 p-3 rounded-xl text-sm h-16 mt-2"></textarea>
-                                </div>
-                            </section>
+                    {/* SECTION 3: KLINISCHE ANAMNESE */}
+                    <section className={noAnswers.clin ? 'opacity-30' : ''}>
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 mb-8 border-b border-slate-100 pb-2">03 Klinische Anamnese</h3>
+                        <div className="space-y-10">
+                            <div>
+                                <label className="text-[11px] text-slate-400 uppercase font-bold mb-2 block">Dauerhafte Medikation & Supplementierung</label>
+                                <textarea name="medication" disabled={noAnswers.clin} placeholder="Listen Sie alle Medikamente, PrEP, Hormone oder Psychopharmaka auf..." onChange={handleChange} onFocus={interact} className="w-full p-4 border rounded-xl border-slate-100 bg-slate-50 focus:bg-white focus:border-blue-200 outline-none h-20 resize-none transition-all"></textarea>
+                            </div>
+                            <div>
+                                <label className="text-[11px] text-slate-400 uppercase font-bold mb-2 block">Hautzustand & Körpermodifikationen</label>
+                                <input type="text" name="tattoos" disabled={noAnswers.clin} placeholder="Anzahl/Art von Tattoos, Piercings oder Implantaten..." onChange={handleChange} onFocus={interact} className="w-full py-2 border-b border-slate-200 outline-none focus:border-blue-600 bg-transparent transition-all" />
+                            </div>
+                            <NoAnswer field="clin" />
+                        </div>
+                    </section>
 
-                            {/* 5. SUCHTMITTEL */}
-                            <section className="space-y-4 p-6 bg-slate-100 border-l-8 border-slate-400 rounded-r-2xl">
-                                <h3 className="font-bold text-slate-800">5. Toxikologische Belastung</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <select name="drugs" onChange={handleChange} onFocus={interact} className="border p-3 rounded-xl bg-white text-sm">
-                                        <option value="">Illegale Substanzen (Häufigkeit)</option>
-                                        <option value="nie">Nie</option><option value="gelegentlich">Gelegentlich (Partykonsum)</option><option value="regelmäßig">Regelmäßig (Cannabis, MDMA, Kokain etc.)</option>
-                                    </select>
-                                    <select name="alcohol" onChange={handleChange} onFocus={interact} className="border p-3 rounded-xl bg-white text-sm">
-                                        <option value="">Alkoholkonsum</option>
-                                        <option value="hoch">Täglich</option><option value="moderat">Mehrmals pro Woche</option><option value="selten">Selten / Nie</option>
-                                    </select>
-                                </div>
-                            </section>
+                    {/* SECTION 4: TOXIKOLOGIE */}
+                    <section className={noAnswers.tox ? 'opacity-30' : ''}>
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 mb-8 border-b border-slate-100 pb-2">04 Toxikologisches Profil</h3>
+                        <div>
+                            <label className="text-[11px] text-slate-400 uppercase font-bold mb-2 block">Substanzkonsum & Genussmittel</label>
+                            <textarea name="drugs" disabled={noAnswers.tox} placeholder="Geben Sie hier Art und Frequenz des Konsums an (z.B. Cannabis, Nikotin, Alkohol, synthetische Substanzen)..." onChange={handleChange} onFocus={interact} className="w-full p-4 border rounded-xl border-slate-100 bg-slate-50 focus:bg-white focus:border-blue-200 outline-none h-20 resize-none transition-all"></textarea>
+                            <NoAnswer field="tox" />
+                        </div>
+                    </section>
 
-                            {/* 6. SEXUALITÄT */}
-                            <section className="space-y-4 p-6 bg-purple-50 border-l-8 border-purple-500 rounded-r-2xl">
-                                <h3 className="font-bold text-purple-900 italic">6. Reproduktive & Intime Gesundheit</h3>
-                                <p className="text-[11px] text-purple-700 leading-tight">Wichtig für die Bestimmung Ihres individuellen Risikoprofils und hormonellen Status:</p>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <select name="sexOrientation" onChange={handleChange} onFocus={interact} className="border p-3 rounded-xl bg-white text-sm">
-                                        <option value="">Sexuelle Orientierung</option>
-                                        <option value="hetero">Heterosexuell</option><option value="homo">Homosexuell</option><option value="bi">Bisexuell</option><option value="andere">Andere</option>
-                                    </select>
-                                    <input type="number" name="partners" placeholder="Partneranzahl (letzte 12 Monate)" onChange={handleChange} onFocus={interact} className="border p-3 rounded-xl bg-white text-sm" />
-                                </div>
-                                <textarea name="stis" placeholder="Hatten Sie jemals Geschlechtskrankheiten? (z.B. Chlamydien, Syphilis, HPV, Herpes...)" onChange={handleChange} onFocus={interact} className="w-full border-purple-200 p-3 rounded-xl text-sm h-16 focus:ring-2 focus:ring-purple-500 outline-none"></textarea>
+                    {/* SECTION 5: HORMONHAUSHALT / REPRODUKTION */}
+                    <section className={noAnswers.sex ? 'opacity-30' : ''}>
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 mb-8 border-b border-slate-100 pb-2">05 Reproduktive Gesundheit</h3>
+                        <div className="space-y-10">
+                            <div className="grid grid-cols-2 gap-10">
                                 <div>
-                                    <label className="block text-[10px] font-bold text-purple-700 uppercase mb-1">Einschätzung sexuelles Verlangen / Libido (1-10)</label>
-                                    <input type="range" name="libido" min="1" max="10" onChange={handleChange} className="w-full accent-purple-600" />
+                                    <label className="text-[11px] text-slate-400 uppercase font-bold mb-1 block">Sexuelle Frequenz (Kontakte / Monat)</label>
+                                    <input type="number" name="sexActivity" disabled={noAnswers.sex} placeholder="Anzahl" onChange={handleChange} onFocus={interact} className="w-full py-2 border-b border-slate-200 outline-none focus:border-blue-600 bg-transparent transition-all" />
                                 </div>
-                            </section>
+                                <div>
+                                    <label className="text-[11px] text-slate-400 uppercase font-bold mb-1 block">Sexuelle Orientierung</label>
+                                    <select name="sexOrientation" disabled={noAnswers.sex} onChange={handleChange} onFocus={interact} className="w-full py-2.5 outline-none border-b border-slate-200 focus:border-blue-600 bg-transparent transition-all">
+                                        <option value="">Wählen...</option><option>Hetero</option><option>Homo</option><option>Bi</option><option>Andere</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="text-[11px] text-slate-400 uppercase font-bold mb-2 block">Infektionshistorie (STIs / Pathogene)</label>
+                                <textarea name="stis" disabled={noAnswers.sex} placeholder="Listen Sie bestehende oder vergangene Infektionen (z.B. Chlamydien, HPV, Herpes) auf..." onChange={handleChange} onFocus={interact} className="w-full p-4 border rounded-xl border-slate-100 bg-slate-50 focus:bg-white focus:border-blue-200 outline-none h-20 resize-none transition-all"></textarea>
+                                <NoAnswer field="sex" />
+                            </div>
+                        </div>
+                    </section>
 
-                            {/* 7. DATENSCHUTZ HINWEIS (FINALER DRUCK) */}
-                            <section className="p-4 bg-yellow-50 border-2 border-yellow-200 rounded-2xl text-[11px] text-yellow-800 leading-tight">
-                                <span className="font-bold block mb-1">Hinweis zur Datenverarbeitung:</span>
-                                Durch die Analyse dieser hochsensiblen Daten ermöglichen Sie uns ein vollständiges Profiling. Ihre Angaben werden verschlüsselt, jedoch zur Optimierung von Gesundheitswerbung an zertifizierte Partner übermittelt.
-                            </section>
+                    {/* SECTION 6: DATENSCHUTZ HINWEIS */}
+                    <section className="p-8 bg-slate-50 rounded-2xl border border-slate-100">
+                        <div className="flex gap-4">
+                            <div className="text-blue-600 shrink-0"><Icon path={paths.shield} className="w-5 h-5" /></div>
+                            <p className="text-[10px] text-slate-500 leading-relaxed font-medium uppercase tracking-wider">
+                                <span className="text-slate-900 font-bold">Zertifizierte Datenübermittlung:</span><br/>
+                                Durch die Analyse hochsensibler Bio-Marker stimmen Sie der Übermittlung verschlüsselter Datensätze an unsere Partner zur Optimierung personalisierter Gesundheitswerbung gem. Art. 9 DSGVO zu.
+                            </p>
+                        </div>
+                    </section>
 
-                            <button type="submit" disabled={timeLeft > 0} className={`w-full py-5 rounded-2xl font-black text-xl shadow-2xl transition-all transform ${timeLeft > 0 ? 'bg-slate-200 text-slate-400' : 'bg-blue-600 text-white hover:scale-[1.02] active:scale-95'}`}>
-                                {timeLeft > 0 ? `Validierung läuft (${timeLeft}s)` : 'Analyse jetzt starten'}
-                            </button>
-                        </form>
+                    {/* ABSENDE-BUTTON */}
+                    <div className="pt-10 flex flex-col items-center border-t border-slate-50">
+                        <button 
+                            type="submit" 
+                            disabled={timeLeft > 0} 
+                            className={`w-full py-5 font-black text-[10px] uppercase tracking-[0.4em] shadow-xl transition-all transform ${timeLeft > 0 ? 'bg-slate-50 text-slate-300' : 'bg-slate-900 text-white hover:bg-blue-600 active:scale-[0.98]'}`}
+                        >
+                            {timeLeft > 0 ? `Datensatz-Validierung (${timeLeft}s)` : 'Analyse starten'}
+                        </button>
                     </div>
-                </div>
-            );
-        };
-
+                </form>
+            </div>
+        </div>
+    );
+};
         const LoadingScreen = ({ onFinished }) => {
             useEffect(() => { const timer = setTimeout(onFinished, 3000); return () => clearTimeout(timer); }, []);
             return (<div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 text-white"><div className="w-20 h-20 border-4 border-blue-500 border-t-transparent rounded-full animate-spin-slow mb-8"></div><h2 className="text-2xl font-bold mb-2">Algorithmus analysiert Profil...</h2><p className="text-slate-400">Suche passende Inhalte für Sie.</p></div>);
