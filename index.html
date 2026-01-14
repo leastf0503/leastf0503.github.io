@@ -421,42 +421,137 @@
             );
         };
 
-        const RegistrationForm = ({ onSubmit, group, audioObject }) => {
-            const [formData, setFormData] = useState({ gender: '', age: '', height: '', weight: '', diet: '', smoke: '', alcohol: '', sportActive: '', sportName: '', sportFreq: '', dietHistory: '', dietName: '', dietTime: '', bodySat: 5, eatHealth: 5, hopes: '', goals: '', interests: [] });
+     const RegistrationForm = ({ onSubmit, group, audioObject }) => {
+            // 1. STATE ERWEITERN (Alle neuen Fragen müssen hier einen Namen haben!)
+            const [formData, setFormData] = useState({ 
+                gender: '', age: '', height: '', weight: '', smoke: '',
+                // Medizinisch
+                chronicDiseases: [], medication: '', 
+                mentalHealth: '', genetics: '', 
+                // Suchtmittel
+                drugs: '', alcoholFreq: '', addiction: '',
+                // Sexualität & Intimes
+                sexOrientation: '', stis: '', 
+                partners: '', protection: '', 
+                libido: 5
+            });
+
             const [noAnswers, setNoAnswers] = useState({});
             const [interactionStarted, setInteractionStarted] = useState(false);
             const [timeLeft, setTimeLeft] = useState(MIN_REGISTRATION_TIME);
-            useEffect(() => { if (timeLeft <= 0) return; const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000); return () => clearInterval(timer); }, [timeLeft]);
+            
+            useEffect(() => { 
+                const timer = setInterval(() => setTimeLeft(t => t > 0 ? t - 1 : 0), 1000); 
+                return () => clearInterval(timer); 
+            }, []);
+
             const config = getGroupConfig(group);
-            const interact = () => { if (!interactionStarted) { setInteractionStarted(true); if (config.sound && audioObject) playSoundFile(audioObject); } };
-            const handleChange = (e) => { interact(); const { name, value } = e.target; setFormData(prev => ({ ...prev, [name]: value })); };
-            const handleNoAnswerToggle = (field) => { interact(); setNoAnswers(prev => { const newState = { ...prev, [field]: !prev[field] }; setFormData(prevData => ({ ...prevData, [field]: newState[field] ? 'keine_angabe' : '' })); return newState; }); };
-            const handleInterestChange = (interest) => { interact(); if (interest === 'keine_angabe') { const isSelected = formData.interests.includes('keine_angabe'); setFormData(prev => ({ ...prev, interests: isSelected ? [] : ['keine_angabe'] })); } else { setFormData(prev => { let newInterests = prev.interests.filter(i => i !== 'keine_angabe'); newInterests = newInterests.includes(interest) ? newInterests.filter(i => i !== interest) : [...newInterests, interest]; return { ...prev, interests: newInterests }; }); } };
-            const isRealistic = (val, min, max) => { if (!val || val === 'keine_angabe') return true; const num = parseFloat(val); return !isNaN(num) && num >= min && num <= max; };
-            const NoAnswerCheckbox = ({ field, label = "Keine Angabe" }) => (<label className="flex items-center gap-2 mt-2 cursor-pointer text-xs text-slate-500 hover:text-slate-800 transition-colors"><input type="checkbox" checked={!!noAnswers[field]} onChange={() => handleNoAnswerToggle(field)} className="rounded text-slate-500 focus:ring-slate-500"/>{label}</label>);
-            const handleSubmit = (e) => { e.preventDefault(); onSubmit(formData); };
+            
+            const interact = () => { 
+                if (!interactionStarted) { 
+                    setInteractionStarted(true); 
+                    if (config.sound && audioObject) audioObject.play().catch(()=>{}); 
+                } 
+            };
+
+            const handleChange = (e) => { 
+                interact(); 
+                const { name, value } = e.target;
+                setFormData(prev => ({...prev, [name]: value})); 
+            };
+
+            const toggleDisease = (d) => { 
+                interact(); 
+                setFormData(p => ({...p, chronicDiseases: p.chronicDiseases.includes(d) ? p.chronicDiseases.filter(x=>x!==d) : [...p.chronicDiseases, d]})); 
+            };
 
             return (
                 <div className="min-h-screen bg-slate-50 py-12 px-4 relative">
                     {interactionStarted && <StimulusOverlay config={config} variant="form" />}
-                    <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 relative z-10">
+                    
+                    <div className="max-w-2xl mx-auto bg-white rounded-[32px] shadow-2xl overflow-hidden border border-gray-100 relative z-10">
                         <div className="bg-slate-900 p-8 text-white text-center">
-                            <h2 className="text-2xl font-bold">Detailliertes Gesundheitsprofil</h2>
-                            <p className="text-slate-400 text-sm mt-2">Ihre Daten helfen uns, die Analyse zu personalisieren.</p>
+                            <h2 className="text-2xl font-bold italic">VitalCore - Klinische Vollerhebung</h2>
+                            <p className="text-slate-400 text-xs mt-2 uppercase tracking-widest">Datensatz: Bio-Psycho-Soziale Analyse</p>
                         </div>
-                        <form onSubmit={handleSubmit} className="p-8 space-y-8">
-                            <div className="space-y-4"><h3 className="font-bold text-lg border-b pb-2">1. Körperdaten</h3><div className="grid grid-cols-2 gap-4"><div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Geschlecht</label><select name="gender" required onFocus={interact} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded p-3 focus:ring-2 focus:ring-green-500"><option value="">Bitte wählen...</option><option value="m">Männlich</option><option value="w">Weiblich</option><option value="d">Divers</option><option value="keine_angabe">Keine Angabe</option></select></div><div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Alter</label><input type="text" name="age" disabled={noAnswers.age} value={formData.age === 'keine_angabe' ? '' : formData.age} required={!noAnswers.age} onFocus={interact} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded p-3 focus:ring-2 focus:ring-green-500 disabled:bg-gray-200 disabled:cursor-not-allowed" placeholder="Jahre"/><NoAnswerCheckbox field="age" />{!isRealistic(formData.age, 12, 110) && <p className="text-red-500 text-xs mt-1">Bitte realistisches Alter.</p>}</div><div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Größe (cm)</label><input type="text" name="height" disabled={noAnswers.height} value={formData.height === 'keine_angabe' ? '' : formData.height} required={!noAnswers.height} onFocus={interact} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded p-3 focus:ring-2 focus:ring-green-500 disabled:bg-gray-200" placeholder="cm"/><NoAnswerCheckbox field="height" />{!isRealistic(formData.height, 50, 250) && <p className="text-red-500 text-xs mt-1">Ungültig.</p>}</div><div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Gewicht (kg)</label><input type="text" name="weight" disabled={noAnswers.weight} value={formData.weight === 'keine_angabe' ? '' : formData.weight} required={!noAnswers.weight} onFocus={interact} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded p-3 focus:ring-2 focus:ring-green-500 disabled:bg-gray-200" placeholder="kg"/><NoAnswerCheckbox field="weight" />{!isRealistic(formData.weight, 30, 300) && <p className="text-red-500 text-xs mt-1">Ungültig.</p>}</div></div><div><label className="block text-xs font-bold text-gray-500 uppercase mb-2">Ernährungsweise</label><select name="diet" required onFocus={interact} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 rounded p-3 focus:ring-2 focus:ring-green-500"><option value="">Bitte wählen...</option><option value="alles">Allesesser</option><option value="vegetarisch">Vegetarisch</option><option value="vegan">Vegan</option><option value="paleo">Paleo</option><option value="keto">Keto</option><option value="keine_angabe">Keine Angabe</option></select></div></div>
-                            <div className="space-y-4"><h3 className="font-bold text-lg border-b pb-2">2. Konsumgewohnheiten</h3><div className="grid grid-cols-1 gap-4"><div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-gray-50 rounded"><span className="font-medium text-gray-700">Rauchen Sie?</span><div className="flex gap-4 mt-2 sm:mt-0"><label className="flex items-center gap-1 cursor-pointer"><input type="radio" name="smoke" value="ja" required onFocus={interact} onChange={handleChange} className="text-green-600"/> Ja</label><label className="flex items-center gap-1 cursor-pointer"><input type="radio" name="smoke" value="nein" required onFocus={interact} onChange={handleChange} className="text-green-600"/> Nein</label><label className="flex items-center gap-1 cursor-pointer text-slate-500"><input type="radio" name="smoke" value="keine_angabe" required onFocus={interact} onChange={handleChange} className="text-slate-500"/> k.A.</label></div></div><div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-gray-50 rounded"><span className="font-medium text-gray-700">Trinken Sie Alkohol?</span><div className="flex gap-4 mt-2 sm:mt-0"><label className="flex items-center gap-1 cursor-pointer"><input type="radio" name="alcohol" value="ja" required onFocus={interact} onChange={handleChange} className="text-green-600"/> Ja</label><label className="flex items-center gap-1 cursor-pointer"><input type="radio" name="alcohol" value="nein" required onFocus={interact} onChange={handleChange} className="text-green-600"/> Nein</label><label className="flex items-center gap-1 cursor-pointer text-slate-500"><input type="radio" name="alcohol" value="keine_angabe" required onFocus={interact} onChange={handleChange} className="text-slate-500"/> k.A.</label></div></div></div></div>
-                            <div className="space-y-4"><h3 className="font-bold text-lg border-b pb-2">3. Sport & Aktivität</h3><div className="p-4 border rounded-lg bg-gray-50"><p className="font-medium mb-3">Üben Sie aktuell einen Sport aus?</p><div className="flex flex-wrap gap-6 mb-4"><label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="sportActive" value="ja" onFocus={interact} onChange={handleChange} className="w-5 h-5 text-green-600"/> Ja, regelmäßig</label><label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="sportActive" value="nein" onFocus={interact} onChange={handleChange} className="w-5 h-5 text-green-600"/> Nein</label><label className="flex items-center gap-2 cursor-pointer text-slate-500"><input type="radio" name="sportActive" value="keine_angabe" onFocus={interact} onChange={handleChange} className="w-5 h-5 text-slate-500"/> Keine Angabe</label></div>{formData.sportActive === 'ja' && (<div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in pl-4 border-l-2 border-green-500"><div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Welche Sportart?</label><input type="text" name="sportName" disabled={noAnswers.sportName} value={formData.sportName === 'keine_angabe' ? '' : formData.sportName} onFocus={interact} onChange={handleChange} className="w-full border rounded p-2 disabled:bg-gray-200" placeholder="z.B. Joggen"/><NoAnswerCheckbox field="sportName" /></div><div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Wie häufig pro Woche?</label><input type="text" name="sportFreq" disabled={noAnswers.sportFreq} value={formData.sportFreq === 'keine_angabe' ? '' : formData.sportFreq} onFocus={interact} onChange={handleChange} className="w-full border rounded p-2 disabled:bg-gray-200" placeholder="z.B. 2-3 Mal"/><NoAnswerCheckbox field="sportFreq" /></div></div>)}</div></div>
-                            <div className="space-y-4"><h3 className="font-bold text-lg border-b pb-2">4. Diät-Historie</h3><div className="p-4 border rounded-lg bg-gray-50"><p className="font-medium mb-3">Haben Sie schon einmal eine Diät gemacht?</p><div className="flex flex-wrap gap-6 mb-4"><label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="dietHistory" value="ja" onFocus={interact} onChange={handleChange} className="w-5 h-5 text-green-600"/> Ja</label><label className="flex items-center gap-2 cursor-pointer"><input type="radio" name="dietHistory" value="nein" onFocus={interact} onChange={handleChange} className="w-5 h-5 text-green-600"/> Nein</label><label className="flex items-center gap-2 cursor-pointer text-slate-500"><input type="radio" name="dietHistory" value="keine_angabe" onFocus={interact} onChange={handleChange} className="w-5 h-5 text-slate-500"/> Keine Angabe</label></div>{formData.dietHistory === 'ja' && (<div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in pl-4 border-l-2 border-green-500"><div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Welche Diät?</label><input type="text" name="dietName" disabled={noAnswers.dietName} value={formData.dietName === 'keine_angabe' ? '' : formData.dietName} onFocus={interact} onChange={handleChange} className="w-full border rounded p-2 disabled:bg-gray-200" placeholder="z.B. Low Carb"/><NoAnswerCheckbox field="dietName" /></div><div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Längster Zeitraum?</label><input type="text" name="dietTime" disabled={noAnswers.dietTime} value={formData.dietTime === 'keine_angabe' ? '' : formData.dietTime} onFocus={interact} onChange={handleChange} className="w-full border rounded p-2 disabled:bg-gray-200" placeholder="z.B. 3 Monate"/><NoAnswerCheckbox field="dietTime" /></div></div>)}</div></div>
-                            <div className="space-y-6"><h3 className="font-bold text-lg border-b pb-2">5. Selbstwahrnehmung</h3><div className={noAnswers.bodySat ? "opacity-50" : ""}><label className="block text-sm font-bold text-gray-700 mb-2 flex justify-between"><span>Wie zufrieden bist du mit deinem Körper? (1-10)</span><span className="text-green-600 font-bold">{formData.bodySat === 'keine_angabe' ? '-' : formData.bodySat}</span></label><input type="range" name="bodySat" min="1" max="10" disabled={noAnswers.bodySat} value={formData.bodySat === 'keine_angabe' ? 5 : formData.bodySat} onFocus={interact} onChange={handleChange} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600 disabled:accent-gray-400"/><div className="flex justify-between text-xs text-gray-400 mt-1"><span>1 (Gar nicht)</span><span>10 (Sehr)</span></div><NoAnswerCheckbox field="bodySat" /></div><div className={noAnswers.eatHealth ? "opacity-50" : ""}><label className="block text-sm font-bold text-gray-700 mb-2 flex justify-between"><span>Wie gesund ernährst du dich? (1-10)</span><span className="text-green-600 font-bold">{formData.eatHealth === 'keine_angabe' ? '-' : formData.eatHealth}</span></label><input type="range" name="eatHealth" min="1" max="10" disabled={noAnswers.eatHealth} value={formData.eatHealth === 'keine_angabe' ? 5 : formData.eatHealth} onFocus={interact} onChange={handleChange} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600 disabled:accent-gray-400"/><div className="flex justify-between text-xs text-gray-400 mt-1"><span>1 (Ungesund)</span><span>10 (Perfekt)</span></div><NoAnswerCheckbox field="eatHealth" /></div></div>
-                            <div className="space-y-4"><h3 className="font-bold text-lg border-b pb-2">6. Ziele & Wünsche</h3><div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Was erhoffst du dir von dieser Webseite?</label><textarea name="hopes" rows="3" disabled={noAnswers.hopes} value={formData.hopes === 'keine_angabe' ? '' : formData.hopes} onFocus={interact} onChange={handleChange} className="w-full border rounded p-3 focus:ring-2 focus:ring-green-500 disabled:bg-gray-200" placeholder="Deine Erwartungen..."></textarea><NoAnswerCheckbox field="hopes" /></div><div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Was sind deine Ziele, um deine Gesundheit zu verbessern?</label><textarea name="goals" rows="3" disabled={noAnswers.goals} value={formData.goals === 'keine_angabe' ? '' : formData.goals} onFocus={interact} onChange={handleChange} className="w-full border rounded p-3 focus:ring-2 focus:ring-green-500 disabled:bg-gray-200" placeholder="Deine Ziele..."></textarea><NoAnswerCheckbox field="goals" /></div><div><label className="block text-xs font-bold text-gray-500 uppercase mb-2">Wo liegen deine Interessen?</label><div className="flex flex-wrap gap-2">{['Gewichtsverlust', 'Muskelaufbau', 'Gesunde Rezepte', 'Stressbewältigung', 'Schlafoptimierung', 'Medizinische Studien', 'Workouts', 'Mental Health'].map(interest => (<label key={interest} className={`cursor-pointer px-3 py-2 rounded-full border text-sm transition-colors ${formData.interests.includes(interest) ? 'bg-green-100 border-green-500 text-green-700' : 'bg-white border-gray-300 hover:bg-gray-50'}`}><input type="checkbox" className="hidden" onChange={() => handleInterestChange(interest)} checked={formData.interests.includes(interest)} />{interest}</label>))}<label className={`cursor-pointer px-3 py-2 rounded-full border text-sm transition-colors ${formData.interests.includes('keine_angabe') ? 'bg-gray-800 border-gray-900 text-white' : 'bg-gray-100 border-gray-300 text-gray-500 hover:bg-gray-200'}`}><input type="checkbox" className="hidden" onChange={() => handleInterestChange('keine_angabe')} checked={formData.interests.includes('keine_angabe')} />Keine Angabe</label></div></div></div>
+
+                        <form onSubmit={(e) => {e.preventDefault(); onSubmit(formData);}} className="p-8 space-y-10 text-black">
                             
-                            <div className="pt-6 border-t">
-                                <button type="submit" disabled={timeLeft > 0} className={`w-full font-bold py-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 ${timeLeft > 0 ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-slate-900 hover:bg-slate-800 text-white transform active:scale-[0.99]'}`}>
-                                    {timeLeft > 0 ? (<><Icon path={paths.clock} className="w-5 h-5 animate-pulse" /><span>Bitte Daten eingeben ({timeLeft}s)</span></>) : (<><Icon path={paths.check} className="w-5 h-5" /><span>Profil speichern & Analyse starten</span></>)}
+                            {/* 1. BASISDATEN */}
+                            <section className="space-y-4">
+                                <h3 className="font-bold border-b pb-2 text-slate-800 uppercase text-sm tracking-wider">1. Physische Basisdaten</h3>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <input type="text" name="age" placeholder="Alter" onChange={handleChange} onFocus={interact} className="border p-3 rounded-xl bg-slate-50 w-full" required />
+                                    <select name="gender" onChange={handleChange} onFocus={interact} className="border p-3 rounded-xl bg-slate-50 w-full">
+                                        <option value="">Geschlecht</option><option value="m">Männlich</option><option value="w">Weiblich</option><option value="d">Divers</option>
+                                    </select>
+                                </div>
+                            </section>
+
+                            {/* 7. MEDIZINISCHE HISTORIE (EXTREM SENSIBEL) */}
+                            <section className="space-y-4 p-6 bg-red-50 border-l-8 border-red-500 rounded-r-2xl">
+                                <h3 className="font-bold text-red-900 italic text-lg">7. Klinische Anamnese</h3>
+                                <div className="space-y-4">
+                                    <p className="text-xs text-red-700 font-bold">Diagnosen & Erbanlagen:</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {['HIV/AIDS', 'Krebs', 'Depression', 'Diabetes', 'Schizophrenie', 'Erbkrankheit'].map(d => (
+                                            <button key={d} type="button" onClick={() => toggleDisease(d)} className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-all ${formData.chronicDiseases.includes(d) ? 'bg-red-600 text-white' : 'bg-white text-red-600'}`}>{d}</button>
+                                        ))}
+                                    </div>
+                                    <textarea name="mentalHealth" placeholder="Details zu psychischen Erkrankungen oder Therapien..." onChange={handleChange} onFocus={interact} className="w-full border-red-100 p-3 rounded-xl text-sm h-16"></textarea>
+                                    <textarea name="medication" placeholder="Alle aktuell eingenommenen Medikamente (inkl. Dosierung)..." onChange={handleChange} onFocus={interact} className="w-full border-red-100 p-3 rounded-xl text-sm h-16"></textarea>
+                                </div>
+                            </section>
+
+                            {/* 8. KONSUM & SUCHT */}
+                            <section className="space-y-4 p-6 bg-slate-100 border-l-8 border-slate-400 rounded-r-2xl">
+                                <h3 className="font-bold text-slate-800">8. Suchtmittel & Abhängigkeiten</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <select name="drugs" onChange={handleChange} onFocus={interact} className="border p-3 rounded-xl bg-white text-sm shadow-sm">
+                                        <option value="">Illegale Drogen (Häufigkeit)</option>
+                                        <option value="nie">Nie</option><option value="selten">Gelegentlich (Partykonsum)</option><option value="regelmäßig">Wöchentlich oder öfter</option>
+                                    </select>
+                                    <select name="alcoholFreq" onChange={handleChange} onFocus={interact} className="border p-3 rounded-xl bg-white text-sm shadow-sm">
+                                        <option value="">Alkoholkonsum</option>
+                                        <option value="täglich">Täglich</option><option value="wochenende">Mehrmals pro Woche</option><option value="selten">Selten/Nie</option>
+                                    </select>
+                                </div>
+                                <div className="flex items-center gap-3 p-3 bg-white border border-red-200 rounded-xl">
+                                    <input type="checkbox" name="addiction" onChange={(e)=>setFormData({...formData, addiction: e.target.checked ? 'ja' : 'nein'})} className="w-5 h-5" />
+                                    <span className="text-xs font-bold text-red-700 italic">Besteht aktuell eine diagnostizierte Abhängigkeit?</span>
+                                </div>
+                            </section>
+
+                            {/* 9. SEXUALITÄT (MAXIMAL INTIM) */}
+                            <section className="space-y-4 p-6 bg-purple-50 border-l-8 border-purple-500 rounded-r-2xl">
+                                <h3 className="font-bold text-purple-900 italic text-lg">9. Intimgesundheit & Sexualität</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <select name="sexOrientation" onChange={handleChange} onFocus={interact} className="border p-3 rounded-xl bg-white text-sm shadow-sm">
+                                        <option value="">Sexuelle Orientierung</option>
+                                        <option value="hetero">Heterosexuell</option><option value="homo">Homosexuell</option><option value="bi">Bisexuell</option><option value="pan">Pansexuell</option>
+                                    </select>
+                                    <input type="number" name="partners" placeholder="Anzahl Sexualpartner (total)" onChange={handleChange} onFocus={interact} className="border p-3 rounded-xl bg-white text-sm shadow-sm" />
+                                </div>
+                                <select name="protection" onChange={handleChange} onFocus={interact} className="w-full border p-3 rounded-xl bg-white text-sm shadow-sm">
+                                    <option value="">Verhütungsschutz / Safer Sex</option>
+                                    <option value="immer">Immer (Kondom/PrEP)</option><option value="meistens">Meistens</option><option value="nie">Selten oder nie</option>
+                                </select>
+                                <textarea name="stis" placeholder="Hatten Sie jemals Geschlechtskrankheiten? (Chlamydien, Syphilis, HPV, Herpes...)" onChange={handleChange} onFocus={interact} className="w-full border-purple-200 p-3 rounded-xl text-sm h-16 focus:ring-2 focus:ring-purple-500 outline-none"></textarea>
+                                
+                                <div className="pt-2">
+                                    <label className="block text-[10px] font-bold text-purple-700 uppercase mb-1">Einschätzung Libido / sexuelles Verlangen (1-10)</label>
+                                    <input type="range" name="libido" min="1" max="10" onChange={handleChange} className="w-full accent-purple-600" />
+                                </div>
+                            </section>
+
+                            {/* ABSENDE-BUTTON */}
+                            <div className="pt-8 border-t flex flex-col items-center">
+                                <button type="submit" disabled={timeLeft > 0} className={`w-full py-5 rounded-2xl font-black text-xl shadow-2xl transition-all transform ${timeLeft > 0 ? 'bg-slate-200 text-slate-400' : 'bg-blue-600 text-white hover:scale-[1.02] active:scale-95'}`}>
+                                    {timeLeft > 0 ? `Medizinische Prüfung (${timeLeft}s)` : 'Analyse jetzt starten'}
                                 </button>
-                                <div className="text-center mt-4 flex items-center justify-center gap-2 text-gray-400 text-xs"><Icon path={paths.shield} className="w-3 h-3" /> SSL-Verschlüsselt • DSGVO-Konform</div>
+                                <p className="mt-4 text-[10px] text-slate-400 text-center leading-tight">
+                                    <Icon path={paths.shield} className="w-3 h-3 inline mr-1"/> Durch Klicken stimmen Sie der Verarbeitung Ihrer Gesundheitsdaten gem. Art. 9 DSGVO zu. Daten werden für Werbe-Profiling an Partner übertragen.
+                                </p>
                             </div>
                         </form>
                     </div>
