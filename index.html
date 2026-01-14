@@ -20,9 +20,8 @@
           92% { transform: scaleY(0.05); }
         }
 
-        .animate-blink-1 { animation: blink 2.5s infinite; transform-origin: center; }
-        .animate-blink-2 { animation: blink 2.5s infinite; animation-delay: 0.4s; transform-origin: center; }
-        
+        .animate-blink-1 { animation: blink 3s infinite; transform-origin: center; }
+        .animate-blink-2 { animation: blink 3s infinite; animation-delay: 0.4s; transform-origin: center; }
         .animate-slide-up { animation: slide-up 0.5s ease-out forwards; }
         .animate-fade-in { animation: fade-in 0.8s ease-out forwards; }
         .animate-pulse-slow { animation: pulse-slow 3s infinite; }
@@ -34,28 +33,40 @@
 </head>
 <body>
     <div id="error-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; padding: 20px; background: #fee2e2; border-bottom: 2px solid #ef4444; color: #991b1b; z-index: 9999; font-family: monospace;">
-        <strong>Systemfehler:</strong> <span id="error-msg">Unbekannter Fehler</span>
+        <strong>Systemfehler:</strong> <span id="error-msg">Skript lädt...</span>
     </div>
-    <script>
-        window.onerror = function(msg, url, line) {
-            document.getElementById('error-overlay').style.display = 'block';
-            document.getElementById('error-msg').innerText = msg + " (Zeile: " + line + ")";
-            return false;
-        };
-    </script>
 
     <div id="root"></div>
 
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
+        // --- KONFIGURATION ---
         const MIN_BROWSING_TIME_1 = 15; 
         const MIN_REGISTRATION_TIME = 10; 
         const MIN_BROWSING_TIME_2 = 15; 
         const COOKIE_BANNER_DELAY_MS = 3000; 
         const SOSCI_BASE_URL = "https://www.soscisurvey.de/BA25LeaPaula/";
 
-        // --- ICONS ---
+        // --- BLOG DATEN ---
+        const BLOG_CONTENT = [
+            { id: 1, title: "Die 5 Säulen der Langlebigkeit", cat: "Forschung", time: "8 min", date: "Aktuell", author: "Dr. med. Weber", image: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=800&q=80", fullText: ["Die Suche nach dem Jungbrunnen ist so alt wie die Menschheit...", "1. Ernährung, 2. Bewegung, 3. Schlaf."], desc: "Kleine Anpassungen in Ihrer Routine können Ihr biologisches Alter senken." },
+            { id: 2, title: "Intervallfasten 16:8", cat: "Ernährung", time: "10 min", date: "10. Okt", author: "Sarah Klein", image: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=800", desc: "Warum Pausen für den Stoffwechsel wichtig sind." },
+            { id: 3, title: "Digital Detox & Cortisol", cat: "Mental Health", time: "7 min", date: "08. Okt", author: "M. Psych. Bauer", image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80", desc: "Wie ständige Erreichbarkeit Ihren Hormonhaushalt beeinflusst." },
+            { id: 4, title: "Herzgesundheit 2.0", cat: "Prävention", time: "5 min", date: "05. Okt", author: "Prof. Dr. Lang", image: "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=800", desc: "Neue Marker im Blutbild, die Sie kennen sollten." },
+            { id: 5, title: "Rauchen: Eine ist keine?", cat: "Prävention", time: "6 min", author: "Dr. Lisa Neubauer", image: "https://cdn.prod.www.spiegel.de/images/caa850d5-0001-0004-0000-000001220757_w1200_r1_fpx41.97_fpy50.jpg", desc: "Warum auch Social Smoking dich krank macht." },
+            { id: 6, title: "Diäten & Jojo-Effekt", cat: "Ernährung", time: "7 min", date: "14. Okt", author: "Dr. Meier", image: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=800", desc: "Warum Crash-Diäten scheitern." },
+            { id: 7, title: "Volkskrankheit Rücken", cat: "Prävention", time: "8 min", date: "16. Okt", author: "Physio T. Müller", image: "ruecken.jpg", desc: "80% der Bevölkerung sind betroffen. Übungen." },
+            { id: 8, title: "Migräne verstehen", cat: "Forschung", time: "7 min", date: "18. Okt", author: "Dr. Neuhaus", image: "migraene.jpg", desc: "Ursachen und moderne Therapieansätze." },
+            { id: 9, title: "Zone 2 Training", cat: "Fitness", time: "10 min", date: "20. Okt", author: "Prof. Arndt", image: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=800", desc: "Warum 'langsam' das neue 'schnell' ist." },
+            { id: 10, title: "Muskeln sind Medizin", cat: "Fitness", time: "6 min", date: "22. Okt", author: "Dr. Reha", image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=800", desc: "Krafttraining als Altersvorsorge." }
+        ];
+
+        const PERSONALIZED_CONTENT = [
+            { id: 101, title: "Ihre Stoffwechsel-Analyse", cat: "Ergebnis", time: "Jetzt", author: "VitalCore AI", image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800", match: "99% Match", desc: "Ihr metabolischer Typ basierend auf Ihren Angaben." }
+        ];
+
+        // --- ICONS & HELFER ---
         const Icon = ({ path, className }) => (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{path}</svg>
         );
@@ -66,70 +77,21 @@
             leaf: <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" />,
             clock: <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14" />,
             activity: <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>,
-            apple: <React.Fragment><path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06Z"/><path d="M10 2c1 .5 2 2 2 5"/></React.Fragment>,
-            coffee: <React.Fragment><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" x2="6" y1="2" y2="4"/><line x1="10" x2="10" y1="2" y2="4"/><line x1="14" x2="14" y1="2" y2="4"/></React.Fragment>,
-            heart: <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>,
-            heartFilled: <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" fill="currentColor" stroke="none"/>,
-            search: <React.Fragment><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></React.Fragment>,
-            arrowLeft: <path d="M19 12H5m7 7-7-7 7-7"/>,
-            ciagrette: <React.Fragment><path d="M18 8c0-2.5-2-2.5-2-5"/><path d="M22 8c0-2.5-2-2.5-2-5"/><rect x="2" y="13" width="20" height="6" rx="2"/><path d="M22 16h-4"/><path d="M2 16h4"/></React.Fragment>
+            arrowLeft: <path d="M19 12H5m7 7-7-7 7-7"/>
         };
 
-        // --- BLOG DATEN ---
-        const BLOG_CONTENT = [
-            { id: 1, title: "Die 5 Säulen der Langlebigkeit", cat: "Forschung", time: "8 min", date: "Aktuell", author: "Dr. med. Weber", image: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=800&q=80", color: "bg-blue-100", icon: paths.activity, desc: "Kleine Anpassungen in Ihrer Routine können Ihr biologisches Alter senken.", fullText: ["Langlebigkeit ist kein Zufallsprodukt...", "Ernährung, Bewegung, Schlaf sind die Schlüssel."] },
-            { id: 2, title: "Intervallfasten 16:8", cat: "Ernährung", time: "10 min", date: "10. Okt", author: "Sarah Klein", image: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=800", color: "bg-orange-100", icon: paths.apple, desc: "Warum Pausen für den Stoffwechsel wichtig sind.", fullText: ["Autophagie ist der Prozess der zellulären Reinigung..."] },
-            { id: 3, title: "Digital Detox & Cortisol", cat: "Mental Health", time: "7 min", date: "08. Okt", author: "M. Psych. Bauer", image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80", color: "bg-purple-100", icon: paths.coffee, desc: "Wie ständige Erreichbarkeit Ihren Stresspegel beeinflusst.", fullText: ["Cortisol-Ausschüttung durch ständige Benachrichtigungen..."] },
-            { id: 4, title: "Herzgesundheit 2.0", cat: "Prävention", time: "5 min", date: "05. Okt", author: "Prof. Dr. Lang", image: "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=800", color: "bg-red-100", icon: paths.heart, desc: "Neue Marker im Blutbild, die Sie kennen sollten.", fullText: ["LDL ist nicht der einzige Faktor für Gefäßgesundheit..."] },
-            { id: 5, title: "Rauchen: Eine ist keine?", cat: "Prävention", time: "6 min", author: "Dr. Lisa Neubauer", image: "https://cdn.prod.www.spiegel.de/images/caa850d5-0001-0004-0000-000001220757_w1200_r1_fpx41.97_fpy50.jpg", color: "bg-orange-100", icon: paths.ciagrette, desc: "Warum auch Social Smoking dich krank macht.", fullText: ["Rauchen schädigt jedes Organ im Körper..."] },
-            { id: 6, title: "Diäten & Jojo-Effekt", cat: "Ernährung", time: "7 min", date: "14. Okt", author: "Dr. Meier", image: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=800", color: "bg-green-100", icon: paths.apple, desc: "Warum Crash-Diäten scheitern.", fullText: ["Der Körper stellt auf Hungerstoffwechsel um..."] },
-            { id: 7, title: "Volkskrankheit Rücken", cat: "Prävention", time: "8 min", date: "16. Okt", author: "Physio T. Müller", image: "ruecken.jpg", color: "bg-blue-100", icon: paths.activity, desc: "80% der Bevölkerung sind betroffen.", fullText: ["Sitzen ist das neue Rauchen..."] },
-            { id: 8, title: "Migräne verstehen", cat: "Forschung", time: "7 min", date: "18. Okt", author: "Dr. Neuhaus", image: "migraene.jpg", color: "bg-purple-100", icon: paths.search, desc: "Mehr als nur Kopfschmerzen.", fullText: ["Migräne ist eine komplexe neurologische Erkrankung..."] },
-            { id: 9, title: "Zone 2 Training", cat: "Fitness", time: "10 min", date: "20. Okt", author: "Prof. Arndt", image: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=800", color: "bg-orange-100", icon: paths.activity, desc: "Langsam ist das neue Schnell.", fullText: ["Mitochondrien-Vermehrung durch Grundlagenausdauer..."] },
-            { id: 10, title: "Muskeln sind Medizin", cat: "Fitness", time: "6 min", date: "22. Okt", author: "Dr. Reha", image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=800", color: "bg-red-100", icon: paths.activity, desc: "Krafttraining als Altersvorsorge.", fullText: ["Myokine wirken entzündungshemmend..."] }
-        ];
-
-        const PERSONALIZED_CONTENT = [
-            { id: 101, title: "Ihre Stoffwechsel-Analyse", cat: "Ergebnis", time: "Jetzt", author: "VitalCore AI", image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800", color: "bg-green-100", icon: paths.check, desc: "Ihr metabolischer Typ analysiert.", fullText: ["Basierend auf Ihren Angaben haben wir Ihr Profil erstellt..."] }
-        ];
-
-        // ==========================================
-        // 4. HELFER FUNKTIONEN
-        // ==========================================
-        const getGroupConfig = (groupID) => {
-            const map = {
-                0: { eyes: false, sound: false, info: false },
-                1: { eyes: true,  sound: false, info: false },
-                2: { eyes: false, sound: true,  info: false },
-                3: { eyes: true,  sound: true,  info: false },
-                5: { eyes: true,  sound: false, info: true  },
-                6: { eyes: false, sound: true,  info: true  },
-                7: { eyes: true,  sound: true,  info: true  },
-            };
-            return map[groupID] || map[0];
+        const getGroupConfig = (id) => {
+            const map = { 0: {eyes:false, info:false}, 1: {eyes:true, info:false}, 5: {eyes:true, info:true}, 7: {eyes:true, info:true, sound:true} };
+            return map[id] || map[0];
         };
 
-        const playSoundFile = (audioObj) => {
-            if (!audioObj) return;
-            audioObj.currentTime = 0;
-            audioObj.play().catch(e => console.log("Audio Error:", e));
-        };
-
-        const isRealistic = (val, min, max) => {
-            if (!val || val === 'keine_angabe') return true;
-            const num = parseFloat(val);
-            return !isNaN(num) && num >= min && num <= max;
-        };
-
-        // ==========================================
-        // 5. KOMPONENTEN
-        // ==========================================
+        // --- KOMPONENTEN ---
 
         const RealisticEye = ({ color, className, hasLashes, blinkClass }) => {
-            const gradId = React.useId().replace(/:/g, ""); 
+            const gradId = Math.random().toString(36).substr(2, 9); // Stabiler als useId in Babel Standalone
             return (
                 <div className={blinkClass}>
-                    <svg viewBox="0 0 100 70" className={className} preserveAspectRatio="xMidYMid meet" style={{ overflow: 'visible' }}>
+                    <svg viewBox="0 0 100 70" className={className} style={{ overflow: 'visible' }}>
                         <defs>
                             <radialGradient id={`whiteGrad-${gradId}`} cx="50%" cy="50%" r="50%" fx="50%" fy="30%">
                                 <stop offset="0%" stopColor="#ffffff" /><stop offset="100%" stopColor="#d1d5db" />
@@ -157,13 +119,13 @@
                 <div className={`pointer-events-none z-[60] flex flex-col items-center gap-2 ${variant === 'form' ? 'fixed top-0 left-1/2 -translate-x-1/2 pt-2' : 'absolute -top-16 left-1/2 -translate-x-1/2'}`}>
                     {config.eyes && (
                         <div className="flex gap-4 filter drop-shadow-xl">
-                            <div className="bg-white p-2 rounded-full border-2 border-gray-300 shadow-2xl overflow-hidden"><RealisticEye color={eyeColor} className="w-20 h-14" hasLashes={variant==='form'} blinkClass="animate-blink-1" /></div>
-                            <div className="bg-white p-2 rounded-full border-2 border-gray-300 shadow-2xl overflow-hidden"><RealisticEye color={eyeColor} className="w-20 h-14" hasLashes={variant==='form'} blinkClass="animate-blink-2" /></div>
+                            <div className="bg-white p-1 rounded-full border shadow-2xl"><RealisticEye color={eyeColor} className="w-20 h-14" hasLashes={variant==='form'} blinkClass="animate-blink-1" /></div>
+                            <div className="bg-white p-1 rounded-full border shadow-2xl"><RealisticEye color={eyeColor} className="w-20 h-14" hasLashes={variant==='form'} blinkClass="animate-blink-2" /></div>
                         </div>
                     )}
                     {config.info && variant === 'form' && (
                         <div className="bg-red-50 border border-red-200 p-2 rounded text-[10px] text-red-900 shadow-xl max-w-[200px] text-center animate-fade-in backdrop-blur-sm">
-                            <span className="font-bold">⚠️ Datenschutz-Warnung:</span> Ihre sensiblen Angaben werden für algorithmische Werbung analysiert.
+                            <span className="font-bold">⚠️ Warnung:</span> Ihre sensiblen Daten werden algorithmisch verarbeitet.
                         </div>
                     )}
                 </div>
@@ -172,82 +134,65 @@
 
         const RegistrationForm = ({ onSubmit, group, audioObject }) => {
             const [formData, setFormData] = useState({ 
-                gender: '', age: '', height: '', weight: '', diet: '', smoke: '', alcohol: '', 
-                sportActive: '', sportName: '', sportFreq: '', dietHistory: '', dietName: '', dietTime: '', 
-                bodySat: 5, eatHealth: 5, hopes: '', goals: '', interests: [],
-                chronicDiseases: [], medication: '', drugs: '', addiction: '', sexOrientation: '', stis: ''
+                gender: '', age: '', chronicDiseases: [], medication: '', drugs: '', addiction: '', sexOrientation: '', stis: ''
             });
             const [noAnswers, setNoAnswers] = useState({});
-            const [interactionStarted, setInteractionStarted] = useState(false);
+            const [interaction, setInteraction] = useState(false);
             const [timeLeft, setTimeLeft] = useState(MIN_REGISTRATION_TIME);
-            
-            useEffect(() => { const timer = setInterval(() => setTimeLeft(t => t > 0 ? t - 1 : 0), 1000); return () => clearInterval(timer); }, []);
-            
             const config = getGroupConfig(group);
-            const interact = () => { if (!interactionStarted) { setInteractionStarted(true); if (config.sound && audioObject) playSoundFile(audioObject); } };
-            const handleChange = (e) => { interact(); const { name, value } = e.target; setFormData(prev => ({ ...prev, [name]: value })); };
-            const handleNoAnswerToggle = (field) => { interact(); setNoAnswers(prev => ({ ...prev, [field]: !prev[field] })); };
-            const toggleDisease = (d) => { interact(); setFormData(p => ({...p, chronicDiseases: p.chronicDiseases.includes(d) ? p.chronicDiseases.filter(x=>x!==d) : [...p.chronicDiseases, d]})); };
 
-            const NoAnswerCheckbox = ({ field }) => (
-                <label className="flex items-center gap-2 mt-2 cursor-pointer text-[10px] text-slate-400 hover:text-slate-600 transition-colors">
-                    <input type="checkbox" checked={!!noAnswers[field]} onChange={() => handleNoAnswerToggle(field)} className="rounded-sm border-gray-300"/> Keine Angabe
-                </label>
-            );
+            useEffect(() => { const t = setInterval(() => setTimeLeft(x => x > 0 ? x - 1 : 0), 1000); return () => clearInterval(t); }, []);
+
+            const handleChange = (e) => { 
+                if (!interaction) { setInteraction(true); if (config.sound && audioObject) audioObject.play(); }
+                setFormData({...formData, [e.target.name]: e.target.value}); 
+            };
+
+            const toggleDisease = (d) => {
+                setInteraction(true);
+                setFormData(p => ({...p, chronicDiseases: p.chronicDiseases.includes(d) ? p.chronicDiseases.filter(x=>x!==d) : [...p.chronicDiseases, d]}));
+            };
 
             return (
                 <div className="min-h-screen bg-slate-50 py-12 px-4 relative">
-                    {interactionStarted && <StimulusOverlay config={config} variant="form" />}
-                    <div className="max-w-2xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100 relative z-10">
-                        <div className="bg-slate-900 p-8 text-white text-center">
-                            <h2 className="text-2xl font-bold italic tracking-tight">VitalCore Premium Profil</h2>
-                            <p className="text-slate-400 text-sm mt-2 font-medium">Umfassende klinische Analyse Ihrer Gesundheitsdaten</p>
-                        </div>
-                        <form onSubmit={(e) => {e.preventDefault(); onSubmit(formData);}} className="p-8 space-y-10 text-black">
+                    {interaction && <StimulusOverlay config={config} variant="form" />}
+                    <div className="max-w-2xl mx-auto bg-white rounded-[32px] shadow-2xl overflow-hidden border relative z-10">
+                        <div className="bg-slate-900 p-8 text-white text-center"><h2 className="text-2xl font-bold italic tracking-tight">VitalCore Premium Analyse</h2></div>
+                        <form onSubmit={(e) => {e.preventDefault(); onSubmit(formData);}} className="p-8 space-y-10">
                             
                             <section className="space-y-4">
-                                <h3 className="font-bold text-lg border-b pb-2">1. Physische Daten</h3>
+                                <h3 className="font-bold border-b pb-2">1. Basisdaten</h3>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-[10px] font-bold text-gray-400 uppercase">Alter</label>
-                                        <input type="text" name="age" disabled={noAnswers.age} onFocus={interact} onChange={handleChange} className="w-full border p-3 rounded-xl bg-slate-50 focus:ring-2 focus:ring-blue-500" required={!noAnswers.age} />
-                                        <NoAnswerCheckbox field="age" />
-                                        {!isRealistic(formData.age, 12, 110) && <p className="text-red-500 text-xs mt-1">Bitte realistisches Alter.</p>}
-                                    </div>
-                                    <div>
-                                        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Geschlecht</label>
-                                        <select name="gender" onFocus={interact} onChange={handleChange} className="w-full border p-3 rounded-xl bg-slate-50">
-                                            <option value="">Wählen...</option><option value="m">Männlich</option><option value="w">Weiblich</option><option value="d">Divers</option>
-                                        </select>
-                                    </div>
+                                    <input type="text" name="age" placeholder="Alter" onChange={handleChange} className="border p-3 rounded-xl w-full" required />
+                                    <select name="gender" onChange={handleChange} className="border p-3 rounded-xl w-full"><option value="">Geschlecht</option><option value="m">Männlich</option><option value="w">Weiblich</option></select>
                                 </div>
                             </section>
 
-                            <section className="space-y-4 p-6 bg-red-50 border-l-8 border-red-500 rounded-r-2xl shadow-inner">
+                            <section className="space-y-4 p-6 bg-red-50 border-l-8 border-red-500 rounded-r-2xl">
                                 <h3 className="font-bold text-red-900 italic text-lg">7. Medizinische Historie</h3>
                                 <div className="flex flex-wrap gap-2">
                                     {['HIV/AIDS', 'Krebs', 'Depression', 'Diabetes', 'Essstörung'].map(d => (
-                                        <button key={d} type="button" onClick={() => toggleDisease(d)} className={`px-4 py-2 rounded-full text-xs font-bold border transition-all ${formData.chronicDiseases.includes(d) ? 'bg-red-600 text-white border-red-700' : 'bg-white text-red-600 border-red-200'}`}>{d}</button>
+                                        <button key={d} type="button" onClick={() => toggleDisease(d)} className={`px-4 py-2 rounded-full text-xs font-bold border transition-all ${formData.chronicDiseases.includes(d) ? 'bg-red-600 text-white' : 'bg-white text-red-600'}`}>{d}</button>
                                     ))}
                                 </div>
-                                <textarea name="medication" placeholder="Aktuelle Medikation & Diagnosen..." onChange={handleChange} onFocus={interact} className="w-full border-red-100 p-3 rounded-xl text-sm h-20 focus:ring-2 focus:ring-red-500"></textarea>
+                                <textarea name="medication" placeholder="Aktuelle Medikation & Diagnosen..." onChange={handleChange} className="w-full border-red-100 p-3 rounded-xl text-sm h-20 outline-none"></textarea>
                             </section>
 
                             <section className="space-y-4 p-6 bg-slate-100 border-l-8 border-slate-400 rounded-r-2xl">
-                                <h3 className="font-bold">8. Suchtmittel & Konsum</h3>
-                                <select name="drugs" onChange={handleChange} onFocus={interact} className="w-full border p-3 rounded-xl bg-white shadow-sm">
-                                    <option value="">Konsum illegaler Drogen (z.B. Kokain)?</option>
+                                <h3 className="font-bold">8. Suchtmittel & Illegaler Konsum</h3>
+                                <select name="drugs" onChange={handleChange} className="w-full border p-3 rounded-xl bg-white shadow-sm">
+                                    <option value="">Konsum illegaler Drogen (z.B. Kokain, MDMA)?</option>
                                     <option value="nie">Nie</option><option value="selten">Selten</option><option value="regelmäßig">Regelmäßig</option>
                                 </select>
                             </section>
 
                             <section className="space-y-4 p-6 bg-purple-50 border-l-8 border-purple-500 rounded-r-2xl">
                                 <h3 className="font-bold text-purple-900 italic text-lg">9. Sexualität</h3>
-                                <textarea name="stis" placeholder="Hatten Sie jemals STIs? (Syphilis, Chlamydien, HPV...)" onChange={handleChange} onFocus={interact} className="w-full border-purple-100 p-3 rounded-xl text-sm h-20 focus:ring-2 focus:ring-purple-500"></textarea>
+                                <textarea name="stis" placeholder="Hatten Sie jemals STIs? (Syphilis, Chlamydien, HPV...)" onChange={handleChange} className="w-full border-purple-200 p-3 rounded-xl text-sm h-20 outline-none"></textarea>
                             </section>
 
-                            <button type="submit" disabled={timeLeft > 0} className={`w-full py-5 rounded-2xl font-black text-xl shadow-2xl transition-all transform ${timeLeft > 0 ? 'bg-slate-200 text-slate-400' : 'bg-blue-600 text-white hover:scale-[1.02] active:scale-95'}`}>
-                                {timeLeft > 0 ? `Daten-Prüfung läuft (${timeLeft}s)` : 'Analyse jetzt starten'}
+                            <button type="submit" disabled={timeLeft > 0} className={`w-full py-5 rounded-2xl font-black text-xl shadow-2xl transition-all ${timeLeft > 0 ? 'bg-slate-200 text-slate-400' : 'bg-blue-600 text-white active:scale-95'}`}>
+                                {timeLeft > 0 ? `Daten-Validierung (${timeLeft}s)` : 'Analyse jetzt starten'}
                             </button>
                         </form>
                     </div>
@@ -256,17 +201,17 @@
         };
 
         const BlogPage = ({ onAction, mode = 'initial' }) => {
-            const [selectedArticle, setSelectedArticle] = useState(null);
+            const [selected, setSelected] = useState(null);
             const articles = mode === 'initial' ? BLOG_CONTENT : [...PERSONALIZED_CONTENT, ...BLOG_CONTENT];
             const [timeLeft, setTimeLeft] = useState(mode === 'initial' ? MIN_BROWSING_TIME_1 : MIN_BROWSING_TIME_2);
-            useEffect(() => { const timer = setInterval(() => setTimeLeft(t => t > 0 ? t - 1 : 0), 1000); return () => clearInterval(timer); }, []);
+            useEffect(() => { const timer = setInterval(() => setTimeLeft(x => x > 0 ? x - 1 : 0), 1000); return () => clearInterval(timer); }, []);
 
-            if (selectedArticle) return (
+            if (selected) return (
                 <div className="min-h-screen bg-white p-8 max-w-4xl mx-auto animate-fade-in text-black">
-                    <button onClick={() => setSelectedArticle(null)} className="mb-6 text-blue-600 font-bold flex items-center gap-2"><Icon path={paths.arrowLeft} className="w-4 h-4"/> Zurück</button>
-                    <h1 className="text-4xl font-black mb-6">{selectedArticle.title}</h1>
-                    <img src={selectedArticle.image} className="w-full h-80 object-cover rounded-[40px] mb-8 shadow-xl" onError={(e)=>{e.target.src='https://placehold.co/800x400?text=Bild';}} />
-                    <div className="space-y-6 text-lg">{selectedArticle.fullText.map((p, i) => <p key={i}>{p}</p>)}</div>
+                    <button onClick={() => setSelected(null)} className="mb-6 text-blue-600 font-bold flex items-center gap-2"><Icon path={paths.arrowLeft} className="w-4 h-4"/> Zurück</button>
+                    <h1 className="text-4xl font-black mb-6">{selected.title}</h1>
+                    <img src={selected.image} className="w-full h-80 object-cover rounded-[40px] mb-8 shadow-xl" onError={(e)=>{e.target.src='https://placehold.co/800x400?text=Bild';}} />
+                    <div className="space-y-6 text-lg text-slate-700 leading-relaxed">{selected.fullText ? selected.fullText.map((p, i) => <p key={i}>{p}</p>) : <p>Lade Inhalt...</p>}</div>
                 </div>
             );
 
@@ -280,10 +225,10 @@
                     </nav>
                     <main className="max-w-6xl mx-auto p-8 grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {articles.map(art => (
-                            <div key={art.id} onClick={() => setSelectedArticle(art)} className="bg-white rounded-[40px] shadow-sm overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-500 border border-slate-100 flex flex-col group">
+                            <div key={art.id} onClick={() => setSelected(art)} className="bg-white rounded-[40px] shadow-sm overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-500 border border-slate-100 flex flex-col group">
                                 <img src={art.image} className="h-52 w-full object-cover group-hover:scale-110 transition-transform duration-700" onError={(e)=>{e.target.src='https://placehold.co/800x400?text=Bild';}} />
                                 <div className="p-7">
-                                    <h3 className="font-bold text-xl mb-3">{art.title}</h3>
+                                    <h3 className="font-bold text-xl mb-3 group-hover:text-blue-600 transition-colors">{art.title}</h3>
                                     <p className="text-sm text-slate-500 line-clamp-2">{art.desc}</p>
                                 </div>
                             </div>
@@ -299,8 +244,8 @@
                 <div className="fixed bottom-0 left-0 right-0 z-50 p-6 bg-white shadow-[0_-20px_50px_rgba(0,0,0,0.15)] border-t-4 border-blue-600 animate-slide-up text-black">
                     <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-8 items-center relative">
                         <StimulusOverlay config={config} variant="banner" />
-                        <div className="flex-1"><h3 className="text-xl font-black mb-2">Tracking & Profiling</h3><p className="text-sm">Wir teilen Gesundheitsinteressen mit Drittanbietern.</p></div>
-                        <button onClick={() => onDecision('accept')} className="px-10 py-3 bg-blue-600 text-white font-black rounded-xl">Akzeptieren</button>
+                        <div className="flex-1"><h3 className="text-xl font-black mb-2 text-slate-900">Privatsphäre & Tracking</h3><p className="text-sm text-slate-600">Wir teilen Gesundheitsinteressen mit Drittanbietern.</p></div>
+                        <button onClick={() => onDecision('accept')} className="px-10 py-3 bg-blue-600 text-white font-black rounded-xl shadow-lg hover:bg-blue-700">Akzeptieren</button>
                     </div>
                 </div>
             );
@@ -313,16 +258,15 @@
             const params = new URLSearchParams(window.location.search);
             const groupID = parseInt(params.get('g')) || 0;
             const token = params.get('t');
-            const audioRef = useRef(new Audio('sound.mp3'));
             const audioManRef = useRef(new Audio('soundmann.mp3'));
 
             if (step === 'intro') return (
                 <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
                     <div className="bg-white p-12 rounded-[50px] shadow-2xl text-center max-w-sm border-t-[12px] border-blue-600 animate-fade-in text-black">
                         <Icon path={paths.activity} className="w-16 h-16 text-blue-600 mx-auto mb-6" />
-                        <h2 className="text-4xl font-black mb-4">VitalCore</h2>
-                        <p className="text-slate-500 mb-10 font-medium">Starten Sie jetzt Ihre Gesundheitsanalyse.</p>
-                        <button onClick={() => {setStep('blog'); setTimeout(()=>setBanner(true), COOKIE_BANNER_DELAY_MS);}} className="w-full bg-blue-600 text-white py-5 rounded-[24px] font-black text-lg shadow-xl">Studie starten</button>
+                        <h2 className="text-4xl font-black mb-4 tracking-tighter">VitalCore</h2>
+                        <p className="text-slate-500 mb-10 font-medium leading-relaxed">Starten Sie jetzt Ihre Gesundheitsanalyse.</p>
+                        <button onClick={() => {setStep('blog'); setTimeout(()=>setBanner(true), COOKIE_BANNER_DELAY_MS);}} className="w-full bg-blue-600 text-white py-5 rounded-[24px] font-black text-lg shadow-xl hover:scale-105 transition-transform">Starten</button>
                     </div>
                 </div>
             );
@@ -335,12 +279,12 @@
             );
 
             if (step === 'register') return <RegistrationForm onSubmit={(d) => {setFinalData({...finalData, ...d}); setStep('loading');}} group={groupID} audioObject={audioManRef.current} />;
-            if (step === 'loading') { setTimeout(() => setStep('personalized'), 3000); return <div className="min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center"><div className="w-20 h-20 border-[6px] border-blue-500 border-t-transparent rounded-full animate-spin mb-8"></div><h2 className="text-2xl font-black italic">Analysiere...</h2></div>; }
+            if (step === 'loading') { setTimeout(() => setStep('personalized'), 3000); return <div className="min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center"><div className="w-20 h-20 border-[6px] border-blue-500 border-t-transparent rounded-full animate-spin mb-8 shadow-xl"></div><h2 className="text-2xl font-black italic">Analysiere Profil...</h2></div>; }
             if (step === 'personalized') return <BlogPage onAction={() => setStep('end')} mode="personalized" />;
 
             if (step === 'end') {
                 const finalUrl = `${SOSCI_BASE_URL}?i=${token}&mydata=${encodeURIComponent(JSON.stringify(finalData))}`;
-                return <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4"><div className="bg-white p-12 rounded-[48px] text-center max-w-sm shadow-2xl border-t-[12px] border-green-500 text-black"><h2 className="text-3xl font-black mb-6">Fertig</h2><a href={finalUrl} className="block w-full bg-slate-900 text-white py-5 rounded-[24px] font-black">Zur Umfrage</a></div></div>;
+                return <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4"><div className="bg-white p-12 rounded-[48px] text-center max-w-sm shadow-2xl border-t-[12px] border-green-500 text-black"><h2 className="text-3xl font-black mb-6 tracking-tighter">Abgeschlossen</h2><p className="text-slate-500 mb-10">Daten wurden sicher übertragen.</p><a href={finalUrl} className="block w-full bg-slate-900 text-white py-5 rounded-[24px] font-black shadow-xl">Zur Umfrage</a></div></div>;
             }
         }
 
