@@ -15,7 +15,6 @@
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         @keyframes pulse-slow { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
         
-        /* Schnelles, realistisches Blinzeln */
         @keyframes blink {
           0%, 88%, 100% { transform: scaleY(1); }
           92% { transform: scaleY(0.05); }
@@ -64,7 +63,6 @@
         const paths = {
             shield: <React.Fragment><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="M12 8v4"/><path d="M12 16h.01"/></React.Fragment>,
             check: <React.Fragment><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></React.Fragment>,
-            user: <React.Fragment><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></React.Fragment>,
             leaf: <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" />,
             clock: <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14" />,
             activity: <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>,
@@ -77,8 +75,9 @@
             ciagrette: <React.Fragment><path d="M18 8c0-2.5-2-2.5-2-5"/><path d="M22 8c0-2.5-2-2.5-2-5"/><rect x="2" y="13" width="20" height="6" rx="2"/><path d="M22 16h-4"/><path d="M2 16h4"/></React.Fragment>
         };
 
+        // --- BLOG DATEN ---
         const BLOG_CONTENT = [
-            { id: 1, title: "Die 5 Säulen der Langlebigkeit", cat: "Forschung", time: "8 min", date: "Aktuell", author: "Dr. med. Weber", image: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=800&q=80", color: "bg-blue-100", icon: paths.activity, desc: "Kleine Anpassungen in Ihrer Routine können Ihr biologisches Alter senken.", fullText: ["Die Suche nach dem Jungbrunnen ist so alt wie die Menschheit...", "Ernährung, Bewegung, Schlaf sind die Schlüssel."] },
+            { id: 1, title: "Die 5 Säulen der Langlebigkeit", cat: "Forschung", time: "8 min", date: "Aktuell", author: "Dr. med. Weber", image: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=800&q=80", color: "bg-blue-100", icon: paths.activity, desc: "Kleine Anpassungen in Ihrer Routine können Ihr biologisches Alter senken.", fullText: ["Langlebigkeit ist kein Zufallsprodukt...", "Ernährung, Bewegung, Schlaf sind die Schlüssel."] },
             { id: 2, title: "Intervallfasten 16:8", cat: "Ernährung", time: "10 min", date: "10. Okt", author: "Sarah Klein", image: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=800", color: "bg-orange-100", icon: paths.apple, desc: "Warum Pausen für den Stoffwechsel wichtig sind.", fullText: ["Autophagie ist der Prozess der zellulären Reinigung..."] },
             { id: 3, title: "Digital Detox & Cortisol", cat: "Mental Health", time: "7 min", date: "08. Okt", author: "M. Psych. Bauer", image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80", color: "bg-purple-100", icon: paths.coffee, desc: "Wie ständige Erreichbarkeit Ihren Stresspegel beeinflusst.", fullText: ["Cortisol-Ausschüttung durch ständige Benachrichtigungen..."] },
             { id: 4, title: "Herzgesundheit 2.0", cat: "Prävention", time: "5 min", date: "05. Okt", author: "Prof. Dr. Lang", image: "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=800", color: "bg-red-100", icon: paths.heart, desc: "Neue Marker im Blutbild, die Sie kennen sollten.", fullText: ["LDL ist nicht der einzige Faktor für Gefäßgesundheit..."] },
@@ -94,7 +93,37 @@
             { id: 101, title: "Ihre Stoffwechsel-Analyse", cat: "Ergebnis", time: "Jetzt", author: "VitalCore AI", image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800", color: "bg-green-100", icon: paths.check, desc: "Ihr metabolischer Typ analysiert.", fullText: ["Basierend auf Ihren Angaben haben wir Ihr Profil erstellt..."] }
         ];
 
-        // --- KOMPONENTEN ---
+        // ==========================================
+        // 4. HELFER FUNKTIONEN
+        // ==========================================
+        const getGroupConfig = (groupID) => {
+            const map = {
+                0: { eyes: false, sound: false, info: false },
+                1: { eyes: true,  sound: false, info: false },
+                2: { eyes: false, sound: true,  info: false },
+                3: { eyes: true,  sound: true,  info: false },
+                5: { eyes: true,  sound: false, info: true  },
+                6: { eyes: false, sound: true,  info: true  },
+                7: { eyes: true,  sound: true,  info: true  },
+            };
+            return map[groupID] || map[0];
+        };
+
+        const playSoundFile = (audioObj) => {
+            if (!audioObj) return;
+            audioObj.currentTime = 0;
+            audioObj.play().catch(e => console.log("Audio Error:", e));
+        };
+
+        const isRealistic = (val, min, max) => {
+            if (!val || val === 'keine_angabe') return true;
+            const num = parseFloat(val);
+            return !isNaN(num) && num >= min && num <= max;
+        };
+
+        // ==========================================
+        // 5. KOMPONENTEN
+        // ==========================================
 
         const RealisticEye = ({ color, className, hasLashes, blinkClass }) => {
             const gradId = React.useId().replace(/:/g, ""); 
@@ -128,8 +157,8 @@
                 <div className={`pointer-events-none z-[60] flex flex-col items-center gap-2 ${variant === 'form' ? 'fixed top-0 left-1/2 -translate-x-1/2 pt-2' : 'absolute -top-16 left-1/2 -translate-x-1/2'}`}>
                     {config.eyes && (
                         <div className="flex gap-4 filter drop-shadow-xl">
-                            <div className="bg-white p-1 rounded-full border shadow-2xl"><RealisticEye color={eyeColor} className="w-20 h-14" hasLashes={variant==='form'} blinkClass="animate-blink-1" /></div>
-                            <div className="bg-white p-1 rounded-full border shadow-2xl"><RealisticEye color={eyeColor} className="w-20 h-14" hasLashes={variant==='form'} blinkClass="animate-blink-2" /></div>
+                            <div className="bg-white p-2 rounded-full border-2 border-gray-300 shadow-2xl overflow-hidden"><RealisticEye color={eyeColor} className="w-20 h-14" hasLashes={variant==='form'} blinkClass="animate-blink-1" /></div>
+                            <div className="bg-white p-2 rounded-full border-2 border-gray-300 shadow-2xl overflow-hidden"><RealisticEye color={eyeColor} className="w-20 h-14" hasLashes={variant==='form'} blinkClass="animate-blink-2" /></div>
                         </div>
                     )}
                     {config.info && variant === 'form' && (
@@ -153,32 +182,52 @@
             const [timeLeft, setTimeLeft] = useState(MIN_REGISTRATION_TIME);
             
             useEffect(() => { const timer = setInterval(() => setTimeLeft(t => t > 0 ? t - 1 : 0), 1000); return () => clearInterval(timer); }, []);
+            
             const config = getGroupConfig(group);
-            const interact = () => { if (!interactionStarted) { setInteractionStarted(true); if (config.sound && audioObject) audioObject.play(); } };
-            const handleChange = (e) => { interact(); setFormData({...formData, [e.target.name]: e.target.value}); };
-            const handleNoAnswer = (f) => { interact(); setNoAnswers(p => ({...p, [f]: !p[f]})); };
+            const interact = () => { if (!interactionStarted) { setInteractionStarted(true); if (config.sound && audioObject) playSoundFile(audioObject); } };
+            const handleChange = (e) => { interact(); const { name, value } = e.target; setFormData(prev => ({ ...prev, [name]: value })); };
+            const handleNoAnswerToggle = (field) => { interact(); setNoAnswers(prev => ({ ...prev, [field]: !prev[field] })); };
             const toggleDisease = (d) => { interact(); setFormData(p => ({...p, chronicDiseases: p.chronicDiseases.includes(d) ? p.chronicDiseases.filter(x=>x!==d) : [...p.chronicDiseases, d]})); };
+
+            const NoAnswerCheckbox = ({ field }) => (
+                <label className="flex items-center gap-2 mt-2 cursor-pointer text-[10px] text-slate-400 hover:text-slate-600 transition-colors">
+                    <input type="checkbox" checked={!!noAnswers[field]} onChange={() => handleNoAnswerToggle(field)} className="rounded-sm border-gray-300"/> Keine Angabe
+                </label>
+            );
 
             return (
                 <div className="min-h-screen bg-slate-50 py-12 px-4 relative">
                     {interactionStarted && <StimulusOverlay config={config} variant="form" />}
-                    <div className="max-w-2xl mx-auto bg-white rounded-[32px] shadow-2xl overflow-hidden border relative z-10">
-                        <div className="bg-slate-900 p-8 text-white text-center"><h2 className="text-2xl font-bold italic">Detailliertes Gesundheitsprofil</h2></div>
-                        <form onSubmit={(e) => {e.preventDefault(); onSubmit(formData);}} className="p-8 space-y-8">
+                    <div className="max-w-2xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100 relative z-10">
+                        <div className="bg-slate-900 p-8 text-white text-center">
+                            <h2 className="text-2xl font-bold italic tracking-tight">VitalCore Premium Profil</h2>
+                            <p className="text-slate-400 text-sm mt-2 font-medium">Umfassende klinische Analyse Ihrer Gesundheitsdaten</p>
+                        </div>
+                        <form onSubmit={(e) => {e.preventDefault(); onSubmit(formData);}} className="p-8 space-y-10 text-black">
                             
                             <section className="space-y-4">
-                                <h3 className="font-bold border-b pb-2">1. Basisdaten</h3>
+                                <h3 className="font-bold text-lg border-b pb-2">1. Physische Daten</h3>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <input type="text" name="age" placeholder="Alter" onChange={handleChange} onFocus={interact} className="border p-3 rounded-xl bg-slate-50 w-full" required />
-                                    <select name="gender" onChange={handleChange} onFocus={interact} className="border p-3 rounded-xl bg-slate-50 w-full"><option value="">Geschlecht</option><option value="m">Männlich</option><option value="w">Weiblich</option></select>
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-gray-400 uppercase">Alter</label>
+                                        <input type="text" name="age" disabled={noAnswers.age} onFocus={interact} onChange={handleChange} className="w-full border p-3 rounded-xl bg-slate-50 focus:ring-2 focus:ring-blue-500" required={!noAnswers.age} />
+                                        <NoAnswerCheckbox field="age" />
+                                        {!isRealistic(formData.age, 12, 110) && <p className="text-red-500 text-xs mt-1">Bitte realistisches Alter.</p>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Geschlecht</label>
+                                        <select name="gender" onFocus={interact} onChange={handleChange} className="w-full border p-3 rounded-xl bg-slate-50">
+                                            <option value="">Wählen...</option><option value="m">Männlich</option><option value="w">Weiblich</option><option value="d">Divers</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </section>
 
-                            <section className="space-y-4 p-6 bg-red-50 border-l-8 border-red-500 rounded-r-2xl">
+                            <section className="space-y-4 p-6 bg-red-50 border-l-8 border-red-500 rounded-r-2xl shadow-inner">
                                 <h3 className="font-bold text-red-900 italic text-lg">7. Medizinische Historie</h3>
                                 <div className="flex flex-wrap gap-2">
                                     {['HIV/AIDS', 'Krebs', 'Depression', 'Diabetes', 'Essstörung'].map(d => (
-                                        <button key={d} type="button" onClick={() => toggleDisease(d)} className={`px-4 py-2 rounded-full text-xs font-bold border transition-all ${formData.chronicDiseases.includes(d) ? 'bg-red-600 text-white' : 'bg-white text-red-600'}`}>{d}</button>
+                                        <button key={d} type="button" onClick={() => toggleDisease(d)} className={`px-4 py-2 rounded-full text-xs font-bold border transition-all ${formData.chronicDiseases.includes(d) ? 'bg-red-600 text-white border-red-700' : 'bg-white text-red-600 border-red-200'}`}>{d}</button>
                                     ))}
                                 </div>
                                 <textarea name="medication" placeholder="Aktuelle Medikation & Diagnosen..." onChange={handleChange} onFocus={interact} className="w-full border-red-100 p-3 rounded-xl text-sm h-20 focus:ring-2 focus:ring-red-500"></textarea>
@@ -198,7 +247,7 @@
                             </section>
 
                             <button type="submit" disabled={timeLeft > 0} className={`w-full py-5 rounded-2xl font-black text-xl shadow-2xl transition-all transform ${timeLeft > 0 ? 'bg-slate-200 text-slate-400' : 'bg-blue-600 text-white hover:scale-[1.02] active:scale-95'}`}>
-                                {timeLeft > 0 ? `Daten-Prüfung (${timeLeft}s)` : 'Analyse jetzt starten'}
+                                {timeLeft > 0 ? `Daten-Prüfung läuft (${timeLeft}s)` : 'Analyse jetzt starten'}
                             </button>
                         </form>
                     </div>
@@ -207,22 +256,22 @@
         };
 
         const BlogPage = ({ onAction, mode = 'initial' }) => {
-            const [selected, setSelected] = useState(null);
+            const [selectedArticle, setSelectedArticle] = useState(null);
             const articles = mode === 'initial' ? BLOG_CONTENT : [...PERSONALIZED_CONTENT, ...BLOG_CONTENT];
             const [timeLeft, setTimeLeft] = useState(mode === 'initial' ? MIN_BROWSING_TIME_1 : MIN_BROWSING_TIME_2);
             useEffect(() => { const timer = setInterval(() => setTimeLeft(t => t > 0 ? t - 1 : 0), 1000); return () => clearInterval(timer); }, []);
 
-            if (selected) return (
-                <div className="min-h-screen bg-white p-8 max-w-4xl mx-auto animate-fade-in">
-                    <button onClick={() => setSelected(null)} className="mb-6 text-blue-600 font-bold flex items-center gap-2"><Icon path={paths.arrowLeft} className="w-4 h-4"/> Zurück</button>
-                    <h1 className="text-4xl font-black mb-6">{selected.title}</h1>
-                    <img src={selected.image} className="w-full h-80 object-cover rounded-[40px] mb-8 shadow-xl" onError={(e)=>{e.target.src='https://placehold.co/800x400?text=Bild';}} />
-                    <div className="space-y-6 text-lg">{selected.fullText.map((p, i) => <p key={i}>{p}</p>)}</div>
+            if (selectedArticle) return (
+                <div className="min-h-screen bg-white p-8 max-w-4xl mx-auto animate-fade-in text-black">
+                    <button onClick={() => setSelectedArticle(null)} className="mb-6 text-blue-600 font-bold flex items-center gap-2"><Icon path={paths.arrowLeft} className="w-4 h-4"/> Zurück</button>
+                    <h1 className="text-4xl font-black mb-6">{selectedArticle.title}</h1>
+                    <img src={selectedArticle.image} className="w-full h-80 object-cover rounded-[40px] mb-8 shadow-xl" onError={(e)=>{e.target.src='https://placehold.co/800x400?text=Bild';}} />
+                    <div className="space-y-6 text-lg">{selectedArticle.fullText.map((p, i) => <p key={i}>{p}</p>)}</div>
                 </div>
             );
 
             return (
-                <div className="min-h-screen bg-slate-50 flex flex-col">
+                <div className="min-h-screen bg-slate-50 flex flex-col text-black">
                     <nav className="bg-white border-b p-4 flex justify-between items-center sticky top-0 z-20 shadow-sm">
                         <div className="flex items-center gap-2 font-black text-2xl tracking-tighter"><Icon path={paths.leaf} className="w-7 h-7 text-green-600"/> VitalCore</div>
                         <button onClick={onAction} disabled={timeLeft > 0} className="bg-slate-900 text-white px-8 py-2.5 rounded-full font-bold shadow-lg disabled:bg-slate-200">
@@ -231,7 +280,7 @@
                     </nav>
                     <main className="max-w-6xl mx-auto p-8 grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {articles.map(art => (
-                            <div key={art.id} onClick={() => setSelected(art)} className="bg-white rounded-[40px] shadow-sm overflow-hidden cursor-pointer hover:shadow-xl transition-all border flex flex-col group">
+                            <div key={art.id} onClick={() => setSelectedArticle(art)} className="bg-white rounded-[40px] shadow-sm overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-500 border border-slate-100 flex flex-col group">
                                 <img src={art.image} className="h-52 w-full object-cover group-hover:scale-110 transition-transform duration-700" onError={(e)=>{e.target.src='https://placehold.co/800x400?text=Bild';}} />
                                 <div className="p-7">
                                     <h3 className="font-bold text-xl mb-3">{art.title}</h3>
@@ -247,7 +296,7 @@
         const CookieBanner = ({ group, onDecision }) => {
             const config = getGroupConfig(group);
             return (
-                <div className="fixed bottom-0 left-0 right-0 z-50 p-6 bg-white shadow-[0_-20px_50px_rgba(0,0,0,0.15)] border-t-4 border-blue-600 animate-slide-up">
+                <div className="fixed bottom-0 left-0 right-0 z-50 p-6 bg-white shadow-[0_-20px_50px_rgba(0,0,0,0.15)] border-t-4 border-blue-600 animate-slide-up text-black">
                     <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-8 items-center relative">
                         <StimulusOverlay config={config} variant="banner" />
                         <div className="flex-1"><h3 className="text-xl font-black mb-2">Tracking & Profiling</h3><p className="text-sm">Wir teilen Gesundheitsinteressen mit Drittanbietern.</p></div>
@@ -269,10 +318,10 @@
 
             if (step === 'intro') return (
                 <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-                    <div className="bg-white p-12 rounded-[50px] shadow-2xl text-center max-w-sm border-t-[12px] border-blue-600 animate-fade-in">
+                    <div className="bg-white p-12 rounded-[50px] shadow-2xl text-center max-w-sm border-t-[12px] border-blue-600 animate-fade-in text-black">
                         <Icon path={paths.activity} className="w-16 h-16 text-blue-600 mx-auto mb-6" />
                         <h2 className="text-4xl font-black mb-4">VitalCore</h2>
-                        <p className="text-slate-500 mb-10 font-medium leading-relaxed">Starten Sie jetzt Ihre Gesundheitsanalyse.</p>
+                        <p className="text-slate-500 mb-10 font-medium">Starten Sie jetzt Ihre Gesundheitsanalyse.</p>
                         <button onClick={() => {setStep('blog'); setTimeout(()=>setBanner(true), COOKIE_BANNER_DELAY_MS);}} className="w-full bg-blue-600 text-white py-5 rounded-[24px] font-black text-lg shadow-xl">Studie starten</button>
                     </div>
                 </div>
@@ -291,7 +340,7 @@
 
             if (step === 'end') {
                 const finalUrl = `${SOSCI_BASE_URL}?i=${token}&mydata=${encodeURIComponent(JSON.stringify(finalData))}`;
-                return <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4"><div className="bg-white p-12 rounded-[48px] text-center max-w-sm shadow-2xl border-t-[12px] border-green-500"><h2 className="text-3xl font-black mb-6">Fertig</h2><a href={finalUrl} className="block w-full bg-slate-900 text-white py-5 rounded-[24px] font-black">Zur Umfrage</a></div></div>;
+                return <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4"><div className="bg-white p-12 rounded-[48px] text-center max-w-sm shadow-2xl border-t-[12px] border-green-500 text-black"><h2 className="text-3xl font-black mb-6">Fertig</h2><a href={finalUrl} className="block w-full bg-slate-900 text-white py-5 rounded-[24px] font-black">Zur Umfrage</a></div></div>;
             }
         }
 
