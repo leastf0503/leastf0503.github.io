@@ -734,7 +734,7 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
         sportFreq: '', sportType: '',
         bodySatisfaction: 5, bodyChangeGoals: '',
         mentalHealth: '', medication: '',
-        reproductiveHistory: '', sexDysfunction: '',
+        reproductiveHistory: '', sexDysfunction: '',reproduction: '',
         sexOrientation: '', partners: '', stis: '', unprotectedSex: '',
         income: '', debts: ''
     });
@@ -782,8 +782,7 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
             check('age') && check('gender') && check('height') && check('weight') && check('insurance') &&
             check('dietStyle') && check('tobacco') && check('alcohol') && check('drugs') &&
             check('sportFreq') && check('mentalHealth') &&
-check('partners') && check('income') && check('reproduction') && !isAgeInvalid            !isAgeInvalid
-        );
+check('partners') && check('income') && check('reproduction') && !isAgeInvalid        );
     };
 
     const NoAnswer = ({ field }) => (
