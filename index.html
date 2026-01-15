@@ -483,7 +483,7 @@
                     {config.info && (
                         <div className="lg:w-1/3 bg-red-50 border border-red-100 p-5 rounded-[24px] animate-fade-in self-center">
                             <div className="flex items-center gap-2 font-black mb-2 text-red-600 uppercase tracking-tighter text-xs">
-                                <Icon path={paths.shield} className="w-4 h-4"/> Datenerfassung Aktiv
+                                <Icon path={paths.shield} className="w-4 h-4"/> DATENERFASSUNG AKTIV
                             </div>
                             <p className="text-[10px] leading-relaxed text-red-800/80">
                                 Die oben eingeblendeten Augen symbolisieren das <strong>Prinzip der sozialen Beobachtung</strong>. 
@@ -826,14 +826,13 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
                 {config.info && (
                     <div className="mx-8 mt-8 bg-red-50 border-2 border-red-100 p-6 rounded-[32px] animate-fade-in">
                         <div className="flex items-center gap-2 font-black mb-3 text-red-600 uppercase tracking-tighter text-xs">
-                            <Icon path={paths.shield} className="w-5 h-5"/> WICHTIGER SYSTEM-HINWEIS
+                            <Icon path={paths.shield} className="w-5 h-5"/> DATENERFASSUNG AKTIV
                         </div>
-                        <p className="text-[11px] leading-relaxed font-medium text-slate-700">
-                            Die oben eingeblendeten Augen symbolisieren das <strong>Prinzip der sozialen Beobachtung</strong>. 
-                            Sie signalisieren, dass jede Ihrer Eingaben in diesem Moment systematisch erfasst wird, um eine algorithmische Personalisierung vorzunehmen. 
-                            Die von Ihnen bereitgestellten Informationen zu Gesundheit, Finanzen und Intimsphäre werden unmittelbar verarbeitet und für die nachfolgende Auswertung gespeichert. 
-                            Wir bitten Sie um eine bewusste Entscheidung darüber, welche privaten Details Sie für dieses Forschungsprofil offenlegen möchten.
-                        </p>
+                        <p className="text-[10px] leading-relaxed text-red-800/80">
+                                Die oben eingeblendeten Augen symbolisieren das <strong>Prinzip der sozialen Beobachtung</strong>. 
+                                Sie signalisieren, dass Ihre Eingaben systematisch erfasst werden. Wir bitten Sie um eine 
+                                <strong> bewusste Entscheidung</strong> darüber, welche Details Sie offenlegen möchten.
+                            </p>
                     </div>
                 )}
 
