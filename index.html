@@ -418,39 +418,27 @@
 
         // --- STIMULUS OVERLAY ---
         const StimulusOverlay = ({ config, variant = "banner" }) => {
-            const eyeColor = variant === 'banner' ? '#3b82f6' : '#5D4037';
-            const positionClass = variant === 'form' 
-                ? 'fixed top-0 left-1/2 -translate-x-1/2 pt-2' 
-                : 'absolute -top-16 left-1/2 -translate-x-1/2'; 
+    if (!config || !config.eyes) return null;
+    const eyeColor = variant === 'banner' ? '#3b82f6' : '#5D4037';
+    
+    // Augen schweben fixiert oben (form) oder absolut im Banner (banner)
+    const positionClass = variant === 'form' 
+        ? 'fixed top-4 left-1/2 -translate-x-1/2' 
+        : 'absolute -top-20 left-1/2 -translate-x-1/2'; 
 
-            return (
-                <div className={`pointer-events-none z-[60] flex flex-col items-center gap-2 transition-opacity duration-500 ${positionClass}`}>
-                    {config.eyes && (
-                        <div className="flex gap-4 items-center justify-center filter drop-shadow-lg">
-                            <div className="bg-white p-2 rounded-full border-2 border-gray-300 shadow-2xl overflow-hidden animate-pulse-slow">
-                                <RealisticEye color={eyeColor} className="w-24 h-16" hasLashes={variant === 'form'} />
-                            </div>
-                            <div className="bg-white p-2 rounded-full border-2 border-gray-300 shadow-2xl overflow-hidden animate-pulse-slow">
-                                <RealisticEye color={eyeColor} className="w-24 h-16" hasLashes={variant === 'form'} />
-                            </div>
-                        </div>
-                    )}
-                    {config.info && variant === 'form' && (
-                        <div className="bg-red-50 border-2 border-red-200 p-4 rounded-xl text-red-900 shadow-2xl mt-2 max-w-md text-center animate-fade-in backdrop-blur-sm bg-opacity-95">
-                            <div className="flex items-center justify-center gap-2 font-bold mb-2 text-red-700 uppercase tracking-wide text-sm">
-                                <Icon path={paths.shield} className="w-5 h-5"/> System-Überwachung aktiv
-                            </div>
-                            <p className="text-[11px] leading-relaxed font-medium text-slate-600">
-            Die oben eingeblendeten Augen symbolisieren das <strong>Prinzip der sozialen Beobachtung</strong>. 
-            Sie signalisieren, dass jede Ihrer Eingaben in diesem Moment systematisch erfasst wird, um eine algorithmische Personalisierung vorzunehmen. 
-            Die von Ihnen bereitgestellten Informationen zu Gesundheit, Finanzen und Intimsphäre werden unmittelbar verarbeitet und für die nachfolgende Auswertung gespeichert. 
-            Wir bitten Sie um eine bewusste Entscheidung darüber, welche privaten Details Sie für dieses Forschungsprofil offenlegen möchten.
-        </p>
-                        </div>
-                    )}
+    return (
+        <div className={`pointer-events-none z-[70] flex flex-col items-center gap-2 ${positionClass}`}>
+            <div className="flex gap-4 items-center justify-center filter drop-shadow-xl">
+                <div className="bg-white/90 backdrop-blur-sm p-2 rounded-full border border-slate-200 shadow-2xl overflow-hidden animate-pulse-slow">
+                    <RealisticEye color={eyeColor} className="w-20 h-14" hasLashes={variant === 'form'} />
                 </div>
-            );
-        };
+                <div className="bg-white/90 backdrop-blur-sm p-2 rounded-full border border-slate-200 shadow-2xl overflow-hidden animate-pulse-slow">
+                    <RealisticEye color={eyeColor} className="w-20 h-14" hasLashes={variant === 'form'} />
+                </div>
+            </div>
+        </div>
+    );
+};
 
         const CookieBanner = ({ group, onDecision, audioObject, onBannerLoad }) => {
     const config = getGroupConfig(group);
@@ -785,26 +773,18 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
     const handleNoAnswerToggle = (field) => { 
         interact(); 
         setNoAnswers(prev => ({ ...prev, [field]: !prev[field] }));
-        // Wir setzen einen Wert, damit die Validierung erkennt, dass die Frage "beantwortet" wurde
         setFormData(prev => ({ ...prev, [field]: !noAnswers[field] ? 'keine_angabe' : '' }));
     };
 
-    // Validierung: Alter unter 18 ist ungültig (außer es wurde "Keine Angabe" gewählt)
     const isAgeInvalid = !noAnswers.age && formData.age !== '' && formData.age !== 'keine_angabe' && parseInt(formData.age) < 18;
 
-    // --- VERBESSERTE VALIDIERUNGSLOGIK FÜR JEDE EINZELNE FRAGE ---
     const isFormComplete = () => {
         const check = (f) => noAnswers[f] || (formData[f] !== '' && formData[f] !== undefined);
-        
         return (
             check('age') && check('gender') && check('height') && check('weight') && check('insurance') &&
-            check('dietStyle') && check('dietHistory') &&
-            check('tobacco') && check('alcohol') && check('drugs') &&
-            check('sportFreq') && check('sportType') &&
-            check('bodySatisfaction') && check('bodyChangeGoals') &&
-            check('mentalHealth') &&
-            check('partners') && check('sexOrientation') && check('stis') && check('unprotectedSex') &&
-            check('income') && check('debts') &&
+            check('dietStyle') && check('tobacco') && check('alcohol') && check('drugs') &&
+            check('sportFreq') && check('mentalHealth') &&
+            check('partners') && check('income') &&
             !isAgeInvalid
         );
     };
@@ -822,22 +802,40 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
     );
 
     const ClinicalDisclaimer = ({ text }) => (
-        <div className="bg-slate-50 border-l-2 border-blue-200 p-3 mb-6 text-[10px] text-slate-500 italic leading-snug">
-            <strong>Klinische Relevanz:</strong> {text}
+        <div className="bg-slate-50 border-l-4 border-slate-400 p-4 mb-8 text-[11px] text-slate-600 leading-relaxed shadow-sm italic">
+            <strong className="block text-slate-800 not-italic mb-1 uppercase tracking-wider text-[10px]">Hinweis zur Datenerfassung & Beobachtung:</strong>
+            {text}
         </div>
     );
 
     return (
-        <div className="min-h-screen bg-slate-100 py-8 px-4 relative text-slate-900">
-            {interactionStarted && <StimulusOverlay config={config} variant="form" />}
+        <div className="min-h-screen bg-slate-100 py-12 px-4 relative pt-40"> {/* Viel Platz für die Augen oben */}
             
-            <div className="max-w-2xl mx-auto bg-white shadow-2xl rounded-xl overflow-hidden border border-slate-200 relative z-10">
-                <header className="bg-slate-900 p-8 text-white">
-                    <div className="flex justify-between items-center">
-                        <h2 className="text-lg font-light tracking-[0.2em] uppercase">Systembiologisches Gesundheitsprofil</h2>
-                        <span className="text-[10px] bg-blue-600 px-2 py-1 rounded font-bold uppercase">Clinical Data Access</span>
-                    </div>
+            {/* 1. Die Augen schweben fest am oberen Bildschirmrand */}
+            <StimulusOverlay config={config} variant="form" />
+            
+            <div className="max-w-2xl mx-auto bg-white shadow-2xl rounded-[40px] overflow-hidden border border-slate-200 relative z-10">
+                
+                {/* 2. Der Header des Formulars */}
+                <header className="bg-slate-900 p-10 text-white text-center">
+                    <h2 className="text-2xl font-bold italic tracking-tight">Ihr Gesundheitsprofil</h2>
+                    <span className="text-[10px] text-blue-400 px-2 py-1 rounded font-bold uppercase tracking-[0.2em]">Clinical Data Access</span>
                 </header>
+
+                {/* 3. NEU: Die integrierte Info-Box (nur wenn info: true) */}
+                {config.info && (
+                    <div className="mx-8 mt-8 bg-red-50 border-2 border-red-100 p-6 rounded-[32px] animate-fade-in">
+                        <div className="flex items-center gap-2 font-black mb-3 text-red-600 uppercase tracking-tighter text-xs">
+                            <Icon path={paths.shield} className="w-5 h-5"/> WICHTIGER SYSTEM-HINWEIS
+                        </div>
+                        <p className="text-[11px] leading-relaxed font-medium text-slate-700">
+                            Die oben eingeblendeten Augen symbolisieren das <strong>Prinzip der sozialen Beobachtung</strong>. 
+                            Sie signalisieren, dass jede Ihrer Eingaben in diesem Moment systematisch erfasst wird, um eine algorithmische Personalisierung vorzunehmen. 
+                            Die von Ihnen bereitgestellten Informationen zu Gesundheit, Finanzen und Intimsphäre werden unmittelbar verarbeitet und für die nachfolgende Auswertung gespeichert. 
+                            Wir bitten Sie um eine bewusste Entscheidung darüber, welche privaten Details Sie für dieses Forschungsprofil offenlegen möchten.
+                        </p>
+                    </div>
+                )}
 
                 <form onSubmit={(e) => {e.preventDefault(); if(isFormComplete()) onSubmit(formData);}} className="p-8 md:p-12 space-y-16">
                     
@@ -847,12 +845,12 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                             <div className={noAnswers.age ? 'opacity-30' : ''}>
                                 <label className="text-sm font-bold text-slate-700 block mb-2">Wie alt sind Sie?</label>
-                                <input type="text" name="age" disabled={noAnswers.age} placeholder="Jahre" value={noAnswers.age ? '' : formData.age} onChange={handleChange} onFocus={interact} className={`w-full py-2 outline-none border-b transition-all bg-transparent ${isAgeInvalid ? 'border-red-500 text-red-500' : 'border-slate-200 focus:border-blue-600'}`} />
+                                <input type="text" name="age" disabled={noAnswers.age} placeholder="Jahre" value={noAnswers.age ? '' : formData.age} onChange={handleChange} className={`w-full py-2 outline-none border-b transition-all bg-transparent ${isAgeInvalid ? 'border-red-500 text-red-500' : 'border-slate-200 focus:border-blue-600'}`} />
                                 {isAgeInvalid && <p className="text-[10px] text-red-500 mt-1 font-bold italic">Teilnahme erst ab 18 Jahren.</p>}
                                 <NoAnswer field="age" />
                             </div>
                             <div className={noAnswers.gender ? 'opacity-30' : ''}>
-                                <label className="text-sm font-bold text-slate-700 block mb-2">Welchem biologischen Geschlecht gehören Sie an?</label>
+                                <label className="text-sm font-bold text-slate-700 block mb-2">Biologisches Geschlecht?</label>
                                 <select name="gender" disabled={noAnswers.gender} value={noAnswers.gender} onChange={handleChange} className="w-full py-2 outline-none border-b border-slate-200 bg-transparent">
                                     <option value="">Wählen...</option><option value="m">Männlich</option><option value="w">Weiblich</option><option value="d">Divers</option>
                                 </select>
@@ -861,18 +859,18 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                             <div className={noAnswers.height ? 'opacity-30' : ''}>
-                                <label className="text-sm font-bold text-slate-700 block mb-2">Ihre Körpergröße (cm)?</label>
+                                <label className="text-sm font-bold text-slate-700 block mb-2">Körpergröße (cm)?</label>
                                 <input type="text" name="height" disabled={noAnswers.height} placeholder="cm" value={noAnswers.height ? '' : formData.height} onChange={handleChange} className="w-full py-2 outline-none border-b border-slate-200 focus:border-blue-600 bg-transparent" />
                                 <NoAnswer field="height" />
                             </div>
                             <div className={noAnswers.weight ? 'opacity-30' : ''}>
-                                <label className="text-sm font-bold text-slate-700 block mb-2">Ihr Körpergewicht (kg)?</label>
+                                <label className="text-sm font-bold text-slate-700 block mb-2">Körpergewicht (kg)?</label>
                                 <input type="text" name="weight" disabled={noAnswers.weight} placeholder="kg" value={noAnswers.weight ? '' : formData.weight} onChange={handleChange} className="w-full py-2 outline-none border-b border-slate-200 focus:border-blue-600 bg-transparent" />
                                 <NoAnswer field="weight" />
                             </div>
                         </div>
                         <div className={noAnswers.insurance ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold text-slate-700 block mb-2">Wie sind Sie versichert?</label>
+                            <label className="text-sm font-bold text-slate-700 block mb-2">Versicherungsstatus?</label>
                             <select name="insurance" disabled={noAnswers.insurance} value={formData.insurance} onChange={handleChange} className="w-full py-2 outline-none border-b border-slate-200 bg-transparent">
                                 <option value="">Wählen...</option><option value="gkv">Gesetzlich</option><option value="pkv">Privat</option><option value="andere">Sonstige</option>
                             </select>
@@ -886,14 +884,14 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
                         <ClinicalDisclaimer text="Die Zufuhr von Makronährstoffen und Ihre Diät-Historie geben Aufschluss über Ihre metabolische Flexibilität." />
                         <div className="space-y-8">
                             <div className={noAnswers.dietStyle ? 'opacity-30' : ''}>
-                                <label className="text-sm font-bold text-slate-700 block mb-2">Welche Ernährungsform praktizieren Sie aktuell?</label>
+                                <label className="text-sm font-bold text-slate-700 block mb-2">Aktuelle Ernährungsform?</label>
                                 <select name="dietStyle" disabled={noAnswers.dietStyle} value={formData.dietStyle} onChange={handleChange} className="w-full py-2 outline-none border-b border-slate-200 bg-transparent">
                                     <option value="">Wählen...</option><option value="omnivor">Omnivor (Mischkost)</option><option value="veggie">Vegetarisch / Vegan</option><option value="keto">Low Carb / Keto</option><option value="fasten">Intervallfasten</option>
                                 </select>
                                 <NoAnswer field="dietStyle" />
                             </div>
                             <div className={noAnswers.dietHistory ? 'opacity-30' : ''}>
-                                <label className="text-sm font-bold text-slate-700 block mb-2">Haben Sie in der Vergangenheit Diäten zur Gewichtsreduktion durchgeführt?</label>
+                                <label className="text-sm font-bold text-slate-700 block mb-2">Bisherige Diäten zur Gewichtsreduktion?</label>
                                 <textarea name="dietHistory" disabled={noAnswers.dietHistory} value={noAnswers.dietHistory ? '' : formData.dietHistory} placeholder="z.B. Low-Fat, Saftkuren..." onChange={handleChange} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-lg outline-none focus:bg-white h-20 transition-all"></textarea>
                                 <NoAnswer field="dietHistory" />
                             </div>
@@ -912,7 +910,7 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
                                 <NoAnswer field="sportFreq" />
                             </div>
                             <div className={noAnswers.sportType ? 'opacity-30' : ''}>
-                                <label className="text-sm font-bold text-slate-700 block mb-2">Welche Sportarten üben Sie aus?</label>
+                                <label className="text-sm font-bold text-slate-700 block mb-2">Ausgeübte Sportarten?</label>
                                 <input type="text" name="sportType" disabled={noAnswers.sportType} value={noAnswers.sportType ? '' : formData.sportType} placeholder="z.B. Krafttraining, Laufen..." onChange={handleChange} className="w-full py-2 outline-none border-b border-slate-200 bg-transparent" />
                                 <NoAnswer field="sportType" />
                             </div>
@@ -922,31 +920,28 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
                     {/* MODUL 04: TOXIKOLOGIE */}
                     <section className="space-y-10">
                         <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 04: Toxikologische Belastung</h3>
-                        
                         <div className={noAnswers.tobacco ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold text-slate-700 block mb-2">Konsumieren Sie Tabak- oder Nikotinprodukte (z.B. Zigaretten, Snus)?</label>
-                            <input name="tobacco" disabled={noAnswers.tobacco} value={noAnswers.tobacco ? '' : formData.tobacco} placeholder="Welche Produkte und wie oft?" onChange={handleChange} className="w-full py-2 outline-none border-b border-slate-200 bg-transparent mb-2" />
+                            <label className="text-sm font-bold text-slate-700 block mb-2">Konsum von Tabak- oder Nikotinprodukten?</label>
+                            <input name="tobacco" disabled={noAnswers.tobacco} value={noAnswers.tobacco ? '' : formData.tobacco} placeholder="Produkte und Häufigkeit?" onChange={handleChange} className="w-full py-2 outline-none border-b border-slate-200 bg-transparent mb-2" />
                             <NoAnswer field="tobacco" />
                         </div>
-
                         <div className={noAnswers.alcohol ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold text-slate-700 block mb-2">Konsumieren Sie regelmäßig alkoholische Getränke?</label>
-                            <input name="alcohol" disabled={noAnswers.alcohol} value={noAnswers.alcohol ? '' : formData.alcohol} placeholder="Bevorzugte Getränke und Häufigkeit?" onChange={handleChange} className="w-full py-2 outline-none border-b border-slate-200 bg-transparent mb-2" />
+                            <label className="text-sm font-bold text-slate-700 block mb-2">Regelmäßiger Konsum von Alkohol?</label>
+                            <input name="alcohol" disabled={noAnswers.alcohol} value={noAnswers.alcohol ? '' : formData.alcohol} placeholder="Getränke und Häufigkeit?" onChange={handleChange} className="w-full py-2 outline-none border-b border-slate-200 bg-transparent mb-2" />
                             <NoAnswer field="alcohol" />
                         </div>
-
                         <div className={noAnswers.drugs ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold text-slate-700 block mb-2">Nutzen Sie illegale Substanzen (z.B. Cannabis, Kokain, MDMA)?</label>
-                            <input name="drugs" disabled={noAnswers.drugs} value={noAnswers.drugs ? '' : formData.drugs} placeholder="Welche Substanzen wurden konsumiert?" onChange={handleChange} className="w-full py-2 outline-none border-b border-slate-200 bg-transparent mb-2" />
+                            <label className="text-sm font-bold text-slate-700 block mb-2">Konsum illegaler Substanzen?</label>
+                            <input name="drugs" disabled={noAnswers.drugs} value={noAnswers.drugs ? '' : formData.drugs} placeholder="Welche Substanzen?" onChange={handleChange} className="w-full py-2 outline-none border-b border-slate-200 bg-transparent mb-2" />
                             <NoAnswer field="drugs" />
                         </div>
                     </section>
 
-                    {/* MODUL 05: SELBSTWAHRNEHMUNG */}
+                    {/* MODUL 05: PSYCHOSOMATIK */}
                     <section className="space-y-10">
                         <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 05: Psychosomatische Selbstwahrnehmung</h3>
                         <div className={noAnswers.bodySatisfaction ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold text-slate-700 block mb-1">Wie zufrieden sind Sie mit Ihrem aktuellen Körperzustand (1-10)?</label>
+                            <label className="text-sm font-bold text-slate-700 block mb-1">Zufriedenheit mit dem Körperzustand (1-10)?</label>
                             <div className="flex items-center gap-4">
                                 <input type="range" name="bodySatisfaction" min="1" max="10" disabled={noAnswers.bodySatisfaction} value={formData.bodySatisfaction} onChange={handleChange} className="flex-1 accent-blue-600" />
                                 <span className="text-xs font-bold text-blue-600 w-4">{formData.bodySatisfaction}</span>
@@ -954,13 +949,13 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
                             <NoAnswer field="bodySatisfaction" />
                         </div>
                         <div className={noAnswers.bodyChangeGoals ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold text-slate-700 block mb-2">Gibt es spezifische Aspekte an Ihrem Körper, die Sie operativ ändern möchten?</label>
-                            <textarea name="bodyChangeGoals" disabled={noAnswers.bodyChangeGoals} value={noAnswers.bodyChangeGoals ? '' : formData.bodyChangeGoals} placeholder="Beschreiben Sie hier Ihre Ziele..." onChange={handleChange} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-lg outline-none h-20"></textarea>
+                            <label className="text-sm font-bold text-slate-700 block mb-2">Wünsche bezüglich operativer Änderungen?</label>
+                            <textarea name="bodyChangeGoals" disabled={noAnswers.bodyChangeGoals} value={noAnswers.bodyChangeGoals ? '' : formData.bodyChangeGoals} placeholder="Ziele oder Wünsche..." onChange={handleChange} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-lg outline-none h-20"></textarea>
                             <NoAnswer field="bodyChangeGoals" />
                         </div>
                         <div className={noAnswers.mentalHealth ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold text-slate-700 block mb-2">Bestehen psychische Vorbelastungen oder befinden Sie sich in Behandlung?</label>
-                            <textarea name="mentalHealth" disabled={noAnswers.mentalHealth} value={noAnswers.mentalHealth ? '' : formData.mentalHealth} placeholder="Depressionen, Angststörungen, etc..." onChange={handleChange} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-lg outline-none h-20"></textarea>
+                            <label className="text-sm font-bold text-slate-700 block mb-2">Psychische Vorbelastungen oder Behandlungen?</label>
+                            <textarea name="mentalHealth" disabled={noAnswers.mentalHealth} value={noAnswers.mentalHealth ? '' : formData.mentalHealth} placeholder="Diagnosen oder Therapien..." onChange={handleChange} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-lg outline-none h-20"></textarea>
                             <NoAnswer field="mentalHealth" />
                         </div>
                     </section>
@@ -975,7 +970,7 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
                                 <NoAnswer field="partners" />
                             </div>
                             <div className={noAnswers.sexOrientation ? 'opacity-30' : ''}>
-                                <label className="text-sm font-bold text-slate-700 block mb-2">Ihre sexuelle Orientierung?</label>
+                                <label className="text-sm font-bold text-slate-700 block mb-2">Sexuelle Orientierung?</label>
                                 <select name="sexOrientation" disabled={noAnswers.sexOrientation} value={formData.sexOrientation} onChange={handleChange} className="w-full py-2 outline-none border-b border-slate-200 bg-transparent">
                                     <option value="">Wählen...</option><option value="hetero">Heterosexuell</option><option value="homo">Homosexuell</option><option value="bi">Bisexuell</option><option value="andere">Andere</option>
                                 </select>
@@ -983,15 +978,15 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
                             </div>
                         </div>
                         <div className={noAnswers.unprotectedSex ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold text-slate-700 block mb-2">Wie oft praktizieren Sie ungeschützten Geschlechtsverkehr?</label>
+                            <label className="text-sm font-bold text-slate-700 block mb-2">Häufigkeit ungeschützten Geschlechtsverkehrs?</label>
                             <select name="unprotectedSex" disabled={noAnswers.unprotectedSex} value={formData.unprotectedSex} onChange={handleChange} className="w-full py-2 outline-none border-b border-slate-200 bg-transparent">
-                                <option value="">Wählen...</option><option value="nie">Nie (Safe Sex)</option><option value="manchmal">Gelegentlich</option><option value="oft">Häufig ungeschützt</option>
+                                <option value="">Wählen...</option><option value="nie">Nie (Safe Sex)</option><option value="manchmal">Gelegentlich</option><option value="oft">Häufig</option>
                             </select>
                             <NoAnswer field="unprotectedSex" />
                         </div>
                         <div className={noAnswers.stis ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold text-slate-700 block mb-2">Sind Ihnen aktuelle oder vergangene Geschlechtskrankheiten bekannt?</label>
-                            <textarea name="stis" disabled={noAnswers.stis} value={noAnswers.stis ? '' : formData.stis} placeholder="HIV, Syphilis, HPV, etc..." onChange={handleChange} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-lg outline-none h-20"></textarea>
+                            <label className="text-sm font-bold text-slate-700 block mb-2">Bekannte Geschlechtskrankheiten?</label>
+                            <textarea name="stis" disabled={noAnswers.stis} value={noAnswers.stis ? '' : formData.stis} placeholder="Historie..." onChange={handleChange} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-lg outline-none h-20"></textarea>
                             <NoAnswer field="stis" />
                         </div>
                     </section>
@@ -1007,8 +1002,8 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
                             <NoAnswer field="income" />
                         </div>
                         <div className={noAnswers.debts ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold text-slate-700 block mb-2">Bestehen finanzielle Schulden?</label>
-                            <input type="text" name="debts" disabled={noAnswers.debts} value={noAnswers.debts ? '' : formData.debts} placeholder="Wenn ja, ungefähre Höhe..." onChange={handleChange} className="w-full py-2 outline-none border-b border-slate-200 bg-transparent" />
+                            <label className="text-sm font-bold text-slate-700 block mb-2">Finanzielle Verbindlichkeiten / Schulden?</label>
+                            <input type="text" name="debts" disabled={noAnswers.debts} value={noAnswers.debts ? '' : formData.debts} placeholder="Höhe oder Art..." onChange={handleChange} className="w-full py-2 outline-none border-b border-slate-200 bg-transparent" />
                             <NoAnswer field="debts" />
                         </div>
                     </section>
@@ -1020,7 +1015,7 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
                             disabled={timeLeft > 0 || !isFormComplete()} 
                             className={`w-full py-6 font-black text-xs uppercase tracking-[0.5em] shadow-2xl transition-all transform ${timeLeft > 0 || !isFormComplete() ? 'bg-slate-100 text-slate-300 cursor-not-allowed shadow-none' : 'bg-blue-600 text-white hover:bg-blue-700 active:scale-[0.98]'}`}
                         >
-                            {!isFormComplete() ? 'BITTE ALLES AUSFÜLLEN ODER "KEINE ANGABE" WÄHLEN' : (timeLeft > 0 ? `Validierung läuft (${timeLeft}s)` : 'GESUNDHEITSPROFIL FINALISIEREN')}
+                            {!isFormComplete() ? 'DATENSATZ UNVOLLSTÄNDIG' : (timeLeft > 0 ? `VALIDIERUNG LÄUFT (${timeLeft}S)` : 'GESUNDHEITSPROFIL FINALISIEREN')}
                         </button>
                     </div>
                 </form>
