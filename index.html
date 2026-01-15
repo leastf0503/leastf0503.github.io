@@ -313,20 +313,19 @@
 
         // --- BLOG PAGE (Handle logic for both Initial and Personalized) ---
 // 1. Hier 'cookieChoice' als Parameter hinzufügen!
+// --- BLOG PAGE (Handle logic for both Initial and Personalized) ---
 const BlogPage = ({ onAction, mode = 'initial', cookieChoice }) => {
     const [selectedArticle, setSelectedArticle] = useState(null);
     const [categoryFilter, setCategoryFilter] = useState("Alle Beiträge");
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [likes, setLikes] = useState({});
     
-    // HIER DIE NEUE LOGIK FÜR PERSONALISIERTE INHALTE
     const [articlesToDisplay, setArticlesToDisplay] = useState([]);
 
     useEffect(() => {
         if (mode === 'initial') {
             setArticlesToDisplay(BLOG_CONTENT);
         } else {
-            // PERSONALIZED MODE: Nimm die "Personalized" Artikel + einen Mix aus den alten
             const oldContentShuffled = [...BLOG_CONTENT].sort(() => 0.5 - Math.random());
             setArticlesToDisplay([...PERSONALIZED_CONTENT, ...oldContentShuffled]);
         }
@@ -341,7 +340,6 @@ const BlogPage = ({ onAction, mode = 'initial', cookieChoice }) => {
         return () => clearInterval(timer);
     }, [timeLeft]);
 
-    // Filter logic (wirkt auf das jeweilige articlesToDisplay Array)
     const filteredArticles = categoryFilter === "Alle Beiträge" 
         ? articlesToDisplay 
         : articlesToDisplay.filter(a => a.cat === categoryFilter);
@@ -351,19 +349,53 @@ const BlogPage = ({ onAction, mode = 'initial', cookieChoice }) => {
 
     const ActionButton = ({inHeader}) => {
         if (mode === 'initial') {
-            // A) Wenn der Timer noch läuft
             if (timeLeft > 0) return (<button disabled className={`bg-slate-300 text-slate-500 rounded-full font-medium cursor-not-allowed flex items-center gap-2 ${inHeader ? 'px-5 py-2 text-sm' : 'w-full py-3 justify-center'}`}><Icon path={paths.clock} className="w-4 h-4 animate-pulse" /> Gesundheitsprofil erstellen in {timeLeft}s</button>);
             
-            // B) NEU: Wenn der Timer abgelaufen ist, aber noch keine Cookies gewählt wurden
-            if (cookieChoice === null) return (<button disabled className={`bg-slate-200 text-slate-400 rounded-full font-medium cursor-not-allowed flex items-center gap-2 ${inHeader ? 'px-5 py-2 text-sm' : 'w-full py-3 justify-center'}`}>Bitte Cookie-Wahl treffen</button>);
+            // Verpflichtende Cookie-Entscheidung
+            if (cookieChoice === null) return (<button disabled className={`bg-slate-200 text-slate-400 rounded-full font-medium cursor-not-allowed flex items-center gap-2 ${inHeader ? 'px-5 py-2 text-sm' : 'w-full py-3 justify-center'}`}>Bitte treffen Sie eine Cookie-Wahl</button>);
 
-            // C) Wenn alles bereit ist
             return (<button onClick={onAction} className={`bg-slate-900 text-white rounded-full font-medium hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/20 animate-fade-in ${inHeader ? 'px-5 py-2 text-sm' : 'w-full py-3'}`}>Gesundheitsprofil erstellen</button>);
         } else {
             if (timeLeft > 0) return (<div className={`bg-green-100 text-green-800 rounded-full text-xs font-bold animate-pulse ${inHeader ? 'px-4 py-2' : 'w-full py-3 text-center'}`}>Personalisierte Ansicht aktiv...</div>);
             return (<button onClick={onAction} className={`bg-green-600 text-white rounded-full font-bold hover:bg-green-700 transition-colors shadow-lg shadow-green-900/20 animate-fade-in ${inHeader ? 'px-6 py-2 text-sm' : 'w-full py-3'}`}>Usability Test beendet! Zurück zum Fragebogen</button>);
         }
     };
+
+    const HeaderTitle = () => (
+        <div onClick={() => {setCategoryFilter("Alle Beiträge"); setSelectedArticle(null);}} className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+            <div className="p-1.5 bg-green-100 rounded text-green-600"><Icon path={paths.leaf} className="w-6 h-6" /></div>
+            <span className="text-xl font-bold tracking-tight text-slate-800">
+                Vital<span className="text-green-600">Core</span>
+                {mode === 'personalized' && <span className="ml-2 text-xs bg-green-600 text-white px-2 py-0.5 rounded uppercase">Für Sie</span>}
+            </span>
+        </div>
+    );
+
+    // WICHTIG: Das eigentliche "Erscheinungsbild" der Seite (Nav und Main)
+    return (
+        <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-slate-50 relative">
+            <nav className="bg-white border-b sticky top-0 z-20 shadow-sm p-4 flex justify-between items-center">
+                <HeaderTitle />
+                <ActionButton inHeader={true} />
+            </nav>
+            <main className="max-w-6xl mx-auto p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+                {filteredArticles.map(art => (
+                    <div key={art.id} onClick={() => setSelectedArticle(art)} className="bg-white rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl cursor-pointer overflow-hidden transition-all group">
+                        <img src={art.image} className="h-48 w-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <div className="p-6"><h3 className="font-bold text-lg text-slate-800 mb-2">{art.title}</h3><p className="text-slate-500 text-sm line-clamp-2">{art.desc}</p></div>
+                    </div>
+                ))}
+            </main>
+            {selectedArticle && (
+                <div className="fixed inset-0 z-[100] bg-white overflow-y-auto p-8 animate-fade-in text-slate-800">
+                    <button onClick={() => setSelectedArticle(null)} className="mb-6 flex items-center gap-2 text-blue-600 font-bold"><Icon path={paths.arrowLeft} className="w-5 h-5"/> Zurück</button>
+                    <h1 className="text-4xl font-black mb-6">{selectedArticle.title}</h1>
+                    <p className="text-lg leading-relaxed max-w-3xl">Dieser Artikel wurde für Ihr Gesundheitsprofil ausgewählt.</p>
+                </div>
+            )}
+        </div>
+    );
+}; // Hier wurde die Klammer geschlossen!
 
             const HeaderTitle = () => (
                 <div onClick={() => {setCategoryFilter("Alle Beiträge"); setSelectedArticle(null);}} className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
@@ -766,64 +798,64 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
     );
 };
 
-        function App() {
-            const [step, setStep] = useState('intro');
-            const [cookieChoice, setCookieChoice] = useState(null);
-            const [bannerVisible, setBannerVisible] = useState(false);
-            const [groupID, setGroupID] = useState(0);
-            const [finalData, setFinalData] = useState({});
-            const [sessionToken, setSessionToken] = useState(null);
-            const timers = useRef({ blogStart: 0, bannerStart: 0, formStart: 0, postBrowsingStart: 0 });
-            const [times, setTimes] = useState({ blogTime: 0, cookieTime: 0, registrationTime: 0, postBrowsingTime: 0 });
-            const audioRef = useRef(null);
-            const audioManRef = useRef(null);
+       function App() {
+    const [step, setStep] = useState('intro');
+    const [cookieChoice, setCookieChoice] = useState(null);
+    const [bannerVisible, setBannerVisible] = useState(false);
+    const [groupID, setGroupID] = useState(0);
+    const [finalData, setFinalData] = useState({});
+    const [sessionToken, setSessionToken] = useState(null);
+    const timers = useRef({ blogStart: 0, bannerStart: 0, formStart: 0, postBrowsingStart: 0 });
+    const [times, setTimes] = useState({ blogTime: 0, cookieTime: 0, registrationTime: 0, postBrowsingTime: 0 });
+    const audioRef = useRef(null);
+    const audioManRef = useRef(null);
 
-            useEffect(() => {
-                const params = new URLSearchParams(window.location.search);
-                const g = parseInt(params.get('g')) || 0;
-                setGroupID(g);
-                const t = params.get('t');
-                if (t) setSessionToken(t);
-                audioRef.current = new Audio('sound.mp3'); audioRef.current.volume = 0.5;
-                audioManRef.current = new Audio('soundmann.mp3'); audioManRef.current.volume = 0.5;
-            }, []);
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const g = parseInt(params.get('g')) || 0;
+        setGroupID(g);
+        const t = params.get('t');
+        if (t) setSessionToken(t);
+        audioRef.current = new Audio('sound.mp3'); audioRef.current.volume = 0.5;
+        audioManRef.current = new Audio('soundmann.mp3'); audioManRef.current.volume = 0.5;
+    }, []);
 
-            const handleStartStudy = () => {
-                const unlockAudio = (audioObj) => { if (audioObj) { audioObj.volume = 0; audioObj.play().then(() => { audioObj.pause(); audioObj.currentTime = 0; audioObj.volume = 0.5; }).catch(e => console.log("Unlock failed", e)); } };
-                unlockAudio(audioRef.current); unlockAudio(audioManRef.current);
-                timers.current.blogStart = Date.now(); setStep('blog'); setTimeout(() => setBannerVisible(true), COOKIE_BANNER_DELAY_MS);
-            };
+    const handleStartStudy = () => {
+        const unlockAudio = (audioObj) => { if (audioObj) { audioObj.volume = 0; audioObj.play().then(() => { audioObj.pause(); audioObj.currentTime = 0; audioObj.volume = 0.5; }).catch(e => console.log("Unlock failed", e)); } };
+        unlockAudio(audioRef.current); unlockAudio(audioManRef.current);
+        timers.current.blogStart = Date.now(); setStep('blog'); setTimeout(() => setBannerVisible(true), COOKIE_BANNER_DELAY_MS);
+    };
 
-            const handleBannerLoad = () => { timers.current.bannerStart = Date.now(); };
-            const handleCookieDecision = (decision) => { const duration = Date.now() - timers.current.bannerStart; setTimes(prev => ({ ...prev, cookieTime: duration })); setCookieChoice(decision); setBannerVisible(false); };
-            const handleGoToRegistration = () => { const duration = Date.now() - timers.current.blogStart; setTimes(prev => ({ ...prev, blogTime: duration })); timers.current.formStart = Date.now(); setStep('register'); };
-            const handleRegistrationSubmit = (formData) => { const duration = Date.now() - timers.current.formStart; setTimes(prev => ({ ...prev, registrationTime: duration })); setFinalData(prev => ({ ...prev, groupID: groupID, ...formData, cookieChoice: cookieChoice })); setStep('loading'); };
-            const handleLoadingFinished = () => { timers.current.postBrowsingStart = Date.now(); setStep('personalized_blog'); };
-            const handleFinishStudy = () => { const duration = Date.now() - timers.current.postBrowsingStart; const completeData = { ...finalData, ...times, postBrowsingTime: duration }; setFinalData(completeData); setStep('end'); };
+    const handleBannerLoad = () => { timers.current.bannerStart = Date.now(); };
+    const handleCookieDecision = (decision) => { const duration = Date.now() - timers.current.bannerStart; setTimes(prev => ({ ...prev, cookieTime: duration })); setCookieChoice(decision); setBannerVisible(false); };
+    const handleGoToRegistration = () => { const duration = Date.now() - timers.current.blogStart; setTimes(prev => ({ ...prev, blogTime: duration })); timers.current.formStart = Date.now(); setStep('register'); };
+    const handleRegistrationSubmit = (formData) => { const duration = Date.now() - timers.current.formStart; setTimes(prev => ({ ...prev, registrationTime: duration })); setFinalData(prev => ({ ...prev, groupID: groupID, ...formData, cookieChoice: cookieChoice })); setStep('loading'); };
+    const handleLoadingFinished = () => { timers.current.postBrowsingStart = Date.now(); setStep('personalized_blog'); };
+    const handleFinishStudy = () => { const duration = Date.now() - timers.current.postBrowsingStart; const completeData = { ...finalData, ...times, postBrowsingTime: duration }; setFinalData(completeData); setStep('end'); };
 
-            return (
-    <div className="font-sans text-gray-800 antialiased selection:bg-green-100 selection:text-green-900">
-        {step === 'intro' && <IntroScreen onStart={handleStartStudy} />}
-        {step === 'blog' && (
-            <>
-                <BlogPage onAction={handleGoToRegistration} mode="initial" cookieChoice={cookieChoice} />
-                {bannerVisible && (
-                    <CookieBanner group={groupID} onDecision={handleCookieDecision} audioObject={audioRef.current} onBannerLoad={handleBannerLoad} />
-                )}
-            </>
-        )}
-        {step === 'register' && (
-            <RegistrationForm onSubmit={handleRegistrationSubmit} group={groupID} audioObject={audioManRef.current} />
-        )}
-        {step === 'loading' && <LoadingScreen onFinished={handleLoadingFinished} />}
-        {step === 'personalized_blog' && (
-            <BlogPage onAction={handleFinishStudy} mode="personalized" cookieChoice={cookieChoice} />
-        )}
-        {step === 'end' && <EndScreen data={finalData} sessionToken={sessionToken} />}
-    </div>
-);
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
+    return (
+        <div className="font-sans text-gray-800 antialiased selection:bg-green-100 selection:text-green-900">
+            {step === 'intro' && <IntroScreen onStart={handleStartStudy} />}
+            {step === 'blog' && (
+                <>
+                    <BlogPage onAction={handleGoToRegistration} mode="initial" cookieChoice={cookieChoice} />
+                    {bannerVisible && (
+                        <CookieBanner group={groupID} onDecision={handleCookieDecision} audioObject={audioRef.current} onBannerLoad={handleBannerLoad} />
+                    )}
+                </>
+            )}
+            {step === 'register' && (
+                <RegistrationForm onSubmit={handleRegistrationSubmit} group={groupID} audioObject={audioManRef.current} />
+            )}
+            {step === 'loading' && <LoadingScreen onFinished={handleLoadingFinished} />}
+            {step === 'personalized_blog' && (
+                <BlogPage onAction={handleFinishStudy} mode="personalized" cookieChoice={cookieChoice} />
+            )}
+            {step === 'end' && <EndScreen data={finalData} sessionToken={sessionToken} />}
+        </div>
+    );
+} // Hier wurde die Klammer geschlossen!
+         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
 </body>
