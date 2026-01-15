@@ -782,8 +782,7 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
             check('age') && check('gender') && check('height') && check('weight') && check('insurance') &&
             check('dietStyle') && check('tobacco') && check('alcohol') && check('drugs') &&
             check('sportFreq') && check('mentalHealth') &&
-            check('partners') && check('income') &&
-            !isAgeInvalid
+check('partners') && check('income') && check('reproduction') && !isAgeInvalid            !isAgeInvalid
         );
     };
 
@@ -1009,7 +1008,7 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
                                 </select>
                                 <NoAnswer field="sexOrientation" />
                             </div>
-                        </div>
+                    
                         <div className={noAnswers.reproduction ? 'opacity-30' : ''}>
     <label className="text-sm font-bold text-slate-700 block mb-2">Besteht bei Ihnen aktuell ein Reproduktionswunsch (Kinderwunsch)?</label>
     <select 
