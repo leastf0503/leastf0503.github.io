@@ -314,13 +314,17 @@
         // --- BLOG PAGE (Handle logic for both Initial and Personalized) ---
 // 1. Hier 'cookieChoice' als Parameter hinzufügen!
 // --- BLOG PAGE (Handle logic for both Initial and Personalized) ---
+// --- BLOG PAGE (Handle logic for both Initial and Personalized) ---
 const BlogPage = ({ onAction, mode = 'initial', cookieChoice }) => {
     const [selectedArticle, setSelectedArticle] = useState(null);
     const [categoryFilter, setCategoryFilter] = useState("Alle Beiträge");
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [likes, setLikes] = useState({});
-    
     const [articlesToDisplay, setArticlesToDisplay] = useState([]);
+
+    // Zeit-Logik
+    const requiredTime = mode === 'initial' ? MIN_BROWSING_TIME_1 : MIN_BROWSING_TIME_2;
+    const [timeLeft, setTimeLeft] = useState(requiredTime);
 
     useEffect(() => {
         if (mode === 'initial') {
@@ -330,9 +334,6 @@ const BlogPage = ({ onAction, mode = 'initial', cookieChoice }) => {
             setArticlesToDisplay([...PERSONALIZED_CONTENT, ...oldContentShuffled]);
         }
     }, [mode]);
-
-    const requiredTime = mode === 'initial' ? MIN_BROWSING_TIME_1 : MIN_BROWSING_TIME_2;
-    const [timeLeft, setTimeLeft] = useState(requiredTime);
 
     useEffect(() => {
         if (timeLeft <= 0) return;
@@ -347,20 +348,7 @@ const BlogPage = ({ onAction, mode = 'initial', cookieChoice }) => {
     const categories = ["Alle Beiträge", "Forschung", "Ernährung", "Fitness", "Mental Health", "Prävention"];
     const toggleLike = (e, id) => { e.stopPropagation(); setLikes(prev => ({...prev, [id]: !prev[id]})); };
 
-    const ActionButton = ({inHeader}) => {
-        if (mode === 'initial') {
-            if (timeLeft > 0) return (<button disabled className={`bg-slate-300 text-slate-500 rounded-full font-medium cursor-not-allowed flex items-center gap-2 ${inHeader ? 'px-5 py-2 text-sm' : 'w-full py-3 justify-center'}`}><Icon path={paths.clock} className="w-4 h-4 animate-pulse" /> Gesundheitsprofil erstellen in {timeLeft}s</button>);
-            
-            // Verpflichtende Cookie-Entscheidung
-            if (cookieChoice === null) return (<button disabled className={`bg-slate-200 text-slate-400 rounded-full font-medium cursor-not-allowed flex items-center gap-2 ${inHeader ? 'px-5 py-2 text-sm' : 'w-full py-3 justify-center'}`}>Bitte treffen Sie eine Cookie-Wahl</button>);
-
-            return (<button onClick={onAction} className={`bg-slate-900 text-white rounded-full font-medium hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/20 animate-fade-in ${inHeader ? 'px-5 py-2 text-sm' : 'w-full py-3'}`}>Gesundheitsprofil erstellen</button>);
-        } else {
-            if (timeLeft > 0) return (<div className={`bg-green-100 text-green-800 rounded-full text-xs font-bold animate-pulse ${inHeader ? 'px-4 py-2' : 'w-full py-3 text-center'}`}>Personalisierte Ansicht aktiv...</div>);
-            return (<button onClick={onAction} className={`bg-green-600 text-white rounded-full font-bold hover:bg-green-700 transition-colors shadow-lg shadow-green-900/20 animate-fade-in ${inHeader ? 'px-6 py-2 text-sm' : 'w-full py-3'}`}>Usability Test beendet! Zurück zum Fragebogen</button>);
-        }
-    };
-
+    // Hilfskomponente für den Titel
     const HeaderTitle = () => (
         <div onClick={() => {setCategoryFilter("Alle Beiträge"); setSelectedArticle(null);}} className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
             <div className="p-1.5 bg-green-100 rounded text-green-600"><Icon path={paths.leaf} className="w-6 h-6" /></div>
@@ -371,94 +359,169 @@ const BlogPage = ({ onAction, mode = 'initial', cookieChoice }) => {
         </div>
     );
 
-    // WICHTIG: Das eigentliche "Erscheinungsbild" der Seite (Nav und Main)
+    // Hilfskomponente für den Button (mit Cookie-Zwang)
+    const ActionButton = ({inHeader}) => {
+        if (mode === 'initial') {
+            // 1. Timer läuft noch
+            if (timeLeft > 0) {
+                return (
+                    <button disabled className={`bg-slate-300 text-slate-500 rounded-full font-medium cursor-not-allowed flex items-center gap-2 ${inHeader ? 'px-5 py-2 text-sm' : 'w-full py-3 justify-center'}`}>
+                        <Icon path={paths.clock} className="w-4 h-4 animate-pulse" /> Gesundheitsprofil erstellen in {timeLeft}s
+                    </button>
+                );
+            }
+            // 2. Timer fertig, aber keine Cookies gewählt
+            if (cookieChoice === null) {
+                return (
+                    <button disabled className={`bg-orange-100 text-orange-600 border border-orange-200 rounded-full font-bold cursor-not-allowed flex items-center gap-2 ${inHeader ? 'px-5 py-2 text-sm' : 'w-full py-3 justify-center'}`}>
+                        Bitte treffen Sie eine Cookie-Wahl
+                    </button>
+                );
+            }
+            // 3. Alles bereit
+            return (
+                <button onClick={onAction} className={`bg-slate-900 text-white rounded-full font-medium hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/20 animate-fade-in ${inHeader ? 'px-5 py-2 text-sm' : 'w-full py-3'}`}>
+                    Gesundheitsprofil erstellen
+                </button>
+            );
+        } else {
+            // Personalized Mode
+            if (timeLeft > 0) return (<div className={`bg-green-100 text-green-800 rounded-full text-xs font-bold animate-pulse ${inHeader ? 'px-4 py-2' : 'w-full py-3 text-center'}`}>Personalisierte Ansicht aktiv...</div>);
+            return (
+                <button onClick={onAction} className={`bg-green-600 text-white rounded-full font-bold hover:bg-green-700 transition-colors shadow-lg shadow-green-900/20 animate-fade-in ${inHeader ? 'px-6 py-2 text-sm' : 'w-full py-3'}`}>
+                    Usability Test beendet! Zurück zum Fragebogen
+                </button>
+            );
+        }
+    };
+
+    // Detailansicht eines Artikels
+    if (selectedArticle) {
+        const related = articlesToDisplay.filter(a => a.id !== selectedArticle.id).sort(() => 0.5 - Math.random()).slice(0, 3);
+        return (
+            <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-white animate-fade-in">
+                <nav className="bg-white border-b sticky top-0 z-20 shadow-sm">
+                    <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+                        <HeaderTitle />
+                        <div className="flex gap-4 items-center">
+                            <button onClick={() => setSelectedArticle(null)} className="text-sm font-medium text-slate-500 hover:text-green-600 flex items-center gap-1">
+                                <Icon path={paths.arrowLeft} className="w-4 h-4" /> Zurück
+                            </button>
+                            <ActionButton inHeader={true} />
+                        </div>
+                    </div>
+                </nav>
+                <article className="max-w-3xl mx-auto px-4 py-12">
+                    <div className="w-full h-80 rounded-2xl overflow-hidden mb-8 shadow-md">
+                        <img src={selectedArticle.image} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex items-center gap-3 text-sm font-bold text-green-600 uppercase tracking-wider mb-3">
+                        {selectedArticle.cat} • {selectedArticle.date}
+                    </div>
+                    <h1 className="text-4xl font-extrabold text-slate-900 mb-6 leading-tight">{selectedArticle.title}</h1>
+                    <div className="flex items-center gap-3 text-slate-500 mb-8 pb-8 border-b">
+                        <span className="font-medium">{selectedArticle.author}</span>
+                        <span>•</span>
+                        <span className="flex items-center gap-1"><Icon path={paths.clock} className="w-4 h-4" /> {selectedArticle.time} Lesezeit</span>
+                    </div>
+                    <div className="prose prose-lg text-slate-700 leading-relaxed space-y-6">
+                        {selectedArticle.fullText.map((p, i) => <p key={i}>{p}</p>)}
+                    </div>
+                    <div className="mt-16 pt-8 border-t text-center italic text-slate-500">
+                        Dieser Beitrag wurde für Ihr persönliches Gesundheitsprofil zusammengestellt.
+                    </div>
+                </article>
+            </div>
+        );
+    }
+
+    // Hauptübersicht
     return (
         <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-slate-50 relative">
-            <nav className="bg-white border-b sticky top-0 z-20 shadow-sm p-4 flex justify-between items-center">
-                <HeaderTitle />
-                <ActionButton inHeader={true} />
-            </nav>
-            <main className="max-w-6xl mx-auto p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
-                {filteredArticles.map(art => (
-                    <div key={art.id} onClick={() => setSelectedArticle(art)} className="bg-white rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl cursor-pointer overflow-hidden transition-all group">
-                        <img src={art.image} className="h-48 w-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                        <div className="p-6"><h3 className="font-bold text-lg text-slate-800 mb-2">{art.title}</h3><p className="text-slate-500 text-sm line-clamp-2">{art.desc}</p></div>
+            <nav className="bg-white border-b sticky top-0 z-20 shadow-sm">
+                <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+                    <HeaderTitle />
+                    <div className="hidden md:flex gap-1 overflow-x-auto no-scrollbar mx-4">
+                        {categories.map(item => (
+                            <button key={item} onClick={() => setCategoryFilter(item)} className={`whitespace-nowrap px-3 py-2 text-sm font-medium rounded-full transition-colors ${categoryFilter === item ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>
+                                {item}
+                            </button>
+                        ))}
                     </div>
-                ))}
+                    <div className="flex gap-4 items-center shrink-0">
+                        <button className="p-2 text-slate-400 hover:text-slate-600" onClick={() => setShowLoginModal(true)}>
+                            <Icon path={paths.search} className="w-5 h-5" />
+                        </button>
+                        <ActionButton inHeader={true} />
+                    </div>
+                </div>
+            </nav>
+
+            <main className="flex-grow max-w-6xl mx-auto px-4 py-8 w-full">
+                {mode === 'initial' && categoryFilter === 'Alle Beiträge' && (
+                    <div className="bg-slate-900 rounded-3xl p-8 md:p-12 mb-12 text-white relative overflow-hidden flex flex-col md:flex-row items-center gap-8">
+                        <div className="flex-1 relative z-10">
+                            <span className="text-green-400 font-bold tracking-wider text-xs uppercase mb-2 block">Trending Topic</span>
+                            <h2 className="text-3xl md:text-5xl font-extrabold mb-4 leading-tight">Wissenschaft trifft <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-300">Lebensqualität</span></h2>
+                            <p className="text-slate-300 mb-6 max-w-lg">Entdecken Sie fundierte Artikel zu Langlebigkeit, Ernährung und Ihrer mentalen Gesundheit.</p>
+                        </div>
+                        <div className="w-full md:w-1/3 aspect-square bg-gradient-to-br from-slate-800 to-slate-700 rounded-2xl border border-slate-600 p-6 flex items-center justify-center relative z-10">
+                            <Icon path={paths.activity} className="w-20 h-20 text-green-500" />
+                        </div>
+                    </div>
+                )}
+
+                {mode === 'personalized' && categoryFilter === 'Alle Beiträge' && (
+                    <div className="bg-green-50 rounded-3xl p-8 mb-12 border border-green-200 text-center animate-fade-in">
+                        <h2 className="text-2xl font-bold text-green-900 mb-2">Willkommen zurück!</h2>
+                        <p className="text-green-700">Wir haben Ihren Feed basierend auf Ihren Angaben für Sie personalisiert.</p>
+                    </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredArticles.map(art => (
+                        <article key={art.id} onClick={() => setSelectedArticle(art)} className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all cursor-pointer overflow-hidden group flex flex-col h-full relative">
+                            {art.match && (
+                                <div className="absolute top-3 left-3 z-10 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded shadow-lg animate-pulse-slow">
+                                    {art.match}
+                                </div>
+                            )}
+                            <div className="h-48 overflow-hidden relative">
+                                <img src={art.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                <div className="absolute top-3 right-3">
+                                    <button onClick={(e) => toggleLike(e, art.id)} className={`p-2 rounded-full backdrop-blur-md transition-colors ${likes[art.id] ? 'bg-red-50 text-red-500' : 'bg-black/30 text-white hover:bg-black/50'}`}>
+                                        <Icon path={likes[art.id] ? paths.heartFilled : paths.heart} className="w-5 h-5" />
+                                    </button>
+                                </div>
+                                <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded font-medium">{art.cat}</div>
+                            </div>
+                            <div className="p-5 flex-1 flex flex-col">
+                                <h3 className="text-lg font-bold text-slate-900 mb-2 leading-tight group-hover:text-green-600 transition-colors">{art.title}</h3>
+                                <p className="text-slate-600 text-sm line-clamp-3 mb-4 flex-1">{art.desc}</p>
+                                <div className="flex items-center gap-2 pt-4 border-t border-slate-100">
+                                    <span className="text-xs font-bold text-slate-500">{art.author}</span>
+                                </div>
+                            </div>
+                        </article>
+                    ))}
+                </div>
             </main>
-            {selectedArticle && (
-                <div className="fixed inset-0 z-[100] bg-white overflow-y-auto p-8 animate-fade-in text-slate-800">
-                    <button onClick={() => setSelectedArticle(null)} className="mb-6 flex items-center gap-2 text-blue-600 font-bold"><Icon path={paths.arrowLeft} className="w-5 h-5"/> Zurück</button>
-                    <h1 className="text-4xl font-black mb-6">{selectedArticle.title}</h1>
-                    <p className="text-lg leading-relaxed max-w-3xl">Dieser Artikel wurde für Ihr Gesundheitsprofil ausgewählt.</p>
+
+            {showLoginModal && (
+                <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 animate-fade-in" onClick={() => setShowLoginModal(false)}>
+                    <div className="bg-white rounded-xl shadow-2xl p-8 max-w-sm w-full text-center" onClick={(e) => e.stopPropagation()}>
+                        <div className="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Icon path={paths.shield} className="w-6 h-6" />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">Zugriff verweigert</h3>
+                        <p className="text-gray-600 mb-6">Dieser Bereich ist ausschließlich für Teilnehmer der Studie reserviert. Bitte fahren Sie mit der Erstellung Ihres Gesundheitsprofils fort.</p>
+                        <button onClick={() => setShowLoginModal(false)} className="w-full bg-gray-900 text-white font-bold py-2 rounded-lg">Verstanden</button>
+                    </div>
                 </div>
             )}
         </div>
     );
-}; // Hier wurde die Klammer geschlossen!
-
-            const HeaderTitle = () => (
-                <div onClick={() => {setCategoryFilter("Alle Beiträge"); setSelectedArticle(null);}} className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
-                    <div className="p-1.5 bg-green-100 rounded text-green-600"><Icon path={paths.leaf} className="w-6 h-6" /></div>
-                    <span className="text-xl font-bold tracking-tight text-slate-800">
-                        Vital<span className="text-green-600">Core</span>
-                        {mode === 'personalized' && <span className="ml-2 text-xs bg-green-600 text-white px-2 py-0.5 rounded uppercase">Für Sie</span>}
-                    </span>
-                </div>
-            );
-
-            if (selectedArticle) {
-                const related = articlesToDisplay.filter(a => a.id !== selectedArticle.id).sort(() => 0.5 - Math.random()).slice(0, 3);
-                return (
-                    <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-white animate-fade-in">
-                        <nav className="bg-white border-b sticky top-0 z-20 shadow-sm"><div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between"><HeaderTitle /><div className="flex gap-4 items-center"><button onClick={() => setSelectedArticle(null)} className="text-sm font-medium text-slate-500 hover:text-green-600 flex items-center gap-1"><Icon path={paths.arrowLeft} className="w-4 h-4" /> Zurück</button><ActionButton inHeader={true} /></div></div></nav>
-                        <article className="max-w-3xl mx-auto px-4 py-12"><div className="w-full h-80 rounded-2xl overflow-hidden mb-8 shadow-md"><img src={selectedArticle.image} className="w-full h-full object-cover" onError={(e) => {e.target.onerror = null; e.target.src='https://placehold.co/800x400/e2e8f0/475569?text=Bild+nicht+verfügbar';}} /></div><div className="flex items-center gap-3 text-sm font-bold text-green-600 uppercase tracking-wider mb-3">{selectedArticle.cat} • {selectedArticle.date}</div><h1 className="text-4xl font-extrabold text-slate-900 mb-6 leading-tight">{selectedArticle.title}</h1><div className="flex items-center gap-3 text-slate-500 mb-8 pb-8 border-b"><span className="font-medium">{selectedArticle.author}</span><span>•</span><span className="flex items-center gap-1"><Icon path={paths.clock} className="w-4 h-4" /> {selectedArticle.time} Lesezeit</span></div><div className="prose prose-lg text-slate-700 leading-relaxed space-y-6">{selectedArticle.fullText.map((p, i) => <p key={i}>{p}</p>)}</div><div className="mt-16 pt-8 border-t"><h3 className="text-xl font-bold mb-6">Das könnte Sie auch interessieren</h3><div className="grid grid-cols-1 md:grid-cols-3 gap-6">{related.map(rel => (<div key={rel.id} onClick={() => {window.scrollTo(0,0); setSelectedArticle(rel);}} className="cursor-pointer group"><div className="h-32 rounded-lg overflow-hidden mb-3"><img src={rel.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform"/></div><h4 className="font-bold text-sm group-hover:text-green-600">{rel.title}</h4></div>))}</div></div></article>
-                    </div>
-                );
-            }
-
-            return (
-                <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-slate-50 relative">
-                    <nav className="bg-white border-b sticky top-0 z-20 shadow-sm">
-                        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between"><HeaderTitle /><div className="hidden md:flex gap-1 overflow-x-auto no-scrollbar mx-4">{categories.map(item => (<button key={item} onClick={() => setCategoryFilter(item)} className={`whitespace-nowrap px-3 py-2 text-sm font-medium rounded-full transition-colors ${categoryFilter === item ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>{item}</button>))}</div><div className="flex gap-4 items-center shrink-0"><button className="p-2 text-slate-400 hover:text-slate-600" onClick={() => setShowLoginModal(true)}><Icon path={paths.search} className="w-5 h-5" /></button><ActionButton inHeader={true} /></div></div><div className="md:hidden flex gap-2 overflow-x-auto px-4 py-2 border-t no-scrollbar">{categories.map(item => (<button key={item} onClick={() => setCategoryFilter(item)} className={`whitespace-nowrap px-3 py-1 text-xs font-medium rounded-full transition-colors ${categoryFilter === item ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-600'}`}>{item}</button>))}</div>
-                    </nav>
-                    <main className="flex-grow max-w-6xl mx-auto px-4 py-8 w-full">
-                        {/* HERO AREA: Nur Initial anzeigen */}
-                        {mode === 'initial' && categoryFilter === 'Alle Beiträge' && (<div className="bg-slate-900 rounded-3xl p-8 md:p-12 mb-12 text-white relative overflow-hidden flex flex-col md:flex-row items-center gap-8"><div className="absolute top-0 right-0 w-96 h-96 bg-green-500 rounded-full blur-3xl opacity-20 translate-x-1/3 -translate-y-1/3"></div><div className="flex-1 relative z-10"><span className="text-green-400 font-bold tracking-wider text-xs uppercase mb-2 block">Trending Topic</span><h2 className="text-3xl md:text-5xl font-extrabold mb-4 leading-tight">Wissenschaft trifft <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-300">Lebensqualität</span></h2><p className="text-slate-300 mb-6 max-w-lg">Entdecken Sie fundierte Artikel zu Langlebigkeit, Ernährung und mentaler Gesundheit.</p><button onClick={() => setCategoryFilter("Forschung")} className="bg-white/10 hover:bg-white/20 backdrop-blur border border-white/20 text-white px-6 py-2 rounded-lg font-medium transition-colors">Mehr erfahren</button></div><div className="w-full md:w-1/3 aspect-square bg-gradient-to-br from-slate-800 to-slate-700 rounded-2xl border border-slate-600 p-6 flex items-center justify-center relative z-10"><Icon path={paths.activity} className="w-20 h-20 text-green-500" /></div></div>)}
-                        
-                        {/* HERO AREA: PERSONALIZED */}
-                        {mode === 'personalized' && categoryFilter === 'Alle Beiträge' && (
-                            <div className="bg-green-50 rounded-3xl p-8 mb-12 border border-green-200 text-center animate-fade-in">
-                                <h2 className="text-2xl font-bold text-green-900 mb-2">Willkommen zurück!</h2>
-                                <p className="text-green-700">Wir haben Ihren Feed basierend auf Ihren Angaben personalisiert.</p>
-                            </div>
-                        )}
-
-                        <div className="flex items-center justify-between mb-6"><h2 className="text-2xl font-bold text-slate-800">{categoryFilter}</h2><span className="text-sm text-slate-400">{filteredArticles.length} Artikel</span></div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {filteredArticles.map(art => (
-                                <article key={art.id} onClick={() => setSelectedArticle(art)} className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all cursor-pointer overflow-hidden group flex flex-col h-full relative">
-                                    {/* PERSONALISIERTER MATCH BADGE */}
-                                    {art.match && (
-                                        <div className="absolute top-3 left-3 z-10 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded shadow-lg animate-pulse-slow">
-                                            {art.match}
-                                        </div>
-                                    )}
-                                    <div className="h-48 overflow-hidden relative">
-                                        <img src={art.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => {e.target.onerror = null; e.target.src='https://placehold.co/800x400/e2e8f0/475569?text=Bild+nicht+verfügbar';}} />
-                                        <div className="absolute top-3 right-3"><button onClick={(e) => toggleLike(e, art.id)} className={`p-2 rounded-full backdrop-blur-md transition-colors ${likes[art.id] ? 'bg-red-50 text-red-500' : 'bg-black/30 text-white hover:bg-black/50'}`}><Icon path={likes[art.id] ? paths.heartFilled : paths.heart} className="w-5 h-5" /></button></div>
-                                        <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded font-medium">{art.cat}</div>
-                                    </div>
-                                    <div className="p-5 flex-1 flex flex-col"><div className="text-xs text-slate-400 mb-2 flex justify-between"><span>{art.date}</span><span>{art.time}</span></div><h3 className="text-lg font-bold text-slate-900 mb-2 leading-tight group-hover:text-green-600 transition-colors">{art.title}</h3><p className="text-slate-600 text-sm line-clamp-3 mb-4 flex-1">{art.desc}</p><div className="flex items-center gap-2 pt-4 border-t border-slate-100"><div className="w-6 h-6 bg-slate-200 rounded-full flex items-center justify-center text-slate-500 text-xs"><Icon path={paths.user} className="w-3 h-3"/></div><span className="text-xs font-bold text-slate-500">{art.author}</span></div></div>
-                                </article>
-                            ))}
-                        </div>
-                    </main>
-                    {showLoginModal && (<div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 animate-fade-in" onClick={() => setShowLoginModal(false)}><div className="bg-white rounded-xl shadow-2xl p-8 max-w-sm w-full text-center" onClick={(e) => e.stopPropagation()}><div className="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4"><Icon path={paths.shield} className="w-6 h-6" /></div><h3 className="text-xl font-bold text-gray-900 mb-2">Zugriff verweigert</h3><p className="text-gray-600 mb-6">Dieser Bereich ist für Teilnehmer der Studie gesperrt.</p><button onClick={() => setShowLoginModal(false)} className="w-full bg-gray-900 text-white font-bold py-2 rounded-lg">Verstanden</button></div></div>)}
-                </div>
-            );
-        };
+};
 
 const RegistrationForm = ({ onSubmit, group, audioObject }) => {
     const [formData, setFormData] = useState({ 
@@ -834,26 +897,26 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
     const handleFinishStudy = () => { const duration = Date.now() - timers.current.postBrowsingStart; const completeData = { ...finalData, ...times, postBrowsingTime: duration }; setFinalData(completeData); setStep('end'); };
 
     return (
-        <div className="font-sans text-gray-800 antialiased selection:bg-green-100 selection:text-green-900">
-            {step === 'intro' && <IntroScreen onStart={handleStartStudy} />}
-            {step === 'blog' && (
-                <>
-                    <BlogPage onAction={handleGoToRegistration} mode="initial" cookieChoice={cookieChoice} />
-                    {bannerVisible && (
-                        <CookieBanner group={groupID} onDecision={handleCookieDecision} audioObject={audioRef.current} onBannerLoad={handleBannerLoad} />
-                    )}
-                </>
-            )}
-            {step === 'register' && (
-                <RegistrationForm onSubmit={handleRegistrationSubmit} group={groupID} audioObject={audioManRef.current} />
-            )}
-            {step === 'loading' && <LoadingScreen onFinished={handleLoadingFinished} />}
-            {step === 'personalized_blog' && (
-                <BlogPage onAction={handleFinishStudy} mode="personalized" cookieChoice={cookieChoice} />
-            )}
-            {step === 'end' && <EndScreen data={finalData} sessionToken={sessionToken} />}
-        </div>
-    );
+    <div className="font-sans text-gray-800 antialiased selection:bg-blue-100 selection:text-blue-900">
+        {step === 'intro' && <IntroScreen onStart={handleStartStudy} />}
+        {step === 'blog' && (
+            <>
+                <BlogPage onAction={handleGoToRegistration} mode="initial" cookieChoice={cookieChoice} />
+                {bannerVisible && (
+                    <CookieBanner group={groupID} onDecision={handleCookieDecision} audioObject={audioRef.current} onBannerLoad={handleBannerLoad} />
+                )}
+            </>
+        )}
+        {step === 'register' && (
+            <RegistrationForm onSubmit={handleRegistrationSubmit} group={groupID} audioObject={audioManRef.current} />
+        )}
+        {step === 'loading' && <LoadingScreen onFinished={handleLoadingFinished} />}
+        {step === 'personalized_blog' && (
+            <BlogPage onAction={handleFinishStudy} mode="personalized" cookieChoice={cookieChoice} />
+        )}
+        {step === 'end' && <EndScreen data={finalData} sessionToken={sessionToken} />}
+    </div>
+);
 } // Hier wurde die Klammer geschlossen!
          const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
