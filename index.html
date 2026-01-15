@@ -998,39 +998,31 @@ check('partners') && check('income') && check('reproduction') && !isAgeInvalid  
                     </section>
 
                     {/* MODUL 06: INTIMITÄT */}
-                    <section className="space-y-10">
-                        <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 06: Reproduktive & Intime Analyse</h3>
-                        
-                            <div className={noAnswers.sexOrientation ? 'opacity-30' : ''}>
-                                <label className="text-sm font-bold text-slate-700 block mb-2">Sexuelle Orientierung?</label>
-                                <select name="sexOrientation" disabled={noAnswers.sexOrientation} value={formData.sexOrientation} onChange={handleChange} className="w-full py-2 outline-none border-b border-slate-200 bg-transparent">
-                                    <option value="">Wählen...</option><option value="hetero">Heterosexuell</option><option value="homo">Homosexuell</option><option value="bi">Bisexuell</option><option value="andere">Andere</option>
-                                </select>
-                                <NoAnswer field="sexOrientation" />
-                            </div>
-                    
-                        <div className={noAnswers.reproduction ? 'opacity-30' : ''}>
-    <label className="text-sm font-bold text-slate-700 block mb-2">Besteht bei Ihnen aktuell ein Reproduktionswunsch (Kinderwunsch)?</label>
-    <select 
-        name="reproduction" 
-        disabled={noAnswers.reproduction} 
-        value={noAnswers.reproduction ? '' : formData.reproduction} 
-        onChange={handleChange} 
-        className="w-full py-2 outline-none border-b border-slate-200 bg-transparent"
-    >
-        <option value="">Wählen...</option>
-        <option value="ja">Ja</option>
-        <option value="nein">Nein</option>
-        <option value="vielleicht">Vielleicht / Unentschlossen</option>
-    </select>
-    <NoAnswer field="reproduction" />
-</div>
-                        <div className={noAnswers.stis ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold text-slate-700 block mb-2">Bekannte Geschlechtskrankheiten?</label>
-                            <textarea name="stis" disabled={noAnswers.stis} value={noAnswers.stis ? '' : formData.stis} placeholder="Historie..." onChange={handleChange} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-lg outline-none h-20"></textarea>
-                            <NoAnswer field="stis" />
-                        </div>
-                    </section>
+<section className="space-y-10">
+    <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 06: Reproduktive & Intime Analyse</h3>
+
+    <div className={noAnswers.sexOrientation ? 'opacity-30' : ''}>
+        <label className="text-sm font-bold text-slate-700 block mb-2">Sexuelle Orientierung?</label>
+        <select name="sexOrientation" disabled={noAnswers.sexOrientation} value={formData.sexOrientation} onChange={handleChange} className="w-full py-2 outline-none border-b border-slate-200 bg-transparent">
+            <option value="">Wählen...</option><option value="hetero">Heterosexuell</option><option value="homo">Homosexuell</option><option value="bi">Bisexuell</option><option value="andere">Andere</option>
+        </select>
+        <NoAnswer field="sexOrientation" />
+    </div>
+
+    <div className={noAnswers.reproduction ? 'opacity-30' : ''}>
+        <label className="text-sm font-bold text-slate-700 block mb-2">Besteht bei Ihnen aktuell ein Reproduktionswunsch (Kinderwunsch)?</label>
+        <select name="reproduction" disabled={noAnswers.reproduction} value={noAnswers.reproduction ? '' : formData.reproduction} onChange={handleChange} className="w-full py-2 outline-none border-b border-slate-200 bg-transparent">
+            <option value="">Wählen...</option><option value="ja">Ja</option><option value="nein">Nein</option><option value="vielleicht">Vielleicht</option>
+        </select>
+        <NoAnswer field="reproduction" />
+    </div>
+
+    <div className={noAnswers.stis ? 'opacity-30' : ''}>
+        <label className="text-sm font-bold text-slate-700 block mb-2">Bekannte Geschlechtskrankheiten?</label>
+        <textarea name="stis" disabled={noAnswers.stis} value={noAnswers.stis ? '' : formData.stis} placeholder="Historie..." onChange={handleChange} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-lg outline-none h-20"></textarea>
+        <NoAnswer field="stis" />
+    </div>
+</section>
 
                     {/* MODUL 07: FINANZEN */}
                     <section className="space-y-10">
