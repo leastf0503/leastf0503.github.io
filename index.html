@@ -438,11 +438,18 @@
                     {config.info && variant === 'form' && (
                         <div className="bg-red-50 border-2 border-red-200 p-4 rounded-xl text-red-900 shadow-2xl mt-2 max-w-md text-center animate-fade-in backdrop-blur-sm bg-opacity-95">
                             <div className="flex items-center justify-center gap-2 font-bold mb-2 text-red-700 uppercase tracking-wide text-sm">
-                                <Icon path={paths.shield} className="w-5 h-5"/> Datenschutz-Hinweis
+                                <Icon path={paths.shield} className="w-5 h-5"/> System-Überwachung aktiv
                             </div>
-                            <p className="text-xs leading-relaxed font-medium">
-                                Achtung: Wenn Sie zustimmen, können Ihre persönlichen Informationen an Dritte weitergegeben und für Werbung genutzt werden. Dies kann Risiken für die Sicherheit Ihrer Daten bergen.
-                            </p>
+                            <p className="text-[11px] leading-relaxed font-medium text-slate-600">
+            <strong className="text-slate-900 block mb-1">Erklärung der visuellen Symbole:</strong>
+            Die oben eingeblendeten Augen symbolisieren das psychologische Prinzip der <strong>sozialen Beobachtung</strong>. 
+            Wissenschaftliche Studien belegen, dass allein das Gefühl, beobachtet zu werden, die Preisgabe privater Informationen massiv beeinflusst. 
+            <br /><br />
+            <strong className="text-slate-900 block mb-1">Was mit Ihren Daten passiert:</strong>
+            Jede Ihrer Eingaben (einschließlich Korrekturen und gelöschter Felder) wird in Echtzeit systematisch erfasst. 
+            Diese Informationen fließen unmittelbar in eine algorithmische Bewertung Ihrer Person ein und werden zur wissenschaftlichen Auswertung an die Forschungsplattform <strong>SoSci Survey</strong> übertragen. 
+            Bitte entscheiden Sie unter Berücksichtigung dieser Beobachtungssituation bewusst, welche privaten Details Sie für dieses Forschungsprofil offenlegen möchten.
+        </p>
                         </div>
                     )}
                 </div>
