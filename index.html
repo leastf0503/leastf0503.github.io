@@ -779,28 +779,31 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
 
     const isAgeInvalid = !noAnswers.age && formData.age !== '' && formData.age !== 'keine_angabe' && parseInt(formData.age) < 18;
 
-    const isFormComplete = () => {
-    // Hilfsfunktion: Ist die Frage beantwortet ODER "Keine Angabe" gewählt?
+  const isFormComplete = () => {
     const check = (f) => {
         if (noAnswers[f]) return true; // Haken bei "Keine Angabe" -> OK
         const val = formData[f];
-        if (Array.isArray(val)) return val.length > 0; // Für Ernährung: Mindestens 1 Chip gewählt?
-        return val !== '' && val !== undefined && val !== null; // Für Text/Select: Nicht leer?
+        if (Array.isArray(val)) return val.length > 0; // Für die Ernährungs-Chips
+        return val !== '' && val !== undefined && val !== null;
     };
 
-    // Hier müssen EXAKT die Felder stehen, die du im Formular hast:
-    const requiredFields = [
+    // Diese Liste muss EXAKT so heißen wie die 'name'-Attribute in deinen Feldern
+    const fields = [
         'age', 'gender', 'height', 'weight', 'insurance', 
         'dietStyle', 'tobacco', 'alcohol', 'drugs', 
         'sportFreq', 'bodySatisfaction', 'bodyChangeGoals', 'mentalHealth',
-        'sexOrientation', 'reproduction', 'partners', 'stis',
+        'sexOrientation', 'reproduction', 'stis',
         'income', 'debts'
     ];
 
-    // Prüfe, ob jedes einzelne Feld in der Liste oben "check" besteht
-    const allFieldsOk = requiredFields.every(field => check(field));
+    // DEBUG-HILFE: Falls es nicht geht, drücke F12 im Browser. 
+    // Dort wird dir jetzt angezeigt, welches Feld noch fehlt!
+    fields.forEach(f => {
+        if (!check(f)) console.log("Es fehlt noch das Feld:", f);
+    });
 
-    return allFieldsOk && !isAgeInvalid;
+    const allOk = fields.every(f => check(f));
+    return allOk && !isAgeInvalid;
 };
 
     const NoAnswer = ({ field }) => (
