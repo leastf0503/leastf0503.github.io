@@ -726,18 +726,21 @@ const BlogPage = ({ onAction, mode = 'initial', cookieChoice }) => {
 
 const RegistrationForm = ({ onSubmit, group, audioObject }) => {
     const [formData, setFormData] = useState({ 
-        age: '', gender: '', height: '', weight: '', insurance: '',
-        dietStyle: '', dietHistory: '',
-        tobacco: '', tobaccoFreq: '',
-        alcohol: '', alcoholFreq: '',
-        drugs: '', drugsFreq: '',
-        sportFreq: '', sportType: '',
-        bodySatisfaction: 5, bodyChangeGoals: '',
-        mentalHealth: '', medication: '',
-        reproductiveHistory: '', sexDysfunction: '',reproduction: '',
-        sexOrientation: '', partners: '', stis: '', unprotectedSex: '',
-        income: '', debts: ''
-    });
+    age: '', gender: '', height: '', weight: '', insurance: '',
+    dietStyle: [], // WICHTIG: Muss [] sein für Mehrfachauswahl!
+    dietHistory: '',
+    tobacco: '', tobaccoFreq: '',
+    alcohol: '', alcoholFreq: '',
+    drugs: '', drugsFreq: '',
+    sportFreq: '', sportType: '',
+    bodySatisfaction: 5, bodyChangeGoals: '',
+    mentalHealth: '', medication: '',
+    reproductiveHistory: '', sexDysfunction: '',
+    sexOrientation: '', 
+    reproduction: '', // WICHTIG: Muss hier definiert sein!
+    partners: '', stis: '', unprotectedSex: '',
+    income: '', debts: ''
+});
 
     const [noAnswers, setNoAnswers] = useState({});
     const [interactionStarted, setInteractionStarted] = useState(false);
