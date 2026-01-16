@@ -371,17 +371,18 @@
         // 4. HELFER FUNKTIONEN
         // ==========================================
         const getGroupConfig = (groupID) => {
-            const map = {
-                0: { eyes: false, sound: false, info: false },
-                1: { eyes: true,  sound: false, info: false },
-                2: { eyes: false, sound: true,  info: false },
-                3: { eyes: true,  sound: true,  info: false },
-                5: { eyes: true,  sound: false, info: true  },
-                6: { eyes: false, sound: true,  info: true  },
-                7: { eyes: true,  sound: true,  info: true  },
-            };
-            return map[groupID] || map[0];
-        };
+    const map = {
+        1: { eyes: false, sound: false, info: false }, // KONTROLLGRUPPE (Standard)
+        2: { eyes: true,  sound: false, info: false }, // Nur Augen
+        3: { eyes: false, sound: true,  info: false }, // Nur Ton
+        4: { eyes: true,  sound: true,  info: false }, // Augen + Ton
+        5: { eyes: true,  sound: false, info: true  }, // Augen + Info
+        6: { eyes: false, sound: true,  info: true  }, // Ton + Info
+        7: { eyes: true,  sound: true,  info: true  }  // ALLES (Maximal-Bedingung)
+    };
+    // Falls SoSci eine falsche Zahl schickt, landen alle in Gruppe 1 (Kontrolle)
+    return map[groupID] || map[1]; 
+};
 
         const playSoundFile = (audioObj) => {
             if (!audioObj) return;
