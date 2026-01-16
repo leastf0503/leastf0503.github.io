@@ -863,7 +863,7 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
                                 <NoAnswer field="age" />
                             </div>
                             <div className={noAnswers.gender ? 'opacity-30' : ''}>
-                                <label className="text-sm font-bold block mb-2">Welchem biologischen Geschlecht gehören Sie an?</label>
+                                <label className="text-sm font-bold block mb-2">Welchem Geschlecht fühlen Sie sich zugehörig?</label>
                                 <select name="gender" disabled={noAnswers.gender} value={noAnswers.gender ? '' : formData.gender} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
                                     <option value="">Wählen...</option><option value="m">Männlich</option><option value="w">Weiblich</option><option value="d">Divers</option>
                                 </select>
@@ -918,7 +918,7 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
                     <section className="space-y-12">
                         <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 03-04: Lebensstil & Toxikologie</h3>
                         <div className={noAnswers.sportFreq ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold block mb-2">Häufigkeit sportlicher Betätigung?</label>
+                            <label className="text-sm font-bold block mb-2">Wie häufig treiben Sie Sport?</label>
                             <select name="sportFreq" disabled={noAnswers.sportFreq} value={formData.sportFreq} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
                                 <option value="">Wählen...</option><option value="täglich">Täglich</option><option value="oft">2-4 mal pro Woche</option><option value="selten">1 mal pro Woche</option><option value="nie">Seltener / Nie</option>
                             </select>
@@ -968,7 +968,7 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
                     <section className="space-y-12">
                         <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 07: Sozio-Ökonomischer Status</h3>
                         <div className={noAnswers.income ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold block mb-2">Monatliches Netto-Einkommen?</label>
+                            <label className="text-sm font-bold block mb-2">Wie hoch ist ihr monatliches Netto-Einkommen?</label>
                             <select name="income" disabled={noAnswers.income} value={formData.income} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
                                 <option value="">Wählen...</option><option value="1">Bis 1.500 €</option><option value="2">1.500 € - 3.500 €</option><option value="3">3.500 € - 5.000 €</option><option value="4">Über 5.000 €</option>
                             </select>
