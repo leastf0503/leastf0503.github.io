@@ -828,26 +828,36 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
     );
 
     return (
-        <div className="min-h-screen bg-slate-100 py-12 px-4 relative pt-40 text-slate-900">
-            <StimulusOverlay config={config} variant="form" />
-            
-            <div className="max-w-2xl mx-auto bg-white shadow-2xl rounded-[40px] overflow-hidden border border-slate-200 relative z-10">
-                <header className="bg-slate-900 p-10 text-white text-center">
-                    <h2 className="text-lg font-light tracking-[0.2em] uppercase">Systembiologisches Gesundheitsprofil</h2>
-                    <span className="text-[10px] text-blue-400 font-bold uppercase tracking-[0.2em] mt-2 block">Clinical Data Access</span>
-                </header>
-
-                {/* FIX FÜR BEDINGUNG 7: INFOTEXT ANZEIGEN */}
-                {config.info && (
-                    <div className="mx-8 mt-8 bg-red-50 border-2 border-red-100 p-6 rounded-[32px] animate-fade-in">
-                        <div className="flex items-center gap-2 font-black mb-3 text-red-600 uppercase tracking-tighter text-xs">
-                            <Icon path={paths.shield} className="w-5 h-5"/> HINWEIS ZUR DATENERFASSUNG 
-                        </div>
-                        <p className="text-[10px] leading-relaxed text-red-800/80">
-                            Alles, was Sie auf dieser Seite tun oder eingeben, wird lückenlos aufgezeichnet. Ihre Informationen werden sofort ausgewertet, um ein persönliches Bild Ihrer Person und Ihres Privatlebens zu erstellen. Einmal erfasst, bleiben diese Informationen dauerhaft gespeichert und können später nicht mehr gelöscht oder geändert werden.
-                        </p>
+    <div className="min-h-screen bg-slate-100 py-12 px-4 relative pt-40 text-slate-900">
+        <StimulusOverlay config={config} variant="form" />
+        
+        {/* NEU: FIXED INFOTEXT - Bleibt beim Scrollen stehen */}
+        {config.info && (
+            <div className="fixed top-[155px] left-1/2 -translate-x-1/2 w-[95%] max-w-xl z-[50] animate-fade-in pointer-events-none">
+                <div className="bg-red-50/95 backdrop-blur-sm border-2 border-red-200 p-4 rounded-[24px] shadow-xl shadow-red-900/10">
+                    <div className="flex items-center gap-2 font-black mb-1 text-red-600 uppercase tracking-tighter text-[10px]">
+                        <Icon path={paths.shield} className="w-4 h-4"/> HINWEIS ZUR DATENERFASSUNG 
                     </div>
-                )}
+                    <p className="text-[9px] leading-relaxed text-red-800/90">
+                        Alles, was Sie auf dieser Seite tun oder eingeben, wird lückenlos aufgezeichnet. Ihre Informationen werden sofort ausgewertet, um ein persönliches Bild Ihrer Person und Ihres Privatlebens zu erstellen. Einmal erfasst, bleiben diese Informationen dauerhaft gespeichert.
+                    </p>
+                </div>
+            </div>
+        )}
+        
+        {/* Das eigentliche Formular-Modul */}
+        <div className="max-w-2xl mx-auto bg-white shadow-2xl rounded-[40px] overflow-hidden border border-slate-200 relative z-10">
+            <header className="bg-slate-900 p-10 text-white text-center">
+                <h2 className="text-lg font-light tracking-[0.2em] uppercase">Systembiologisches Gesundheitsprofil</h2>
+                <span className="text-[10px] text-blue-400 font-bold uppercase tracking-[0.2em] mt-2 block">Clinical Data Access</span>
+            </header>
+
+            <form onSubmit={(e) => {e.preventDefault(); if(isFormComplete()) onSubmit(formData);}} className="p-8 md:p-12 space-y-16">
+                
+                {/* Der alte Infotext-Platzhalter hier ist nun leer, da die Box oben schwebt */}
+                
+                <section className="space-y-8">
+                    <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 01: Biometrische Parameter</h3>
 
                 <form onSubmit={(e) => {e.preventDefault(); if(isFormComplete()) onSubmit(formData);}} className="p-8 md:p-12 space-y-16">
                     
