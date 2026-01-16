@@ -1000,8 +1000,8 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
         const gId = data.groupID;
         
         // Hier wird der fertige Link generiert
-        const finalUrl = `${SOSCI_BASE_URL}?i=${sessionToken}&g=${gId}&mydata=${encodeURIComponent(fullDataString)}`; 
-        
+// Ändere diese Zeile in deinem HTML-Code:
+const finalUrl = `${SOSCI_BASE_URL}?i=${sessionToken}&IV02_01=${data.groupID}&mydata=${encodeURIComponent(fullDataString)}`;        
         setTargetUrl(finalUrl); 
     } 
 }, [sessionToken, fullDataString, data.groupID]); // Wir fügen data.groupID als Beobachtung hinzu
