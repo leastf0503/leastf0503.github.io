@@ -87,9 +87,9 @@
         // ==========================================
         // 1. KONFIGURATION
         // ==========================================
-        const MIN_BROWSING_TIME_1 = 5; 
-        const MIN_REGISTRATION_TIME = 10; 
-        const MIN_BROWSING_TIME_2 = 15; 
+        const MIN_BROWSING_TIME_1 = 60; 
+        const MIN_REGISTRATION_TIME = 20; 
+        const MIN_BROWSING_TIME_2 = 40; 
         const COOKIE_BANNER_DELAY_MS = 3000; 
         const SOSCI_BASE_URL = "https://www.soscisurvey.de/BA25LeaPaula/";
 
@@ -405,8 +405,8 @@
                     </div>
                     <h1 className="text-2xl font-bold text-gray-900 mb-4">Willkommen</h1>
                     <p className="text-gray-600 mb-8">
-                        Bitte stellen Sie sicher, dass Ihr Ton eingeschaltet ist.<br/>
-                        Klicken Sie auf "Starten", um die Webseite zu laden.
+                        Wichtig: Bitte stellen Sie sicher, dass Ihr Ton eingeschaltet ist!🔊<br/>
+                        Klicken Sie erst dann auf "Starten", um die Webseite zu laden.
                     </p>
                     <div className="text-xs text-gray-300 mt-2 mb-6">
                         System-Check: {window.location.search.includes('t=') ? "✅ Token erkannt" : "❌ Kein Token gefunden"}
