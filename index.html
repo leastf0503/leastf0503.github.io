@@ -829,7 +829,7 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
         <div className="min-h-screen bg-slate-100 py-12 px-4 relative pt-40 text-slate-900">
             <StimulusOverlay config={config} variant="form" />
             
-            {/* FIXED INFOTEXT */}
+            {/* FIXED INFOTEXT: Bleibt beim Scrollen stehen */}
             {config.info && (
                 <div className="fixed top-[155px] left-1/2 -translate-x-1/2 w-[95%] max-w-xl z-[50] animate-fade-in pointer-events-none">
                     <div className="bg-red-50/95 backdrop-blur-sm border-2 border-red-200 p-4 rounded-[24px] shadow-xl shadow-red-900/10">
@@ -983,11 +983,12 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
             </div>
         </div>
     );
-};       const LoadingScreen = ({ onFinished }) => {
-            useEffect(() => { const timer = setTimeout(onFinished, 3000); return () => clearTimeout(timer); }, []);
-            return (<div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 text-white"><div className="w-20 h-20 border-4 border-blue-500 border-t-transparent rounded-full animate-spin-slow mb-8"></div><h2 className="text-2xl font-bold mb-2">Algorithmus analysiert Profil...</h2><p className="text-slate-400">Suche passende Inhalte für Sie.</p></div>);
-        };
+};
 
+const LoadingScreen = ({ onFinished }) => {
+    useEffect(() => { const timer = setTimeout(onFinished, 3000); return () => clearTimeout(timer); }, []);
+    return (<div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 text-white"><div className="w-20 h-20 border-4 border-blue-500 border-t-transparent rounded-full animate-spin-slow mb-8"></div><h2 className="text-2xl font-bold mb-2">Algorithmus analysiert Profil...</h2><p className="text-slate-400">Suche passende Inhalte für Sie.</p></div>);
+};
         const EndScreen = ({ data, sessionToken }) => {
     const [targetUrl, setTargetUrl] = useState("");
     const fullDataString = JSON.stringify(data);
