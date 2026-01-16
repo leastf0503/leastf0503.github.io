@@ -993,18 +993,22 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
     const [targetUrl, setTargetUrl] = useState("");
     const fullDataString = JSON.stringify(data);
 
-  useEffect(() => { 
-    // Wir prüfen, ob der Token UND die Gruppennummer da sind
-    if (sessionToken && data && data.groupID) { 
-        // Wir stellen sicher, dass groupID eine saubere Zahl ist
-        const gId = data.groupID;
+useEffect(() => { 
+    // WICHTIG: Wir holen die Gruppe direkt aus der App-Einstellung, 
+    // falls data.groupID noch nicht fertig geladen ist.
+    const currentGroup = data.groupID || groupID; 
+
+    if (sessionToken && currentGroup) { 
+        // Wir nutzen IV02_01, weil SoSci das am besten versteht
+        const finalUrl = SOSCI_BASE_URL + 
+                         "?i=" + sessionToken + 
+                         "&IV02_01=" + currentGroup + 
+                         "&g=" + currentGroup + // Wir schicken beides, doppelt hält besser
+                         "&mydata=" + encodeURIComponent(fullDataString);
         
-        // Hier wird der fertige Link generiert
-// Ändere diese Zeile in deinem HTML-Code:
-const finalUrl = `${SOSCI_BASE_URL}?i=${sessionToken}&IV02_01=${data.groupID}&mydata=${encodeURIComponent(fullDataString)}`;        
         setTargetUrl(finalUrl); 
     } 
-}, [sessionToken, fullDataString, data.groupID]); // Wir fügen data.groupID als Beobachtung hinzu
+}, [sessionToken, fullDataString, data.groupID]);
 
     return (
         <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 text-center">
