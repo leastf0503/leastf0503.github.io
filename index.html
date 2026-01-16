@@ -786,8 +786,7 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
         const required = [
             'age', 'gender', 'height', 'weight', 'insurance', 'dietStyle',
             'tobacco', 'alcohol', 'drugs', 'sportFreq', 'bodySatisfaction',
-            'bodyChange', 'mentalHealth', 'sexOrientation', 'reproduction', 
-            'partners', 'stis', 'income', 'debts'
+            'bodyChange', 'mentalHealth', 'sexOrientation', 'reproduction',  'stis', 'income', 'debts'
         ];
 
         return required.every(f => check(f)) && !isAgeInvalid;
