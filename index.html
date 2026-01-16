@@ -435,79 +435,101 @@
                 }
             };
 
-            if (selectedArticle) {
-                return (
-                    <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-white animate-fade-in">
-                        <nav className="bg-white border-b sticky top-0 z-20 shadow-sm">
-                            <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-                                <HeaderTitle />
-                                <div className="flex gap-4 items-center">
-                                    <button onClick={() => setSelectedArticle(null)} className="text-sm font-medium text-slate-500 hover:text-green-600 flex items-center gap-1">
-                                        <Icon path={paths.arrowLeft} className="w-4 h-4" /> Zurück
-                                    </button>
-                                    <ActionButton inHeader={true} />
+           if (selectedArticle) {
+    return (
+        <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-white animate-fade-in">
+            <nav className="bg-white border-b sticky top-0 z-20 shadow-sm px-4 h-16 flex items-center justify-between">
+                <HeaderTitle />
+                <div className="flex gap-4 items-center">
+                    <button onClick={() => setSelectedArticle(null)} className="text-sm font-medium text-slate-500 hover:text-green-600 flex items-center gap-1">
+                        <Icon path={paths.arrowLeft} className="w-4 h-4" /> Zurück
+                    </button>
+                    <ActionButton inHeader={true} />
+                </div>
+            </nav>
+            <article className="max-w-3xl mx-auto px-4 py-12">
+                <div className="w-full h-80 rounded-2xl overflow-hidden mb-8 shadow-md">
+                    <img src={selectedArticle.image} className="w-full h-full object-cover" />
+                </div>
+                <div className="flex items-center gap-3 text-sm font-bold text-green-600 uppercase tracking-wider mb-3">
+                    {selectedArticle.cat} • {selectedArticle.date || "Aktuell"}
+                </div>
+                <h1 className="text-4xl font-extrabold text-slate-900 mb-6 leading-tight">{selectedArticle.title}</h1>
+                
+                {/* NEU: Hier werden Autor und Zeit in der Detailansicht angezeigt */}
+                <div className="flex items-center gap-3 text-slate-500 mb-8 pb-8 border-b">
+                    <span className="font-medium">{selectedArticle.author}</span>
+                    <span>•</span>
+                    <span className="flex items-center gap-1"><Icon path={paths.clock} className="w-4 h-4" /> {selectedArticle.time} Lesezeit</span>
+                </div>
+
+                <div className="prose prose-lg text-slate-700 leading-relaxed space-y-6">
+                    {selectedArticle.fullText.map((p, i) => <p key={i}>{p}</p>)}
+                </div>
+            </article>
+        </div>
+    );
+}
+
+           return (
+    <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-slate-50 relative">
+        <nav className="bg-white border-b sticky top-0 z-20 shadow-sm">
+            <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+                <HeaderTitle />
+                <div className="hidden md:flex gap-1 mx-4">
+                    {categories.map(item => (
+                        <button key={item} onClick={() => setCategoryFilter(item)} className={`whitespace-nowrap px-3 py-2 text-sm font-medium rounded-full transition-colors ${categoryFilter === item ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>
+                            {item}
+                        </button>
+                    ))}
+                </div>
+                <div className="flex gap-4 items-center shrink-0">
+                    <button className="p-2 text-slate-400 hover:text-slate-600" onClick={() => setShowLoginModal(true)}>
+                        <Icon path={paths.search} className="w-5 h-5" />
+                    </button>
+                    <ActionButton inHeader={true} />
+                </div>
+            </div>
+        </nav>
+
+        <main className="flex-grow max-w-6xl mx-auto px-4 py-8 w-full">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredArticles.map(art => (
+                    <article key={art.id} onClick={() => setSelectedArticle(art)} className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all cursor-pointer overflow-hidden group flex flex-col h-full relative">
+                        {art.match && <div className="absolute top-3 left-3 z-10 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded shadow-lg">{art.match}</div>}
+                        <div className="h-48 overflow-hidden relative">
+                            <img src={art.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                            <div className="absolute top-3 right-3">
+                                <button onClick={(e) => toggleLike(e, art.id)} className={`p-2 rounded-full backdrop-blur-md transition-colors ${likes[art.id] ? 'bg-red-50 text-red-500' : 'bg-black/30 text-white'}`}>
+                                    <Icon path={likes[art.id] ? paths.heartFilled : paths.heart} className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </div>
+                        
+                        {/* INHALTSBEREICH DER KARTE */}
+                        <div className="p-5 flex-1 flex flex-col">
+                            {/* Kategorie-Label */}
+                            <div className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-2">{art.cat}</div>
+                            
+                            <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-green-600 transition-colors leading-tight">{art.title}</h3>
+                            <p className="text-slate-600 text-sm line-clamp-3 mb-4 flex-1">{art.desc}</p>
+                            
+                            {/* FOOTER: Autor und Zeit */}
+                            <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-tighter">
+                                    {art.author}
+                                </span>
+                                <div className="flex items-center gap-1 text-[10px] text-slate-400 font-medium">
+                                    <Icon path={paths.clock} className="w-3 h-3" /> {art.time}
                                 </div>
                             </div>
-                        </nav>
-                        <article className="max-w-3xl mx-auto px-4 py-12">
-                            <div className="w-full h-80 rounded-2xl overflow-hidden mb-8 shadow-md">
-                                <img src={selectedArticle.image} className="w-full h-full object-cover" />
-                            </div>
-                            <div className="flex items-center gap-3 text-sm font-bold text-green-600 uppercase mb-3">
-                                {selectedArticle.cat} • {selectedArticle.date}
-                            </div>
-                            <h1 className="text-4xl font-extrabold text-slate-900 mb-6 leading-tight">{selectedArticle.title}</h1>
-                            <div className="prose prose-lg text-slate-700 leading-relaxed space-y-6">
-                                {selectedArticle.fullText.map((p, i) => <p key={i}>{p}</p>)}
-                            </div>
-                        </article>
-                    </div>
-                );
-            }
-
-            return (
-                <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-slate-50 relative">
-                    <nav className="bg-white border-b sticky top-0 z-20 shadow-sm">
-                        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-                            <HeaderTitle />
-                            <div className="hidden md:flex gap-1 mx-4">
-                                {categories.map(item => (
-                                    <button key={item} onClick={() => setCategoryFilter(item)} className={`whitespace-nowrap px-3 py-2 text-sm font-medium rounded-full transition-colors ${categoryFilter === item ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>
-                                        {item}
-                                    </button>
-                                ))}
-                            </div>
-                            <div className="flex gap-4 items-center shrink-0">
-                                <button className="p-2 text-slate-400 hover:text-slate-600" onClick={() => setShowLoginModal(true)}>
-                                    <Icon path={paths.search} className="w-5 h-5" />
-                                </button>
-                                <ActionButton inHeader={true} />
-                            </div>
                         </div>
-                    </nav>
-
-                    <main className="flex-grow max-w-6xl mx-auto px-4 py-8 w-full">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {filteredArticles.map(art => (
-                                <article key={art.id} onClick={() => setSelectedArticle(art)} className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all cursor-pointer overflow-hidden group flex flex-col h-full relative">
-                                    {art.match && <div className="absolute top-3 left-3 z-10 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded shadow-lg">{art.match}</div>}
-                                    <div className="h-48 overflow-hidden relative">
-                                        <img src={art.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                                        <div className="absolute top-3 right-3">
-                                            <button onClick={(e) => toggleLike(e, art.id)} className={`p-2 rounded-full backdrop-blur-md transition-colors ${likes[art.id] ? 'bg-red-50 text-red-500' : 'bg-black/30 text-white'}`}>
-                                                <Icon path={likes[art.id] ? paths.heartFilled : paths.heart} className="w-5 h-5" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div className="p-5 flex-1 flex flex-col">
-                                        <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-green-600 transition-colors">{art.title}</h3>
-                                        <p className="text-slate-600 text-sm line-clamp-3 mb-4 flex-1">{art.desc}</p>
-                                    </div>
-                                </article>
-                            ))}
-                        </div>
-                    </main>
-
+                    </article>
+                ))}
+            </div>
+        </main>
+    </div>
+);
                     {showLoginModal && (
                         <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4" onClick={() => setShowLoginModal(false)}>
                             <div className="bg-white rounded-xl p-8 max-w-sm w-full text-center" onClick={(e) => e.stopPropagation()}>
