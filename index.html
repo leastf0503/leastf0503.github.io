@@ -995,7 +995,7 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
     useEffect(() => { 
         if (sessionToken) { 
             // Hier wird der fertige Link mit deinen Daten generiert
-            const finalUrl = `${SOSCI_BASE_URL}?i=${sessionToken}&mydata=${encodeURIComponent(fullDataString)}`; 
+            const finalUrl = `${SOSCI_BASE_URL}?i=${sessionToken}&g=${data.groupID}&mydata=${encodeURIComponent(fullDataString)}`;
             setTargetUrl(finalUrl); 
         } 
     }, [sessionToken, fullDataString]);
