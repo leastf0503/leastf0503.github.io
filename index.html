@@ -15,57 +15,34 @@
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         @keyframes pulse-slow { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        /* Blinzel-Effekt: 0% bis 90% offen, dann kurzes Schließen bei 95% */
-/* Schnelleres Blinzeln: Dauer auf 2.5s reduziert */
-@keyframes blink {
-  0%, 88%, 100% { transform: scaleY(1); }
-  92% { transform: scaleY(0.05); } /* Sehr schnelles "Zuklappen" */
-}
 
-.animate-blink-1 {
-  animation: blink 3s infinite;
-  transform-origin: 50% 50%; /* WICHTIG: Blinzeln von der Mitte aus */
-}
+        @keyframes blink {
+          0%, 88%, 100% { transform: scaleY(1); }
+          92% { transform: scaleY(0.05); }
+        }
 
-.animate-blink-2 {
-  animation: blink 3s infinite;
-  animation-delay: 0.3s;
-  transform-origin: 50% 50%;
-}
+        .animate-blink-1 {
+          animation: blink 2.5s infinite;
+          transform-origin: center;
+        }
 
-/* Erstes Auge */
-.animate-blink-1 {
-  animation: blink 2.5s infinite;
-  transform-origin: center;
-}
+        .animate-blink-2 {
+          animation: blink 2.5s infinite;
+          animation-delay: 0.4s;
+          transform-origin: center;
+        }
 
-/* Zweites Auge mit Verzögerung für mehr Realismus */
-.animate-blink-2 {
-  animation: blink 2.5s infinite;
-  animation-delay: 0.4s; /* Das zweite Auge blinzelt kurz nach dem ersten */
-  transform-origin: center;
-}
-
-.animate-blink {
-  animation: blink 4s infinite;
-  transform-origin: center;
-}
-        
         .animate-slide-up { animation: slide-up 0.5s ease-out forwards; }
         .animate-fade-in { animation: fade-in 0.8s ease-out forwards; }
         .animate-pulse-slow { animation: pulse-slow 3s infinite; }
         .animate-spin-slow { animation: spin 3s linear infinite; }
         
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; }
-        
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
         #error-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; padding: 20px; background: #fee2e2; border-bottom: 2px solid #ef4444; color: #991b1b; z-index: 9999; font-family: monospace; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body>
@@ -84,81 +61,56 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        // ==========================================
+        const { useState, useEffect, useRef } = React;
+
         // 1. KONFIGURATION
-        // ==========================================
         const MIN_BROWSING_TIME_1 = 60; 
         const MIN_REGISTRATION_TIME = 20; 
         const MIN_BROWSING_TIME_2 = 40; 
         const COOKIE_BANNER_DELAY_MS = 3000; 
         const SOSCI_BASE_URL = "https://www.soscisurvey.de/BA25LeaPaula/";
 
-        const { useState, useEffect, useRef } = React;
-
-        // ==========================================
         // 2. ICONS & ASSETS
-        // ==========================================
         const Icon = ({ path, className }) => (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{path}</svg>
         );
 
         const RealisticEye = ({ color, className, hasLashes }) => {
-    // Einzigartige ID für die Gradients, damit sie sich nicht überschneiden
-    const gradId = React.useId().replace(/:/g, ""); 
-    
-    return (
-        <svg viewBox="0 0 100 70" className={className} preserveAspectRatio="xMidYMid meet" style={{ overflow: 'visible' }}>
-            <defs>
-                {/* Verlauf für den Augapfel (Sclera) - macht ihn rundlich */}
-                <radialGradient id={`whiteGrad-${gradId}`} cx="50%" cy="50%" r="50%" fx="50%" fy="30%">
-                    <stop offset="0%" stopColor="#ffffff" />
-                    <stop offset="80%" stopColor="#ffffff" />
-                    <stop offset="100%" stopColor="#d1d5db" />
-                </radialGradient>
-                
-                {/* Verlauf für die Iris - gibt ihr Tiefe und Struktur */}
-                <radialGradient id={`irisGrad-${gradId}`}>
-                    <stop offset="20%" stopColor="#111" />
-                    <stop offset="40%" stopColor={color} />
-                    <stop offset="100%" stopColor="#000" stopOpacity="0.8" />
-                </radialGradient>
-            </defs>
-
-            <g className="animate-blink-1">
-                {/* Wimpern (optional) */}
-                {hasLashes && (
-                    <g stroke="#1a1a1a" strokeWidth="1.2" fill="none" strokeLinecap="round" opacity="0.8">
-                        <path d="M15,28 Q10,15 5,12" /><path d="M25,23 Q20,10 15,8" /><path d="M35,20 Q32,8 28,5" />
-                        <path d="M50,18 Q50,8 50,4" /><path d="M65,20 Q68,8 72,5" /><path d="M75,23 Q80,10 85,8" /><path d="M85,28 Q90,15 95,12" />
+            const gradId = React.useId().replace(/:/g, ""); 
+            return (
+                <svg viewBox="0 0 100 70" className={className} preserveAspectRatio="xMidYMid meet" style={{ overflow: 'visible' }}>
+                    <defs>
+                        <radialGradient id={`whiteGrad-${gradId}`} cx="50%" cy="50%" r="50%" fx="50%" fy="30%">
+                            <stop offset="0%" stopColor="#ffffff" />
+                            <stop offset="80%" stopColor="#ffffff" />
+                            <stop offset="100%" stopColor="#d1d5db" />
+                        </radialGradient>
+                        <radialGradient id={`irisGrad-${gradId}`}>
+                            <stop offset="20%" stopColor="#111" />
+                            <stop offset="40%" stopColor={color} />
+                            <stop offset="100%" stopColor="#000" stopOpacity="0.8" />
+                        </radialGradient>
+                    </defs>
+                    <g className="animate-blink-1">
+                        {hasLashes && (
+                            <g stroke="#1a1a1a" strokeWidth="1.2" fill="none" strokeLinecap="round" opacity="0.8">
+                                <path d="M15,28 Q10,15 5,12" /><path d="M25,23 Q20,10 15,8" /><path d="M35,20 Q32,8 28,5" />
+                                <path d="M50,18 Q50,8 50,4" /><path d="M65,20 Q68,8 72,5" /><path d="M75,23 Q80,10 85,8" /><path d="M85,28 Q90,15 95,12" />
+                            </g>
+                        )}
+                        <path d="M5,35 Q50,-12 95,35 Q50,82 5,35 Z" fill={`url(#whiteGrad-${gradId})`} stroke="#4b5563" strokeWidth="0.5" />
+                        <circle cx="50" cy="35" r="17" fill={`url(#irisGrad-${gradId})`} />
+                        {[...Array(12)].map((_, i) => (
+                            <line key={i} x1="50" y1="35" x2={50 + 15 * Math.cos(i * 30 * Math.PI/180)} y2={35 + 15 * Math.sin(i * 30 * Math.PI/180)} stroke="rgba(255,255,255,0.1)" strokeWidth="0.5" />
+                        ))}
+                        <circle cx="50" cy="35" r="8" fill="#000" />
+                        <circle cx="45" cy="30" r="3.5" fill="#fff" opacity="0.8" />
+                        <circle cx="56" cy="40" r="1.5" fill="#fff" opacity="0.4" />
                     </g>
-                )}
+                </svg>
+            );
+        };
 
-                {/* Augapfel mit Schatten am Rand */}
-                <path d="M5,35 Q50,-12 95,35 Q50,82 5,35 Z" fill={`url(#whiteGrad-${gradId})`} stroke="#4b5563" strokeWidth="0.5" />
-                
-                {/* Iris mit Farbverlauf */}
-                <circle cx="50" cy="35" r="17" fill={`url(#irisGrad-${gradId})`} />
-                
-                {/* Subtile Linien in der Iris (Striae) */}
-                {[...Array(12)].map((_, i) => (
-                    <line 
-                        key={i} 
-                        x1="50" y1="35" x2={50 + 15 * Math.cos(i * 30 * Math.PI/180)} y2={35 + 15 * Math.sin(i * 30 * Math.PI/180)} 
-                        stroke="rgba(255,255,255,0.1)" strokeWidth="0.5" 
-                    />
-                ))}
-
-                {/* Pupille */}
-                <circle cx="50" cy="35" r="8" fill="#000" />
-                
-                {/* Lichtreflexe (Glanzpunkte) - Das Wichtigste für Realismus! */}
-                <circle cx="45" cy="30" r="3.5" fill="#fff" opacity="0.8" />
-                <circle cx="56" cy="40" r="1.5" fill="#fff" opacity="0.4" />
-            </g>
-        </svg>
-    );
-};
-        
         const paths = {
             shield: <React.Fragment><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="M12 8v4"/><path d="M12 16h.01"/></React.Fragment>,
             check: <React.Fragment><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></React.Fragment>,
@@ -175,214 +127,136 @@
             heartFilled: <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" fill="currentColor" stroke="none"/>,
             star: <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />,
             ciagrette: <React.Fragment><path d="M18 8c0-2.5-2-2.5-2-5"/><path d="M22 8c0-2.5-2-2.5-2-5"/><rect x="2" y="13" width="20" height="6" rx="2"/><path d="M22 16h-4"/><path d="M2 16h4"/></React.Fragment>,
-            menu: <path d="M3 12h18M3 6h18M3 18h18" />,
-            x: <path d="M18 6 6 18M6 6l12 12" />
         };
 
-        // ==========================================
-        // 3. DATEN: STANDARD & PERSONALISIERT
-        // ==========================================
+        // 3. DATEN
         const BLOG_CONTENT = [
-    { 
-        id: 1, 
-        title: "Die 5 Säulen Ihrer Langlebigkeit", 
-        cat: "Forschung", 
-        time: "6 min", 
-        date: "Aktuell", 
-        author: "Dr. med. Weber", 
-        image: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=800&q=80", 
-        color: "bg-blue-100", 
-        icon: paths.activity, 
-        desc: "Erfahren Sie, wie kleine Anpassungen in Ihrer täglichen Routine Ihr biologisches Alter messbar senken können.", 
-        fullText: [
-    "Die moderne Altersforschung hat in den letzten Jahren bahnbrechende Erkenntnisse geliefert: Ihr biologisches Alter ist kein feststehender Wert, sondern das Resultat Ihrer täglichen Entscheidungen. Während die Genetik lediglich die 'geladene Waffe' darstellt, ist es Ihr Lebensstil, der letztlich den Abzug drückt. Wir sprechen hier von Epigenetik – der Fähigkeit, durch äußere Einflüsse zu bestimmen, welche Gene in Ihrem Körper aktiv geschaltet werden und welche stumm bleiben.",
-    "Die erste Säule bildet die Ernährung. Es geht hierbei weniger um strikten Verzicht oder kurzfristige Diäten, sondern um die Qualität der molekularen Information, die Sie Ihren Zellen zuführen. Komplexe Kohlenhydrate und hochwertige Omega-3-Fettsäuren schützen Ihre Zellmembranen vor oxidativem Stress und verhindern die sogenannte Glykation – die Verzuckerung von Gewebestrukturen. Zudem aktivieren Phyto-Nährstoffe wie Resveratrol bestimmte Langlebigkeits-Gene, die Sirtuine, welche Reparaturprozesse an der DNA einleiten.",
-    "Zweitens spielt die moderate Bewegung eine entscheidende Rolle für die vaskuläre Integrität. Sie müssen kein Leistungssportler sein, um Ihre Gefäße elastisch zu halten. Schon 30 Minuten zügiges Gehen täglich lösen die Ausschüttung von Stickstoffmonoxid aus, was die Gefäßwände entspannt und den Blutdruck senkt. Auf zellulärer Ebene aktiviert diese Belastung Ihre Mitochondrien – die Kraftwerke Ihrer Zellen. Durch den Prozess der Mitophagie werden beschädigte Mitochondrien aussortiert und durch neue, leistungsstarke Einheiten ersetzt, was Ihr Energieniveau nachhaltig steigert.",
-    "Die dritte Säule ist die Schlafhygiene, ein oft unterschätzter Faktor der Regeneration. Während Sie schlafen, wird das sogenannte glympathische System aktiv – eine Art Selbstreinigung des Gehirns, bei der toxische Stoffwechselprodukte wie Beta-Amyloide abtransportiert werden. Ohne diese nächtliche Drainage steigen die Entzündungswerte im gesamten System massiv an. Chronischer Schlafmangel korreliert direkt mit einer Verkürzung der Telomere, den Schutzkappen unserer Chromosomen, was den Alterungsprozess auf DNA-Ebene drastisch beschleunigt.",
-    "Viertens: Stressmanagement und hormonelle Balance. Chronisch hohes Cortisol ist ein regelrechter Zellgift-Cocktail. Es schwächt das Immunsystem, baut Muskulatur ab und fördert die Einlagerung von viszeralem Fett. Wir zeigen Ihnen Techniken, wie Sie Ihren Vagusnerv – den Hauptnerv unseres parasympathischen Nervensystems – gezielt stimulieren können. Durch kontrollierte Atmung oder Kaltwasserreize signalisieren Sie Ihrem Körper Sicherheit, was die Ausschüttung von regenerativen Hormonen wie DHEA begünstigt und die 'Silent Inflammation' (stille Entzündung) im Körper bekämpft.",
-    "Fünftens: Soziale Resonanz und psychische Kohärenz. Der Mensch ist ein biologisch auf Kooperation programmiertes Wesen. Statistiken aus den sogenannten 'Blue Zones' belegen, dass Menschen in stabilen sozialen Gefügen deutlich seltener an chronischen Krankheiten leiden. Einsamkeit hingegen löst im Körper ähnliche Stressreaktionen aus wie physischer Schmerz. Die Ausschüttung von Oxytocin bei positiven sozialen Interaktionen wirkt direkt protektiv auf das Herz-Kreislauf-System und senkt die Herzfrequenzvariabilität auf ein gesundes Niveau.",
-    "Zusammenfassend lässt sich sagen: Langlebigkeit ist kein Zufallsprodukt, sondern die Summe Ihrer täglichen Gewohnheiten. Jeder Schritt, jede Mahlzeit und jede Stunde Schlaf ist eine Investition in Ihr zukünftiges Ich. Es ist nie zu spät, die biologische Uhr ein Stück weit zurückzudrehen."
-]
-    },
-    { 
-        id: 2, 
-        title: "Intervallfasten 16:8 für Einsteiger", 
-        cat: "Ernährung", 
-        time: "8 min", 
-        date: "10. Okt", 
-        author: "Sarah Klein", 
-        image: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=800", 
-        color: "bg-orange-100", 
-        icon: paths.apple, 
-        desc: "Warum zeitlich begrenzte Esspausen für Ihren Stoffwechsel wertvoller sind als jede klassische Kalorien-Diät.", 
-        fullText: [
-            "Haben Sie sich schon einmal gefragt, warum Ihr Körper ständig Hunger signalisiert? In unserer modernen Gesellschaft ist Ihr Verdauungssystem permanent im Einsatz.",
-            "Das Intervallfasten, insbesondere die 16:8 Methode, setzt genau hier an. Indem Sie 16 Stunden fasten und in einem 8-Stunden-Fenster essen, geben Sie Ihrem Körper die Chance auf Autophagie.",
-            "Autophagie ist ein körpereigener Prozess, bei dem beschädigte Zellstrukturen abgebaut und recycelt werden. Das schützt Sie vor neurodegenerativen Erkrankungen und stärkt Ihre Stoffwechselrate.",
-            "Wichtig für Sie: In der Fastenphase ist nur Wasser, ungesüßter Tee oder schwarzer Kaffee erlaubt. Jede Kalorienzufuhr würde den Insulinspiegel heben und den Regenerationsprozess sofort stoppen.",
-            "Starten Sie langsam: Schieben Sie Ihr Frühstück jeden Tag eine Stunde weiter nach hinten, bis Sie das 16-Stunden-Fenster bequem erreichen."
-        ] 
-    },
-    { 
-        id: 3, 
-        title: "Digital Detox & Ihr Cortisolspiegel", 
-        cat: "Mental Health", 
-        time: "5 min", 
-        date: "08. Okt", 
-        author: "M. Psych. Bauer", 
-        image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80", 
-        color: "bg-purple-100", 
-        icon: paths.coffee, 
-        desc: "Wie die ständige Erreichbarkeit Ihr Gehirn in einen Alarmzustand versetzt und was Sie dagegen tun können.", 
-        fullText: [
-            "Ihr Smartphone ist heute Ihr ständiger Begleiter, doch der Preis für diese Vernetzung ist hoch. Jede Push-Benachrichtigung löst in Ihrem Gehirn einen kleinen Dopamin-Stoß aus, gefolgt von einem Anstieg des Stresshormons Cortisol.",
-            "Chronisch erhöhte Cortisolwerte beeinträchtigen Ihre Konzentrationsfähigkeit und führen langfristig zu Schlafstörungen und Erschöpfungszuständen.",
-            "Digital Detox bedeutet nicht, dass Sie Ihre Technik aufgeben müssen. Es geht um einen bewussten Umgang. Reservieren Sie sich Zeitfenster, in denen Sie offline sind – insbesondere in den ersten 60 Minuten nach dem Aufstehen.",
-            "Indem Sie Ihr Schlafzimmer zur handyfreien Zone erklären, erlauben Sie Ihrem Nervensystem, wirklich zur Ruhe zu kommen. Sie werden bemerken, wie sich Ihre Schlafqualität bereits nach wenigen Tagen verbessert."
-        ] 
-    },
-    { 
-        id: 4, 
-        title: "Herzgesundheit: Vorsorge neu gedacht", 
-        cat: "Prävention", 
-        time: "8 min", 
-        date: "05. Okt", 
-        author: "Prof. Dr. Lang", 
-        image: "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=800", 
-        color: "bg-red-100", 
-        icon: paths.heart, 
-        desc: "Kennen Sie Ihre Blutwerte? Warum moderne Diagnostik weit über einfaches Cholesterin hinausgeht.", 
-        fullText: [
-            "Herz-Kreislauf-Erkrankungen sind nach wie vor die häufigste Todesursache, doch viele Risiken ließen sich durch präzise Vorsorge minimieren.",
-            "Moderne klinische Marker wie das Lipoprotein(a) oder das hochsensitive CRP geben uns heute Einblicke in Ihr individuelles Risiko, die früher unmöglich waren.",
-            "Ein besonderes Augenmerk liegt auf stillen Entzündungen in Ihren Gefäßwänden. Diese werden durch Fehlernährung, Bewegungsmangel, aber auch durch unbehandelten Stress begünstigt.",
-            "Wir empfehlen Ihnen, einmal jährlich ein erweitertes Blutbild anfertigen zu lassen. Wer seine Zahlen kennt, kann gezielt gegensteuern, bevor Symptome auftreten."
-        ] 
-    },
-    { 
-        id: 5, 
-        title: "Toxikologische Belastung durch Rauchen", 
-        cat: "Prävention", 
-        time: "7 min", 
-        author: "Dr. Lisa Neubauer", 
-        image: "https://cdn.prod.www.spiegel.de/images/caa850d5-0001-0004-0000-000001220757_w1200_r1_fpx41.97_fpy50.jpg", 
-        color: "bg-orange-100", 
-        icon: paths.ciagrette, 
-        desc: "Warum auch gelegentlicher Konsum Ihre DNA schädigt und wie Ihr Körper regenerieren kann.", 
-        fullText: [
-            "Tabakkonsum ist die größte vermeidbare Gesundheitsgefahr unserer Zeit. Jede Zigarette führt Ihrem Körper über 4.000 Chemikalien zu, von denen viele direkt Ihre DNA angreifen.",
-            "Besonders kritisch ist die Belastung für Ihre Lungenbläschen und Ihr Herz-Kreislauf-System. Die Gefäße verengen sich unmittelbar, was den Blutdruck steigen lässt und die Sauerstoffversorgung Ihrer Organe verschlechtert.",
-            "Die gute Nachricht für Sie: Ihr Körper besitzt enorme Selbstheilungskräfte. Schon 24 Stunden nach der letzten Zigarette sinkt Ihr Risiko für einen Herzinfarkt deutlich.",
-            "Nach einem Jahr ohne Tabak hat sich Ihr Risiko für koronare Herzkrankheiten bereits halbiert. Es ist nie zu spät, diesen Regenerationsprozess einzuleiten."
-        ] 
-    },
-    { 
-        id: 6, 
-        title: "Finanzieller Stress & Körperliche Resilienz", 
-        cat: "Mental Health", 
-        time: "4 min", 
-        author: "Dr. Wagner", 
-        image: "https://images.unsplash.com/photo-1554224155-1696413565d3?auto=format&fit=crop&w=800", 
-        color: "bg-slate-100", 
-        icon: paths.search, 
-        desc: "Wie ökonomische Sorgen Ihre Gesundheit beeinflussen und wie Sie Ihre psychische Widerstandskraft stärken.", 
-        fullText: [
-            "Es ist klinisch erwiesen: Finanzielle Sorgen und Schuldenlast wirken wie ein permanenter Stressor auf Ihr vegetatives Nervensystem. Ihr Körper befindet sich in einer dauerhaften 'Flucht-oder-Kampf'-Reaktion.",
-            "Dies führt nicht nur zu psychischer Erschöpfung, sondern manifestiert sich oft in Verspannungen, Verdauungsproblemen oder chronischen Kopfschmerzen.",
-            "Um Ihre Resilienz zu stärken, ist es wichtig, diese Zusammenhänge zu erkennen. Gesundheit ist ein ganzheitliches Konzept, das auch Ihre sozio-ökonomische Stabilität umfasst.",
-            "Suchen Sie aktiv nach Wegen, diesen Stress zu reduzieren – sei es durch professionelle Beratung oder gezielte Entspannungstechniken, die Ihren Parasympathikus aktivieren."
-        ] 
-    }
-];
-        const PERSONALIZED_CONTENT = [
-    { 
-        id: 101, 
-        title: "Ihr individuelles Stoffwechsel-Profil", 
-        cat: "Analyse", 
-        time: "Jetzt", 
-        author: "VitalCore AI", 
-        image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800", 
-        color: "bg-green-100", 
-        icon: paths.check, 
-        desc: "Basierend auf Ihren Angaben zu Biometrie und Ernährung haben wir Ihre metabolische Rate berechnet.", 
-        fullText: [
-    "Anhand der von Ihnen übermittelten biometrischen Daten (Alter, Größe und Gewicht) hat unser Algorithmus Ihren präzisen basalen Ruheumsatz (BMR) kalkuliert. Dieser Wert repräsentiert die exakte Energiemenge, die Ihr Organismus benötigt, um lebenswichtige Funktionen wie Thermoregulation, Zellreparatur und kardiovaskuläre Aktivität im absoluten Ruhezustand aufrechtzuerhalten. Durch den Abgleich Ihres BMI mit statistischen Vergleichswerten Ihrer Alterskohorte konnten wir zudem Rückschlüsse auf Ihre wahrscheinliche Stoffwechselrate ziehen, die als fundamentale Basis für Ihre weiteren Gesundheitsziele dient.",
-    "Ihre Angaben zur aktuellen Ernährungsform – ob Mischkost, vegetarisch oder vegan – wurden in Echtzeit mit Ihrem gemeldeten Aktivitätslevel korreliert. Das Ergebnis unserer Analyse bescheinigt Ihnen eine 'moderate metabolische Flexibilität'. Das bedeutet, dass Ihr Körper zwar in der Lage ist, effizient zwischen der Verbrennung von Kohlenhydraten und Fettsäuren zu wechseln, dieser Prozess jedoch durch gezielte Reize noch optimiert werden kann. Eine Steigerung dieser Flexibilität würde nicht nur Ihre Energielevel über den Tag hinweg stabilisieren, sondern auch Ihre Insulinsensitivität nachhaltig verbessern.",
-    "Ein besonders kritischer Aspekt Ihrer Analyse betrifft das Zusammenspiel von Vorerkrankungen, potenziellen Medikationen und Ihrem hormonellen Milieu. Da Sie uns hierzu spezifische Informationen bereitgestellt haben, konnten wir deren Einfluss auf Ihren Insulin- und Cortisolspiegel in die Berechnung einbeziehen. Wir stellen fest, dass Ihr Körper aktuell eine erhöhte Unterstützung bei der Stickstoffbilanz benötigt. Wir empfehlen Ihnen daher dringend, die Zufuhr von hochwertigen Proteinen leicht zu erhöhen. Dies ist essenziell, um die Proteinsynthese zu stimulieren und Ihre Muskelmasse – die als Ihr größtes Stoffwechselorgan fungiert – basierend auf Ihrem Alter proaktiv zu schützen.",
-    "Diese Auswertung ist kein allgemeiner Ratschlag, sondern das Ergebnis einer komplexen algorithmischen Mustererkennung Ihrer individuellen Datenpunkte. Um die hier genannten Erkenntnisse in Ihren Alltag zu integrieren, haben wir spezifische Mikronährstoff-Empfehlungen und einen auf Ihre metabolische Rate zugeschnittenen Makronährstoff-Plan erstellt. Alle detaillierten Handlungsanweisungen, inklusive einer grafischen Aufbereitung Ihrer Stoffwechselkurven, finden Sie ab sofort in Ihrem persönlichen Download-Bereich."
-]
-        match: "99% Match" 
-    },
-    { 
-    id: 102, 
-    title: "Ihre biometrische Lebensplanung & Prognose", 
-    cat: "Zukunfts-Report", 
-    time: "8 min", 
-    author: "Prof. Dr. Leisner", 
-    image: "https://images.unsplash.com/photo-1559757175-5700dde675bc?auto=format&fit=crop&w=800", 
-    color: "bg-blue-100", 
-    icon: paths.activity, 
-    desc: "Basierend auf Ihrem Profil zum Reproduktionswunsch und Ihrem Versicherungsstatus haben wir Ihre langfristige Vorsorgestrategie kalkuliert.", 
-    fullText: [
-    "Dieser umfassende Zukunfts-Report basiert auf einer biostatistischen Modellierung, die Ihre biometrischen Basisdaten – insbesondere das Verhältnis von Alter zu Body-Mass-Index (BMI) – mit Ihren persönlichen Angaben zur langfristigen Lebensplanung und Ihrem aktuellen sozio-ökonomischen Status synergetisch verknüpft. Unser Algorithmus berechnet daraus einen Prognosehorizont für das kommende Jahrzehnt. Ziel dieser Analyse ist es, potenzielle gesundheitliche Engpässe frühzeitig zu identifizieren, bevor diese klinische Relevanz erreichen. Dabei berücksichtigen wir, dass Ihr vaskulärer Alterungsprozess direkt mit Ihren Angaben zur täglichen Belastung und Ihrer physischen Konstitution korreliert.",
-    "Ein zentraler und hochsensibler Punkt Ihrer individuellen Analyse ist der angegebene Reproduktionswunsch. Die VitalCore-Engine gleicht diesen Wunsch mit Ihrem aktuellen biologischen Zeitfenster, Ihrem sportlichen Aktivitätslevel und Ihrem BMI ab. Auf Basis dieser Daten ermitteln wir eine statistische Wahrscheinlichkeit für eine komplikationslose Umsetzung Ihrer Familienplanung. Wir beziehen hierbei explizit die von Ihnen genannten Vorbelastungen und aktuellen Medikationen als potenzielle Moderatoren ein. Diese Faktoren können die hormonelle Resilienz beeinflussen, weshalb wir in der Prognose auch Präventivmaßnahmen zur Stärkung der reproduktiven Gesundheit für die nächsten 24 bis 60 Monate priorisiert haben.",
-    "Zusätzlich haben wir Ihren Versicherungsstatus (GKV/PKV) als entscheidenden Faktor für Ihre medizinische Versorgungskette in die Prognose einbezogen. Dies ist nicht nur für die Kostenübernahme aktueller Behandlungen relevant, sondern definiert den Zugang zu modernsten diagnostischen Verfahren und spezialisierten Screenings, die exakt auf Ihr Risikoprofil zugeschnitten sind. Sollten Sie bei den sensiblen Fragen zu Ihrer Schuldensituation oder Ihren monatlichen Fixkosten 'Keine Angabe' gewählt haben, greift das System auf validierte Durchschnittswerte Ihrer spezifischen Alters- und Berufsgruppe zurück. Dies ermöglicht zwar weiterhin eine Prognose, reduziert jedoch die Präzision der wirtschaftlichen Empfehlungen hinsichtlich Ihrer zukünftigen Gesundheitsinvestitionen leicht.",
-    "Wir empfehlen Ihnen dringend, dieses Profil als strategische Grundlage für zukünftige Beratungsgespräche mit Fachärzten oder Vorsorgeexperten zu nutzen. Die Analyse zeigt deutlich auf, in welchen Bereichen Ihr 'Präventiv-Kapital' – also Ihre Zeit und Ihr Geld – den höchsten Impact auf Ihre Langlebigkeit erzielen wird. Ob es um den Abschluss gezielter Zusatzversicherungen, die Inanspruchnahme spezifischer Krebsfrüherkennungen oder die Anpassung Ihres Lebensstils an Ihre Familienziele geht: Nutzen Sie diese algorithmische Prognose, um Ihre Ressourcen dort zu platzieren, wo Ihr individuelles biologisches Risiko statistisch am höchsten ist."
-]
-    match: "84% Match" 
-},
-    { 
-        id: 103, 
-        title: "Wirtschaftsstatus & Gesundheitsrisiko", 
-        cat: "Sozio-Analyse", 
-        time: "3 min", 
-        author: "VitalCore Finance", 
-        image: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=800", 
-        color: "bg-slate-100", 
-        icon: paths.shield, 
-        desc: "Die Analyse Ihres Einkommens und Ihrer Schuldenlast in Bezug auf Ihr Stresslevel.", 
-        fullText: [
-    "Die von Ihnen bereitgestellten Informationen zu Ihrem monatlichen Netto-Einkommen sowie Ihrer aktuellen Schuldensituation bilden eine essenzielle Säule unserer sozio-ökonomischen Risikoanalyse. In der modernen Medizin ist unumstritten, dass der wirtschaftliche Status einer der stärksten Prädiktoren für die langfristige Gesundheit ist. Unser System nutzt diese Daten, um Ihre sogenannte 'allostatische Last' zu berechnen – also den kumulativen Verschleiß von Körper und Geist durch chronische Umweltbelastungen. Finanzielle Instabilität wirkt dabei als permanenter Stressor auf Ihr vegetatives Nervensystem, was die Ausschüttung von Entzündungsmarkern im Blut messbar beeinflussen kann.",
-    "Der VitalCore Finance-Algorithmus hat auf Basis Ihrer Angaben einen individuellen 'Economic Stress Index' (ESI) erstellt. Ein hohes Maß an finanzieller Unsicherheit oder eine bestehende Schuldenlast korreliert in Ihrem spezifischen Profil mit einem signifikant erhöhten Risiko für psychosomatische Sekundärbeschwerden. Dazu zählen insbesondere Schlafstörungen, chronische Verspannungen im HWS-Bereich sowie funktionelle Magen-Darm-Erkrankungen. Wir haben Ihre psychische Belastungsgrenze so kalibriert, dass unser System Warnsignale erkennt, wenn ökonomische Sorgen Ihre Regenerationsfähigkeit während der Nachtruhe (REM-Phasen-Effizienz) zu untergraben drohen.",
-    "Hinsichtlich Ihres angegebenen Versicherungsstatus (GKV/PKV) haben wir eine detaillierte Wirtschaftlichkeitsprüfung Ihrer empfohlenen Präventionsmaßnahmen durchgeführt. Ziel dieser Analyse ist es, Ihre medizinische Versorgung optimal mit Ihren finanziellen Möglichkeiten zu harmonisieren, um eine 'Financial Toxicity' – also die zusätzliche gesundheitliche Belastung durch Behandlungskosten – zu vermeiden. Unser System hat geprüft, welche klinischen Screenings und therapeutischen Maßnahmen von Ihrem spezifischen Kostenträger übernommen werden. In Ihrem persönlichen Bericht finden Sie eine Priorisierung von Maßnahmen, die den höchsten gesundheitlichen Nutzen (ROI - Return on Health) bieten, ohne Ihre aktuelle ökonomische Stabilität zu gefährden."
-]
-        match: "93% Match" 
-    },
-    { 
-        id: 104, 
-        title: "Körperbild & Optimierungswünsche", 
-        cat: "Psychosomatik", 
-        time: "6 min", 
-        author: "Dr. Stein", 
-        image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800", 
-        color: "bg-blue-100", 
-        icon: paths.user, 
-        desc: "Auswertung Ihrer Ziele zur körperlichen Veränderung und operativen Optimierung.", 
-        fullText: [
-    "In Ihrem individuellen Gesundheitsprofil haben Sie spezifische Parameter und Aspekte Ihres Körpers definiert, die Sie gerne durch operative Eingriffe oder therapeutische Interventionen optimieren möchten. Unsere VitalCore-Engine hat diese Wünsche in Korrelation zu Ihrem aktuellen Zufriedenheitswert auf einer Skala von 1 bis 10 gesetzt. Dabei analysieren wir die sogenannte 'Body-Mind-Gap' – also die Diskrepanz zwischen Ihrer objektiven biometrischen Verfassung (BMI, Alter, Aktivitätslevel) und Ihrer subjektiven Körperwahrnehmung. Ziel dieser Auswertung ist es, festzustellen, ob die angestrebten Veränderungen lediglich ästhetischer Natur sind oder ob sie eine signifikante Verbesserung Ihrer physischen Funktionalität und hormonellen Balance bewirken können.",
-    "Basierend auf den von Ihnen beschriebenen Problemzonen und Optimierungszielen schlägt Ihnen unser System in diesem Modul hochspezialisierte Fachärzte und modernste Behandlungsmethoden vor. Die Auswahl reicht von minimalinvasiven dermatologischen Verfahren bis hin zu komplexen chirurgischen Eingriffen, die exakt auf Ihre physiologischen Voraussetzungen zugeschnitten sind. Der Algorithmus hat dabei Kliniken und Experten priorisiert, die nachweislich hohe Erfolgsquoten in Ihren spezifischen Interessensgebieten vorweisen. Zusätzlich wurden alternative, nicht-invasive Therapieansätze (wie gezieltes medizinisches Krafttraining oder Ernährungsprotokolle) in den Vergleich miteinbezogen, um Ihnen ein ganzheitliches Spektrum an Optimierungsmöglichkeiten aufzuzeigen.",
-    "Ein wesentlicher Bestandteil unserer klinischen Evaluation ist der Abgleich Ihrer Veränderungswünsche mit Ihren Angaben zu psychischen Vorbelastungen oder laufenden Behandlungen. Da die psychische Resilienz einen entscheidenden Faktor für den postoperativen Heilungsprozess und die langfristige Zufriedenheit mit dem Ergebnis darstellt, empfehlen wir vor jeder invasiven Intervention ein fundiertes klärendes Gespräch mit einem psychosomatisch geschulten Experten. Dies dient der Sicherstellung, dass die angestrebte körperliche Veränderung nicht als Kompensation für tieferliegende Stressoren dient, sondern zu einer echten, nachhaltigen Steigerung Ihrer Lebensqualität führt. Wir haben in Ihrem persönlichen Dossier eine Checkliste für solche Beratungsgespräche vorbereitet, die speziell auf Ihr psychologisches Profil abgestimmt ist."
-]
-        match: "95% Match" 
-    }
-];
+            { 
+                id: 1, title: "Die 5 Säulen Ihrer Langlebigkeit", cat: "Forschung", time: "6 min", date: "Aktuell", author: "Dr. med. Weber", 
+                image: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=800&q=80", 
+                desc: "Erfahren Sie, wie kleine Anpassungen in Ihrer täglichen Routine Ihr biologisches Alter messbar senken können.", 
+                fullText: [
+                    "Die moderne Altersforschung hat in den letzten Jahren bahnbrechende Erkenntnisse geliefert: Ihr biologisches Alter ist kein feststehender Wert, sondern das Resultat Ihrer täglichen Entscheidungen. Während die Genetik lediglich die 'geladene Waffe' darstellt, ist es Ihr Lebensstil, der letztlich den Abzug drückt. Wir sprechen hier von Epigenetik – der Fähigkeit, durch äußere Einflüsse zu bestimmen, welche Gene in Ihrem Körper aktiv geschaltet werden und welche stumm bleiben.",
+                    "Die erste Säule bildet die Ernährung. Es geht hierbei weniger um strikten Verzicht oder kurzfristige Diäten, sondern um die Qualität der molekularen Information, die Sie Ihren Zellen zuführen. Komplexe Kohlenhydrate und hochwertige Omega-3-Fettsäuren schützen Ihre Zellmembranen vor oxidativem Stress und verhindern die sogenannte Glykation – die Verzuckerung von Gewebestrukturen. Zudem aktivieren Phyto-Nährstoffe wie Resveratrol bestimmte Langlebigkeits-Gene, die Sirtuine, welche Reparaturprozesse an der DNA einleiten.",
+                    "Zweitens spielt die moderate Bewegung eine entscheidende Rolle für die vaskuläre Integrität. Sie müssen kein Leistungssportler sein, um Ihre Gefäße elastisch zu halten. Schon 30 Minuten zügiges Gehen täglich lösen die Ausschüttung von Stickstoffmonoxid aus, was die Gefäßwände entspannt und den Blutdruck senkt. Auf zellulärer Ebene aktiviert diese Belastung Ihre Mitochondrien – die Kraftwerke Ihrer Zellen. Durch den Prozess der Mitophagie werden beschädigte Mitochondrien aussortiert und durch neue, leistungsstarke Einheiten ersetzt, was Ihr Energieniveau nachhaltig steigert.",
+                    "Die dritte Säule ist die Schlafhygiene, ein oft unterschätzter Faktor der Regeneration. Während Sie schlafen, wird das sogenannte glympathische System aktiv – eine Art Selbstreinigung des Gehirns, bei der toxische Stoffwechselprodukte wie Beta-Amyloide abtransportiert werden. Ohne diese nächtliche Drainage steigen die Entzündungswerte im gesamten System massiv an. Chronischer Schlafmangel korreliert direkt mit einer Verkürzung der Telomere, den Schutzkappen unserer Chromosomen, was den Alterungsprozess auf DNA-Ebene drastisch beschleunigt.",
+                    "Viertens: Stressmanagement und hormonelle Balance. Chronisch hohes Cortisol ist ein regelrechter Zellgift-Cocktail. Es schwächt das Immunsystem, baut Muskulatur ab und fördert die Einlagerung von viszeralem Fett. Wir zeigen Ihnen Techniken, wie Sie Ihren Vagusnerv – den Hauptnerv unseres parasympathischen Nervensystems – gezielt stimulieren können. Durch kontrollierte Atmung oder Kaltwasserreize signalisieren Sie Ihrem Körper Sicherheit, was die Ausschüttung von regenerativen Hormonen wie DHEA begünstigt und die 'Silent Inflammation' (stille Entzündung) im Körper bekämpft.",
+                    "Fünftens: Soziale Resonanz und psychische Kohärenz. Der Mensch ist ein biologisch auf Kooperation programmiertes Wesen. Statistiken aus den sogenannten 'Blue Zones' belegen, dass Menschen in stabilen sozialen Gefügen deutlich seltener an chronischen Krankheiten leiden. Einsamkeit hingegen löst im Körper ähnliche Stressreaktionen aus wie physischer Schmerz. Die Ausschüttung von Oxytocin bei positiven sozialen Interaktionen wirkt direkt protektiv auf das Herz-Kreislauf-System und senkt die Herzfrequenzvariabilität auf ein gesundes Niveau.",
+                    "Zusammenfassend lässt sich sagen: Langlebigkeit ist kein Zufallsprodukt, sondern die Summe Ihrer täglichen Gewohnheiten. Jeder Schritt, jede Mahlzeit und jede Stunde Schlaf ist eine Investition in Ihr zukünftiges Ich. Es ist nie zu spät, die biologische Uhr ein Stück weit zurückzudrehen."
+                ] 
+            },
+            { 
+                id: 2, title: "Intervallfasten 16:8 für Einsteiger", cat: "Ernährung", time: "8 min", date: "10. Okt", author: "Sarah Klein", 
+                image: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=800", 
+                desc: "Warum zeitlich begrenzte Esspausen für Ihren Stoffwechsel wertvoller sind als jede klassische Kalorien-Diät.", 
+                fullText: [
+                    "Haben Sie sich schon einmal gefragt, warum Ihr Körper ständig Hunger signalisiert? In unserer modernen Gesellschaft ist Ihr Verdauungssystem permanent im Einsatz.",
+                    "Das Intervallfasten, insbesondere die 16:8 Methode, setzt genau hier an. Indem Sie 16 Stunden fasten und in einem 8-Stunden-Fenster essen, geben Sie Ihrem Körper die Chance auf Autophagie.",
+                    "Autophagie ist ein körpereigener Prozess, bei dem beschädigte Zellstrukturen abgebaut und recycelt werden. Das schützt Sie vor neurodegenerativen Erkrankungen und stärkt Ihre Stoffwechselrate.",
+                    "Wichtig für Sie: In der Fastenphase ist nur Wasser, ungesüßter Tee oder schwarzer Kaffee erlaubt. Jede Kalorienzufuhr würde den Insulinspiegel heben und den Regenerationsprozess sofort stoppen.",
+                    "Starten Sie langsam: Schieben Sie Ihr Frühstück jeden Tag eine Stunde weiter nach hinten, bis Sie das 16-Stunden-Fenster bequem erreichen."
+                ] 
+            },
+            { 
+                id: 3, title: "Digital Detox & Ihr Cortisolspiegel", cat: "Mental Health", time: "5 min", date: "08. Okt", author: "M. Psych. Bauer", 
+                image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80", 
+                desc: "Wie die ständige Erreichbarkeit Ihr Gehirn in einen Alarmzustand versetzt und was Sie dagegen tun können.", 
+                fullText: [
+                    "Ihr Smartphone ist heute Ihr ständiger Begleiter, doch der Preis für diese Vernetzung ist hoch. Jede Push-Benachrichtigung löst in Ihrem Gehirn einen kleinen Dopamin-Stoß aus, gefolgt von einem Anstieg des Stresshormons Cortisol.",
+                    "Chronisch erhöhte Cortisolwerte beeinträchtigen Ihre Konzentrationsfähigkeit und führen langfristig zu Schlafstörungen und Erschöpfungszuständen.",
+                    "Digital Detox bedeutet nicht, dass Sie Ihre Technik aufgeben müssen. Es geht um einen bewussten Umgang. Reservieren Sie sich Zeitfenster, in denen Sie offline sind – insbesondere in den ersten 60 Minuten nach dem Aufstehen.",
+                    "Indem Sie Ihr Schlafzimmer zur handyfreien Zone erklären, erlauben Sie Ihrem Nervensystem, wirklich zur Ruhe zu kommen. Sie werden bemerken, wie sich Ihre Schlafqualität bereits nach wenigen Tagen verbessert."
+                ] 
+            },
+            { 
+                id: 4, title: "Herzgesundheit: Vorsorge neu gedacht", cat: "Prävention", time: "8 min", date: "05. Okt", author: "Prof. Dr. Lang", 
+                image: "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=800", 
+                desc: "Kennen Sie Ihre Blutwerte? Warum moderne Diagnostik weit über einfaches Cholesterin hinausgeht.", 
+                fullText: [
+                    "Herz-Kreislauf-Erkrankungen sind nach wie vor die häufigste Todesursache, doch viele Risiken ließen sich durch präzise Vorsorge minimieren.",
+                    "Moderne klinische Marker wie das Lipoprotein(a) oder das hochsensitive CRP geben uns heute Einblicke in Ihr individuelles Risiko, die früher unmöglich waren.",
+                    "Ein besonderes Augenmerk liegt auf stillen Entzündungen in Ihren Gefäßwänden. Diese werden durch Fehlernährung, Bewegungsmangel, aber auch durch unbehandelten Stress begünstigt.",
+                    "Wir empfehlen Ihnen, einmal jährlich ein erweitertes Blutbild anfertigen zu lassen. Wer seine Zahlen kennt, kann gezielt gegensteuern, bevor Symptome auftreten."
+                ] 
+            },
+            { 
+                id: 5, title: "Toxikologische Belastung durch Rauchen", cat: "Prävention", time: "7 min", author: "Dr. Lisa Neubauer", 
+                image: "https://cdn.prod.www.spiegel.de/images/caa850d5-0001-0004-0000-000001220757_w1200_r1_fpx41.97_fpy50.jpg", 
+                desc: "Warum auch gelegentlicher Konsum Ihre DNA schädigt und wie Ihr Körper regenerieren kann.", 
+                fullText: [
+                    "Tabakkonsum ist die größte vermeidbare Gesundheitsgefahr unserer Zeit. Jede Zigarette führt Ihrem Körper über 4.000 Chemikalien zu, von denen viele direkt Ihre DNA angreifen.",
+                    "Besonders kritisch ist die Belastung für Ihre Lungenbläschen und Ihr Herz-Kreislauf-System. Die Gefäße verengen sich unmittelbar, was den Blutdruck steigen lässt und die Sauerstoffversorgung Ihrer Organe verschlechtert.",
+                    "Die gute Nachricht für Sie: Ihr Körper besitzt enorme Selbstheilungskräfte. Schon 24 Stunden nach der letzten Zigarette sinkt Ihr Risiko für einen Herzinfarkt deutlich.",
+                    "Nach einem Jahr ohne Tabak hat sich Ihr Risiko für koronare Herzkrankheiten bereits halbiert. Es ist nie zu spät, diesen Regenerationsprozess einzuleiten."
+                ] 
+            },
+            { 
+                id: 6, title: "Finanzieller Stress & Körperliche Resilienz", cat: "Mental Health", time: "4 min", author: "Dr. Wagner", 
+                image: "https://images.unsplash.com/photo-1554224155-1696413565d3?auto=format&fit=crop&w=800", 
+                desc: "Wie ökonomische Sorgen Ihre Gesundheit beeinflussen und wie Sie Ihre psychische Widerstandskraft stärken.", 
+                fullText: [
+                    "Es ist klinisch erwiesen: Finanzielle Sorgen und Schuldenlast wirken wie ein permanenter Stressor auf Ihr vegetatives Nervensystem. Ihr Körper befindet sich in einer dauerhaften 'Flucht-oder-Kampf'-Reaktion.",
+                    "Dies führt nicht nur zu psychischer Erschöpfung, sondern manifestiert sich oft in Verspannungen, Verdauungsproblemen oder chronischen Kopfschmerzen.",
+                    "Um Ihre Resilienz zu stärken, ist es wichtig, diese Zusammenhänge zu erkennen. Gesundheit ist ein ganzheitliches Konzept, das auch Ihre sozio-ökonomische Stabilität umfasst.",
+                    "Suchen Sie aktiv nach Wegen, diesen Stress zu reduzieren – sei es durch professionelle Beratung oder gezielte Entspannungstechniken, die Ihren Parasympathikus aktivieren."
+                ] 
+            }
+        ];
 
-        // ==========================================
+        const PERSONALIZED_CONTENT = [
+            { 
+                id: 101, title: "Ihr individuelles Stoffwechsel-Profil", cat: "Analyse", time: "Jetzt", author: "VitalCore AI", match: "99% Match",
+                image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800", 
+                fullText: [
+                    "Anhand der von Ihnen übermittelten biometrischen Daten (Alter, Größe und Gewicht) hat unser Algorithmus Ihren präzisen basalen Ruheumsatz (BMR) kalkuliert. Dieser Wert repräsentiert die exakte Energiemenge, die Ihr Organismus benötigt, um lebenswichtige Funktionen wie Thermoregulation, Zellreparatur und kardiovaskuläre Aktivität im absoluten Ruhezustand aufrechtzuerhalten. Durch den Abgleich Ihres BMI mit statistischen Vergleichswerten Ihrer Alterskohorte konnten wir zudem Rückschlüsse auf Ihre wahrscheinliche Stoffwechselrate ziehen, die als fundamentale Basis für Ihre weiteren Gesundheitsziele dient.",
+                    "Ihre Angaben zur aktuellen Ernährungsform – ob Mischkost, vegetarisch oder vegan – wurden in Echtzeit mit Ihrem gemeldeten Aktivitätslevel korreliert. Das Ergebnis unserer Analyse bescheinigt Ihnen eine 'moderate metabolische Flexibilität'. Das bedeutet, dass Ihr Körper zwar in der Lage ist, effizient zwischen der Verbrennung von Kohlenhydraten und Fettsäuren zu wechseln, dieser Prozess jedoch durch gezielte Reize noch optimiert werden kann. Eine Steigerung dieser Flexibilität würde nicht nur Ihre Energielevel über den Tag hinweg stabilisieren, sondern auch Ihre Insulinsensitivität nachhaltig verbessern.",
+                    "Ein besonders kritischer Aspekt Ihrer Analyse betrifft das Zusammenspiel von Vorerkrankungen, potenziellen Medikationen und Ihrem hormonellen Milieu. Da Sie uns hierzu spezifische Informationen bereitgestellt haben, konnten wir deren Einfluss auf Ihren Insulin- und Cortisolspiegel in die Berechnung einbeziehen. Wir stellen fest, dass Ihr Körper aktuell eine erhöhte Unterstützung bei der Stickstoffbilanz benötigt. Wir empfehlen Ihnen daher dringend, die Zufuhr von hochwertigen Proteinen leicht zu erhöhen. Dies ist essenziell, um die Proteinsynthese zu stimulieren und Ihre Muskelmasse – die als Ihr größtes Stoffwechselorgan fungiert – basierend auf Ihrem Alter proaktiv zu schützen.",
+                    "Diese Auswertung ist kein allgemeiner Ratschlag, sondern das Ergebnis einer komplexen algorithmischen Mustererkennung Ihrer individuellen Datenpunkte. Um die hier genannten Erkenntnisse in Ihren Alltag zu integrieren, haben wir spezifische Mikronährstoff-Empfehlungen und einen auf Ihre metabolische Rate zugeschnittenen Makronährstoff-Plan erstellt. Alle detaillierten Handlungsanweisungen, inklusive einer grafischen Aufbereitung Ihrer Stoffwechselkurven, finden Sie ab sofort in Ihrem persönlichen Download-Bereich."
+                ] 
+            },
+            { 
+                id: 102, title: "Ihre biometrische Lebensplanung & Prognose", cat: "Zukunfts-Report", time: "8 min", author: "Prof. Dr. Leisner", match: "84% Match",
+                image: "https://images.unsplash.com/photo-1559757175-5700dde675bc?auto=format&fit=crop&w=800", 
+                fullText: [
+                    "Dieser umfassende Zukunfts-Report basiert auf einer biostatistischen Modellierung, die Ihre biometrischen Basisdaten – insbesondere das Verhältnis von Alter zu Body-Mass-Index (BMI) – mit Ihren persönlichen Angaben zur langfristigen Lebensplanung und Ihrem aktuellen sozio-ökonomischen Status synergetisch verknüpft. Unser Algorithmus berechnet daraus einen Prognosehorizont für das kommende Jahrzehnt. Ziel dieser Analyse ist es, potenzielle gesundheitliche Engpässe frühzeitig zu identifizieren, bevor diese klinische Relevanz erreichen. Dabei berücksichtigen wir, dass Ihr vaskulärer Alterungsprozess direkt mit Ihren Angaben zur täglichen Belastung und Ihrer physischen Konstitution korreliert.",
+                    "Ein zentraler und hochsensibler Punkt Ihrer individuellen Analyse ist der angegebene Reproduktionswunsch. Die VitalCore-Engine gleicht diesen Wunsch mit Ihrem aktuellen biologischen Zeitfenster, Ihrem sportlichen Aktivitätslevel und Ihrem BMI ab. Auf Basis dieser Daten ermitteln wir eine statistische Wahrscheinlichkeit für eine komplikationslose Umsetzung Ihrer Familienplanung. Wir beziehen hierbei explizit die von Ihnen genannten Vorbelastungen und aktuellen Medikationen als potenzielle Moderatoren ein. Diese Faktoren können die hormonelle Resilienz beeinflussen, weshalb wir in der Prognose auch Präventivmaßnahmen zur Stärkung der reproduktiven Gesundheit für die nächsten 24 bis 60 Monate priorisiert haben.",
+                    "Zusätzlich haben wir Ihren Versicherungsstatus (GKV/PKV) als entscheidenden Faktor für Ihre medizinische Versorgungskette in die Prognose einbezogen. Dies ist nicht nur für die Kostenübernahme aktueller Behandlungen relevant, sondern definiert den Zugang zu modernsten diagnostischen Verfahren und spezialisierten Screenings, die exakt auf Ihr Risikoprofil zugeschnitten sind. Sollten Sie bei den sensiblen Fragen zu Ihrer Schuldensituation oder Ihren monatlichen Fixkosten 'Keine Angabe' gewählt haben, greift das System auf validierte Durchschnittswerte Ihrer spezifischen Alters- und Berufsgruppe zurück. Dies ermöglicht zwar weiterhin eine Prognose, reduziert jedoch die Präzision der wirtschaftlichen Empfehlungen hinsichtlich Ihrer zukünftigen Gesundheitsinvestitionen leicht.",
+                    "Wir empfehlen Ihnen dringend, dieses Profil als strategische Grundlage für zukünftige Beratungsgespräche mit Fachärzten oder Vorsorgeexperten zu nutzen. Die Analyse zeigt deutlich auf, in welchen Bereichen Ihr 'Präventiv-Kapital' – also Ihre Zeit und Ihr Geld – den höchsten Impact auf Ihre Langlebigkeit erzielen wird. Ob es um den Abschluss gezielter Zusatzversicherungen, die Inanspruchnahme spezifischer Krebsfrüherkennungen oder die Anpassung Ihres Lebensstils an Ihre Familienziele geht: Nutzen Sie diese algorithmische Prognose, um Ihre Ressourcen dort zu platzieren, wo Ihr individuelles biologisches Risiko statistisch am höchsten ist."
+                ] 
+            },
+            { 
+                id: 103, title: "Wirtschaftsstatus & Gesundheitsrisiko", cat: "Sozio-Analyse", time: "3 min", author: "VitalCore Finance", match: "93% Match",
+                image: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=800", 
+                fullText: [
+                    "Die von Ihnen bereitgestellten Informationen zu Ihrem monatlichen Netto-Einkommen sowie Ihrer aktuellen Schuldensituation bilden eine essenzielle Säule unserer sozio-ökonomischen Risikoanalyse. In der modernen Medizin ist unumstritten, dass der wirtschaftliche Status einer der stärksten Prädiktoren für die langfristige Gesundheit ist. Unser System nutzt diese Daten, um Ihre sogenannte 'allostatische Last' zu berechnen – also den kumulativen Verschleiß von Körper und Geist durch chronische Umweltbelastungen. Finanzielle Instabilität wirkt dabei als permanenter Stressor auf Ihr vegetatives Nervensystem, was die Ausschüttung von Entzündungsmarkern im Blut messbar beeinflussen kann.",
+                    "Der VitalCore Finance-Algorithmus hat auf Basis Ihrer Angaben einen individuellen 'Economic Stress Index' (ESI) erstellt. Ein hohes Maß an finanzieller Unsicherheit oder eine bestehende Schuldenlast korreliert in Ihrem spezifischen Profil mit einem signifikant erhöhten Risiko für psychosomatische Sekundärbeschwerden. Dazu zählen insbesondere Schlafstörungen, chronische Verspannungen im HWS-Bereich sowie funktionelle Magen-Darm-Erkrankungen. Wir haben Ihre psychische Belastungsgrenze so kalibriert, dass unser System Warnsignale erkennt, wenn ökonomische Sorgen Ihre Regenerationsfähigkeit während der Nachtruhe (REM-Phasen-Effizienz) zu untergraben drohen.",
+                    "Hinsichtlich Ihres angegebenen Versicherungsstatus (GKV/PKV) haben wir eine detaillierte Wirtschaftlichkeitsprüfung Ihrer empfohlenen Präventionsmaßnahmen durchgeführt. Ziel dieser Analyse ist es, Ihre medizinische Versorgung optimal mit Ihren finanziellen Möglichkeiten zu harmonisieren, um eine 'Financial Toxicity' – also die zusätzliche gesundheitliche Belastung durch Behandlungskosten – zu vermeiden. Unser System hat geprüft, welche klinischen Screenings und therapeutischen Maßnahmen von Ihrem spezifischen Kostenträger übernommen werden. In Ihrem persönlichen Bericht finden Sie eine Priorisierung von Maßnahmen, die den höchsten gesundheitlichen Nutzen (ROI - Return on Health) bieten, ohne Ihre aktuelle ökonomische Stabilität zu gefährden."
+                ] 
+            },
+            { 
+                id: 104, title: "Körperbild & Optimierungswünsche", cat: "Psychosomatik", time: "6 min", author: "Dr. Stein", match: "95% Match",
+                image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800", 
+                fullText: [
+                    "In Ihrem individuellen Gesundheitsprofil haben Sie spezifische Parameter und Aspekte Ihres Körpers definiert, die Sie gerne durch operative Eingriffe oder therapeutische Interventionen optimieren möchten. Unsere VitalCore-Engine hat diese Wünsche in Korrelation zu Ihrem aktuellen Zufriedenheitswert auf einer Skala von 1 bis 10 gesetzt. Dabei analysieren wir die sogenannte 'Body-Mind-Gap' – also die Diskrepanz zwischen Ihrer objektiven biometrischen Verfassung (BMI, Alter, Aktivitätslevel) und Ihrer subjektiven Körperwahrnehmung. Ziel dieser Auswertung ist es, festzustellen, ob die angestrebten Veränderungen lediglich ästhetischer Natur sind oder ob sie eine signifikante Verbesserung Ihrer physischen Funktionalität und hormonellen Balance bewirken können.",
+                    "Basierend auf den von Ihnen beschriebenen Problemzonen und Optimierungszielen schlägt Ihnen unser System in diesem Modul hochspezialisierte Fachärzte und modernste Behandlungsmethoden vor. Die Auswahl reicht von minimalinvasiven dermatologischen Verfahren bis hin zu komplexen chirurgischen Eingriffen, die exakt auf Ihre physiologischen Voraussetzungen zugeschnitten sind. Der Algorithmus hat dabei Kliniken und Experten priorisiert, die nachweislich hohe Erfolgsquoten in Ihren spezifischen Interessensgebieten vorweisen. Zusätzlich wurden alternative, nicht-invasive Therapieansätze (wie gezieltes medizinisches Krafttraining oder Ernährungsprotokolle) in den Vergleich miteinbezogen, um Ihnen ein ganzheitliches Spektrum an Optimierungsmöglichkeiten aufzuzeigen.",
+                    "Ein wesentlicher Bestandteil unserer klinischen Evaluation ist der Abgleich Ihrer Veränderungswünsche mit Ihren Angaben zu psychischen Vorbelastungen oder laufenden Behandlungen. Da die psychische Resilienz einen entscheidenden Faktor für den postoperativen Heilungsprozess und die langfristige Zufriedenheit mit dem Ergebnis darstellt, empfehlen wir vor jeder invasiven Intervention ein fundiertes klärendes Gespräch mit einem psychosomatisch geschulten Experten. Dies dient der Sicherstellung, dass die angestrebte körperliche Veränderung nicht als Kompensation für tieferliegende Stressoren dient, sondern zu einer echten, nachhaltigen Steigerung Ihrer Lebensqualität führt. Wir haben in Ihrem persönlichen Dossier eine Checkliste für solche Beratungsgespräche vorbereitet, die speziell auf Ihr psychologisches Profil abgestimmt ist."
+                ] 
+            }
+        ];
+
         // 4. HELFER FUNKTIONEN
-        // ==========================================
         const getGroupConfig = (groupID) => {
-    const map = {
-        1: { eyes: false, sound: false, info: false }, // KONTROLLGRUPPE (Standard)
-        2: { eyes: true,  sound: false, info: false }, // Nur Augen
-        3: { eyes: false, sound: true,  info: false }, // Nur Ton
-        4: { eyes: true,  sound: true,  info: false }, // Augen + Ton
-        5: { eyes: true,  sound: false, info: true  }, // Augen + Info
-        6: { eyes: false, sound: true,  info: true  }, // Ton + Info
-        7: { eyes: true,  sound: true,  info: true  }  // ALLES (Maximal-Bedingung)
-    };
-    // Falls SoSci eine falsche Zahl schickt, landen alle in Gruppe 1 (Kontrolle)
-    return map[groupID] || map[1]; 
-};
+            const map = {
+                1: { eyes: false, sound: false, info: false },
+                2: { eyes: true,  sound: false, info: false },
+                3: { eyes: false, sound: true,  info: false },
+                4: { eyes: true,  sound: true,  info: false },
+                5: { eyes: true,  sound: false, info: true  },
+                6: { eyes: false, sound: true,  info: true  },
+                7: { eyes: true,  sound: true,  info: true  }
+            };
+            return map[groupID] || map[1]; 
+        };
 
         const playSoundFile = (audioObj) => {
             if (!audioObj) return;
@@ -393,10 +267,7 @@
             }
         };
 
-        // ==========================================
         // 5. KOMPONENTEN
-        // ==========================================
-
         const IntroScreen = ({ onStart }) => (
             <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
                 <div className="bg-white max-w-md w-full p-8 rounded-2xl shadow-2xl text-center animate-fade-in">
@@ -418,690 +289,562 @@
             </div>
         );
 
-        // --- STIMULUS OVERLAY ---
-       const StimulusOverlay = ({ config, variant = "banner" }) => {
-    if (!config || !config.eyes) return null;
-    const eyeColor = variant === 'banner' ? '#3b82f6' : '#5D4037';
-    
-    // Banner: Von -top-20 auf -top-12 (näher ran)
-    const positionClass = variant === 'form' 
-        ? 'fixed top-4 left-1/2 -translate-x-1/2' 
-        : 'absolute -top-12 left-1/2 -translate-x-1/2'; 
+        const StimulusOverlay = ({ config, variant = "banner" }) => {
+            if (!config || !config.eyes) return null;
+            const eyeColor = variant === 'banner' ? '#3b82f6' : '#5D4037';
+            const positionClass = variant === 'form' 
+                ? 'fixed top-4 left-1/2 -translate-x-1/2' 
+                : 'absolute -top-12 left-1/2 -translate-x-1/2'; 
 
-    return (
-        <div className={`pointer-events-none z-[100] flex flex-col items-center gap-2 ${positionClass}`}>
-            {/* Weißer Glow-Effekt im Hintergrund, damit sie auf bunten Blogs auffallen */}
-            <div className="flex gap-4 items-center justify-center bg-white p-2 rounded-full shadow-[0_0_30px_rgba(255,255,255,1),0_10px_30px_rgba(0,0,0,0.2)] border border-slate-100">
-                <RealisticEye color={eyeColor} className="w-20 h-14 animate-pulse-slow" hasLashes={true} />
-                <RealisticEye color={eyeColor} className="w-20 h-14 animate-pulse-slow" hasLashes={true} />
-            </div>
-        </div>
-    );
-};
-
-        const CookieBanner = ({ group, onDecision, audioObject, onBannerLoad }) => {
-    const config = getGroupConfig(group);
-    useEffect(() => { 
-        onBannerLoad(); 
-        if (config.sound && audioObject) playSoundFile(audioObject); 
-    }, []);
-    
-    const [details, setDetails] = useState(false);
-
-    return (
-        <div className="fixed bottom-0 left-0 right-0 z-50 p-4 md:p-8 bg-white shadow-[0_-20px_50px_rgba(0,0,0,0.15)] border-t-4 border-blue-600 animate-slide-up rounded-t-[40px]">
-            <div className="max-w-7xl mx-auto relative pt-8"> {/* pt-8 gibt den Augen Platz */}
-                
-                {/* Die Augen - absolut positioniert oberhalb des Inhalts */}
-                <div className="absolute -top-20 left-1/2 -translate-x-1/2">
-                    <StimulusOverlay config={config} variant="banner" />
-                </div>
-
-                <div className="flex flex-col lg:flex-row gap-8 items-stretch lg:items-center">
-                    
-                    {/* Linke Seite: Titel und Beschreibung */}
-                    <div className="flex-1 space-y-2">
-                        <h3 className="text-xl font-black text-slate-900 tracking-tight">Privatsphäre-Einstellungen</h3>
-                        <p className="text-sm text-slate-500 leading-relaxed max-w-2xl">
-                            Wir nutzen Cookies und Tracking-Technologien, um Ihr Nutzererlebnis zu personalisieren und unser medizinisches Informationsangebot zu verbessern. 
-                            {details && (
-                                <span className="block mt-3 p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs text-slate-400 animate-fade-in">
-                                    Dabei werden pseudonymisierte Daten an Analyse-Partner übertragen. Dies ermöglicht eine algorithmische Anpassung der Inhalte an Ihr Gesundheitsprofil.
-                                </span>
-                            )}
-                        </p>
-                        <button 
-                            onClick={() => setDetails(!details)} 
-                            className="text-xs text-blue-600 font-bold uppercase tracking-widest hover:text-blue-800 transition-colors"
-                        >
-                            {details ? "− Weniger Informationen" : "+ Mehr Informationen"}
-                        </button>
-                    </div>
-
-                    {/* Mittlere Sektion: Der rote Warnhinweis (nur wenn config.info true) */}
-                    {config.info && (
-                        <div className="lg:w-1/3 bg-red-50 border border-red-100 p-5 rounded-[24px] animate-fade-in self-center">
-                            <div className="flex items-center gap-2 font-black mb-2 text-red-600 uppercase tracking-tighter text-xs">
-                                <Icon path={paths.shield} className="w-4 h-4"/> HINWEIS ZUR DATENERFASSUNG
-                            </div>
-                            <p className="text-[10px] leading-relaxed text-red-800/80">
-                                 Alles, was Sie auf dieser Seite tun oder eingeben, wird lückenlos aufgezeichnet. Ihre Informationen werden sofort ausgewertet, um ein persönliches Bild Ihrer Person und Ihres Privatlebens zu erstellen. Einmal erfasst, bleiben diese Informationen dauerhaft gespeichert und können später nicht mehr gelöscht oder geändert werden.
-                            </p>
-                        </div>
-                    )}
-
-                    {/* Rechte Seite: Die Buttons */}
-                    <div className="flex flex-col gap-3 shrink-0 min-w-[200px] justify-center">
-                        <button 
-                            onClick={() => onDecision('accept_all')} 
-                            className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl shadow-lg shadow-blue-200 transition-all transform active:scale-95 text-sm uppercase tracking-wider"
-                        >
-                            Alle akzeptieren
-                        </button>
-                        <button 
-                            onClick={() => onDecision('reject_all')} 
-                            className="px-8 py-3 bg-white hover:bg-slate-50 text-slate-400 font-bold border border-slate-200 rounded-2xl transition-colors text-xs uppercase tracking-wider"
-                        >
-                            Nur Notwendige
-                        </button>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-    );
-};
-        // --- BLOG PAGE (Handle logic for both Initial and Personalized) ---
-// 1. Hier 'cookieChoice' als Parameter hinzufügen!
-// --- BLOG PAGE (Handle logic for both Initial and Personalized) ---
-// --- BLOG PAGE (Handle logic for both Initial and Personalized) ---
-const BlogPage = ({ onAction, mode = 'initial', cookieChoice }) => {
-    const [selectedArticle, setSelectedArticle] = useState(null);
-    const [categoryFilter, setCategoryFilter] = useState("Alle Beiträge");
-    const [showLoginModal, setShowLoginModal] = useState(false);
-    const [likes, setLikes] = useState({});
-    const [articlesToDisplay, setArticlesToDisplay] = useState([]);
-
-    // Zeit-Logik
-    const requiredTime = mode === 'initial' ? MIN_BROWSING_TIME_1 : MIN_BROWSING_TIME_2;
-    const [timeLeft, setTimeLeft] = useState(requiredTime);
-
-    useEffect(() => {
-        if (mode === 'initial') {
-            setArticlesToDisplay(BLOG_CONTENT);
-        } else {
-            const oldContentShuffled = [...BLOG_CONTENT].sort(() => 0.5 - Math.random());
-            setArticlesToDisplay([...PERSONALIZED_CONTENT, ...oldContentShuffled]);
-        }
-    }, [mode]);
-
-    useEffect(() => {
-        if (timeLeft <= 0) return;
-        const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
-        return () => clearInterval(timer);
-    }, [timeLeft]);
-
-    const filteredArticles = categoryFilter === "Alle Beiträge" 
-        ? articlesToDisplay 
-        : articlesToDisplay.filter(a => a.cat === categoryFilter);
-
-    const categories = ["Alle Beiträge", "Forschung", "Ernährung", "Fitness", "Mental Health", "Prävention"];
-    const toggleLike = (e, id) => { e.stopPropagation(); setLikes(prev => ({...prev, [id]: !prev[id]})); };
-
-    // Hilfskomponente für den Titel
-    const HeaderTitle = () => (
-        <div onClick={() => {setCategoryFilter("Alle Beiträge"); setSelectedArticle(null);}} className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
-            <div className="p-1.5 bg-green-100 rounded text-green-600"><Icon path={paths.leaf} className="w-6 h-6" /></div>
-            <span className="text-xl font-bold tracking-tight text-slate-800">
-                Vital<span className="text-green-600">Core</span>
-                {mode === 'personalized' && <span className="ml-2 text-xs bg-green-600 text-white px-2 py-0.5 rounded uppercase">Für Sie</span>}
-            </span>
-        </div>
-    );
-
-    // Hilfskomponente für den Button (mit Cookie-Zwang)
-    const ActionButton = ({inHeader}) => {
-        if (mode === 'initial') {
-            // 1. Timer läuft noch
-            if (timeLeft > 0) {
-                return (
-                    <button disabled className={`bg-slate-300 text-slate-500 rounded-full font-medium cursor-not-allowed flex items-center gap-2 ${inHeader ? 'px-5 py-2 text-sm' : 'w-full py-3 justify-center'}`}>
-                        <Icon path={paths.clock} className="w-4 h-4 animate-pulse" /> Gesundheitsprofil erstellen in {timeLeft}s
-                    </button>
-                );
-            }
-            // 2. Timer fertig, aber keine Cookies gewählt
-            if (cookieChoice === null) {
-                return (
-                    <button disabled className={`bg-orange-100 text-orange-600 border border-orange-200 rounded-full font-bold cursor-not-allowed flex items-center gap-2 ${inHeader ? 'px-5 py-2 text-sm' : 'w-full py-3 justify-center'}`}>
-                        Bitte treffen Sie eine Cookie-Wahl
-                    </button>
-                );
-            }
-            // 3. Alles bereit
             return (
-                <button onClick={onAction} className={`bg-slate-900 text-white rounded-full font-medium hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/20 animate-fade-in ${inHeader ? 'px-5 py-2 text-sm' : 'w-full py-3'}`}>
-                    Gesundheitsprofil erstellen
-                </button>
+                <div className={`pointer-events-none z-[100] flex flex-col items-center gap-2 ${positionClass}`}>
+                    <div className="flex gap-4 items-center justify-center bg-white p-2 rounded-full shadow-[0_0_30px_rgba(255,255,255,1),0_10px_30px_rgba(0,0,0,0.2)] border border-slate-100">
+                        <RealisticEye color={eyeColor} className="w-20 h-14 animate-pulse-slow" hasLashes={true} />
+                        <RealisticEye color={eyeColor} className="w-20 h-14 animate-pulse-slow" hasLashes={true} />
+                    </div>
+                </div>
             );
-        } else {
-            // Personalized Mode
-            if (timeLeft > 0) return (<div className={`bg-green-100 text-green-800 rounded-full text-xs font-bold animate-pulse ${inHeader ? 'px-4 py-2' : 'w-full py-3 text-center'}`}>Personalisierte Ansicht aktiv...</div>);
-            return (
-                <button onClick={onAction} className={`bg-green-600 text-white rounded-full font-bold hover:bg-green-700 transition-colors shadow-lg shadow-green-900/20 animate-fade-in ${inHeader ? 'px-6 py-2 text-sm' : 'w-full py-3'}`}>
-                    Weiter zum Fragebogen
-                </button>
-            );
-        }
-    };
-
-    // Detailansicht eines Artikels
-    if (selectedArticle) {
-        const related = articlesToDisplay.filter(a => a.id !== selectedArticle.id).sort(() => 0.5 - Math.random()).slice(0, 3);
-        return (
-            <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-white animate-fade-in">
-                <nav className="bg-white border-b sticky top-0 z-20 shadow-sm">
-                    <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-                        <HeaderTitle />
-                        <div className="flex gap-4 items-center">
-                            <button onClick={() => setSelectedArticle(null)} className="text-sm font-medium text-slate-500 hover:text-green-600 flex items-center gap-1">
-                                <Icon path={paths.arrowLeft} className="w-4 h-4" /> Zurück
-                            </button>
-                            <ActionButton inHeader={true} />
-                        </div>
-                    </div>
-                </nav>
-                <article className="max-w-3xl mx-auto px-4 py-12">
-                    <div className="w-full h-80 rounded-2xl overflow-hidden mb-8 shadow-md">
-                        <img src={selectedArticle.image} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex items-center gap-3 text-sm font-bold text-green-600 uppercase tracking-wider mb-3">
-                        {selectedArticle.cat} • {selectedArticle.date}
-                    </div>
-                    <h1 className="text-4xl font-extrabold text-slate-900 mb-6 leading-tight">{selectedArticle.title}</h1>
-                    <div className="flex items-center gap-3 text-slate-500 mb-8 pb-8 border-b">
-                        <span className="font-medium">{selectedArticle.author}</span>
-                        <span>•</span>
-                        <span className="flex items-center gap-1"><Icon path={paths.clock} className="w-4 h-4" /> {selectedArticle.time} Lesezeit</span>
-                    </div>
-                    <div className="prose prose-lg text-slate-700 leading-relaxed space-y-6">
-                        {selectedArticle.fullText.map((p, i) => <p key={i}>{p}</p>)}
-                    </div>
-                    <div className="mt-16 pt-8 border-t text-center italic text-slate-500">
-                        Dieser Beitrag wurde für Ihr persönliches Gesundheitsprofil zusammengestellt.
-                    </div>
-                </article>
-            </div>
-        );
-    }
-
-    // Hauptübersicht
-    return (
-        <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-slate-50 relative">
-            <nav className="bg-white border-b sticky top-0 z-20 shadow-sm">
-                <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-                    <HeaderTitle />
-                    <div className="hidden md:flex gap-1 overflow-x-auto no-scrollbar mx-4">
-                        {categories.map(item => (
-                            <button key={item} onClick={() => setCategoryFilter(item)} className={`whitespace-nowrap px-3 py-2 text-sm font-medium rounded-full transition-colors ${categoryFilter === item ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>
-                                {item}
-                            </button>
-                        ))}
-                    </div>
-                    <div className="flex gap-4 items-center shrink-0">
-                        <button className="p-2 text-slate-400 hover:text-slate-600" onClick={() => setShowLoginModal(true)}>
-                            <Icon path={paths.search} className="w-5 h-5" />
-                        </button>
-                        <ActionButton inHeader={true} />
-                    </div>
-                </div>
-            </nav>
-
-            <main className="flex-grow max-w-6xl mx-auto px-4 py-8 w-full">
-                {mode === 'initial' && categoryFilter === 'Alle Beiträge' && (
-                    <div className="bg-slate-900 rounded-3xl p-8 md:p-12 mb-12 text-white relative overflow-hidden flex flex-col md:flex-row items-center gap-8">
-                        <div className="flex-1 relative z-10">
-                            <span className="text-green-400 font-bold tracking-wider text-xs uppercase mb-2 block">Trending Topic</span>
-                            <h2 className="text-3xl md:text-5xl font-extrabold mb-4 leading-tight">Wissenschaft trifft <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-300">Lebensqualität</span></h2>
-                            <p className="text-slate-300 mb-6 max-w-lg">Entdecken Sie fundierte Artikel zu Langlebigkeit, Ernährung und Ihrer mentalen Gesundheit.</p>
-                        </div>
-                        <div className="w-full md:w-1/3 aspect-square bg-gradient-to-br from-slate-800 to-slate-700 rounded-2xl border border-slate-600 p-6 flex items-center justify-center relative z-10">
-                            <Icon path={paths.activity} className="w-20 h-20 text-green-500" />
-                        </div>
-                    </div>
-                )}
-
-                {mode === 'personalized' && categoryFilter === 'Alle Beiträge' && (
-                    <div className="bg-green-50 rounded-3xl p-8 mb-12 border border-green-200 text-center animate-fade-in">
-                        <h2 className="text-2xl font-bold text-green-900 mb-2">Willkommen zurück!</h2>
-                        <p className="text-green-700">Wir haben Ihren Feed basierend auf Ihren Angaben für Sie personalisiert.</p>
-                    </div>
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredArticles.map(art => (
-                        <article key={art.id} onClick={() => setSelectedArticle(art)} className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all cursor-pointer overflow-hidden group flex flex-col h-full relative">
-                            {art.match && (
-                                <div className="absolute top-3 left-3 z-10 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded shadow-lg animate-pulse-slow">
-                                    {art.match}
-                                </div>
-                            )}
-                            <div className="h-48 overflow-hidden relative">
-                                <img src={art.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                                <div className="absolute top-3 right-3">
-                                    <button onClick={(e) => toggleLike(e, art.id)} className={`p-2 rounded-full backdrop-blur-md transition-colors ${likes[art.id] ? 'bg-red-50 text-red-500' : 'bg-black/30 text-white hover:bg-black/50'}`}>
-                                        <Icon path={likes[art.id] ? paths.heartFilled : paths.heart} className="w-5 h-5" />
-                                    </button>
-                                </div>
-                                <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded font-medium">{art.cat}</div>
-                            </div>
-                            <div className="p-5 flex-1 flex flex-col">
-                                <h3 className="text-lg font-bold text-slate-900 mb-2 leading-tight group-hover:text-green-600 transition-colors">{art.title}</h3>
-                                <p className="text-slate-600 text-sm line-clamp-3 mb-4 flex-1">{art.desc}</p>
-                                <div className="flex items-center gap-2 pt-4 border-t border-slate-100">
-                                    <span className="text-xs font-bold text-slate-500">{art.author}</span>
-                                </div>
-                            </div>
-                        </article>
-                    ))}
-                </div>
-            </main>
-
-            {showLoginModal && (
-                <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 animate-fade-in" onClick={() => setShowLoginModal(false)}>
-                    <div className="bg-white rounded-xl shadow-2xl p-8 max-w-sm w-full text-center" onClick={(e) => e.stopPropagation()}>
-                        <div className="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Icon path={paths.shield} className="w-6 h-6" />
-                        </div>
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">Zugriff verweigert</h3>
-                        <p className="text-gray-600 mb-6">Dieser Bereich ist ausschließlich für Teilnehmer der Studie reserviert. Bitte fahren Sie mit der Erstellung Ihres Gesundheitsprofils fort.</p>
-                        <button onClick={() => setShowLoginModal(false)} className="w-full bg-gray-900 text-white font-bold py-2 rounded-lg">Verstanden</button>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-};
-const RegistrationForm = ({ onSubmit, group, audioObject }) => {
-    const [formData, setFormData] = useState({ 
-        age: '', gender: '', height: '', weight: '', insurance: '',
-        dietStyle: [], dietHistory: '',
-        tobacco: '', tobaccoDetails: '',
-        alcohol: '', alcoholDetails: '',
-        drugs: '', drugsDetails: '',
-        sportFreq: '', sportType: '',
-        bodySatisfaction: 5, 
-        bodyChangeGoals: '', bodyChangeDetails: '',
-        mentalHealth: '', mentalHealthDetails: '',
-        sexOrientation: '', reproduction: '', 
-        stis: '', stisDetails: '',
-        income: '', 
-        debts: '', debtsDetails: []
-    });
-
-    const [noAnswers, setNoAnswers] = useState({});
-    const [interactionStarted, setInteractionStarted] = useState(false);
-    const [timeLeft, setTimeLeft] = useState(MIN_REGISTRATION_TIME);
-    
-    useEffect(() => { 
-        const timer = setInterval(() => setTimeLeft(t => t > 0 ? t - 1 : 0), 1000); 
-        return () => clearInterval(timer); 
-    }, []);
-
-    const config = getGroupConfig(group);
-    const interact = () => { 
-        if (!interactionStarted) { 
-            setInteractionStarted(true); 
-            if (config.sound && audioObject) audioObject.play().catch(()=>{}); 
-        } 
-    };
-
-    const handleChange = (e) => { 
-        interact(); 
-        const { name, value } = e.target;
-        if (name === 'age' || name === 'height' || name === 'weight') {
-            const val = value.replace(/[^0-9]/g, '');
-            setFormData(prev => ({...prev, [name]: val}));
-        } else {
-            setFormData(prev => ({...prev, [name]: value})); 
-        }
-    };
-
-    const handleNoAnswerToggle = (field) => { 
-        interact(); 
-        setNoAnswers(prev => ({ ...prev, [field]: !prev[field] }));
-    };
-
-    const isAgeInvalid = !noAnswers.age && formData.age !== '' && parseInt(formData.age) < 18;
-
-    const isFormComplete = () => {
-        const check = (f) => {
-            if (noAnswers[f]) return true; 
-            const val = formData[f];
-            if (Array.isArray(val)) return val.length > 0;
-            return val !== '' && val !== undefined && val !== null;
         };
 
-        const required = [
-            'age', 'gender', 'height', 'weight', 'insurance', 'dietStyle', 'dietHistory',
-            'sportFreq', 'tobacco', 'alcohol', 'drugs', 'bodySatisfaction',
-            'bodyChangeGoals', 'mentalHealth', 'sexOrientation', 'reproduction', 
-            'stis', 'income', 'debts'
-        ];
-
-        return required.every(f => check(f)) && !isAgeInvalid;
-    };
-
-    const NoAnswer = ({ field }) => (
-        <label className="flex items-center gap-2 mt-2 cursor-pointer w-fit group">
-            <input type="checkbox" checked={!!noAnswers[field]} onChange={() => handleNoAnswerToggle(field)} className="w-3.5 h-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
-            <span className="text-[9px] text-slate-400 group-hover:text-slate-600 uppercase tracking-widest font-bold transition-colors">Keine Angabe</span>
-        </label>
-    );
-
-    const JaNeinInput = ({ label, field, placeholder }) => (
-        <div className={noAnswers[field] ? 'opacity-30' : ''}>
-            <label className="text-sm font-bold text-slate-700 block mb-3">{label}</label>
-            <div className="flex gap-4 mb-3">
-                {['ja', 'nein'].map(opt => (
-                    <button key={opt} type="button" disabled={noAnswers[field]}
-                        onClick={() => { interact(); setFormData(prev => ({...prev, [field]: opt})); }}
-                        className={`px-6 py-2 rounded-full text-xs font-black border-2 transition-all ${formData[field] === opt ? 'bg-slate-900 border-slate-900 text-white' : 'bg-transparent border-slate-200 text-slate-400'}`}
-                    >
-                        {opt.toUpperCase()}
-                    </button>
-                ))}
-            </div>
-            {formData[field] === 'ja' && !noAnswers[field] && (
-                <textarea 
-                    name={`${field}Details`}
-                    value={formData[`${field}Details`] || ''}
-                    onChange={handleChange}
-                    placeholder={placeholder}
-                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs outline-none focus:bg-white h-20 animate-fade-in"
-                />
-            )}
-            <NoAnswer field={field} />
-        </div>
-    );
-
-    return (
-        <div className="min-h-screen bg-slate-100 py-12 px-4 relative pt-40 text-slate-900">
-            <StimulusOverlay config={config} variant="form" />
+        const CookieBanner = ({ group, onDecision, audioObject, onBannerLoad }) => {
+            const config = getGroupConfig(group);
+            useEffect(() => { 
+                onBannerLoad(); 
+                if (config.sound && audioObject) playSoundFile(audioObject); 
+            }, []);
             
-            {/* FIXED INFOTEXT: Bleibt beim Scrollen stehen */}
-            {config.info && (
-                <div className="fixed top-[155px] left-1/2 -translate-x-1/2 w-[95%] max-w-xl z-[50] animate-fade-in pointer-events-none">
-                    <div className="bg-red-50/95 backdrop-blur-sm border-2 border-red-200 p-4 rounded-[24px] shadow-xl shadow-red-900/10">
-                        <div className="flex items-center gap-2 font-black mb-1 text-red-600 uppercase tracking-tighter text-[10px]">
-                            <Icon path={paths.shield} className="w-4 h-4"/> HINWEIS ZUR DATENERFASSUNG 
+            const [details, setDetails] = useState(false);
+
+            return (
+                <div className="fixed bottom-0 left-0 right-0 z-50 p-4 md:p-8 bg-white shadow-[0_-20px_50px_rgba(0,0,0,0.15)] border-t-4 border-blue-600 animate-slide-up rounded-t-[40px]">
+                    <div className="max-w-7xl mx-auto relative pt-8">
+                        <div className="absolute -top-20 left-1/2 -translate-x-1/2">
+                            <StimulusOverlay config={config} variant="banner" />
                         </div>
-                        <p className="text-[9px] leading-relaxed text-red-800/90">
-                            Alles, was Sie auf dieser Seite tun oder eingeben, wird lückenlos aufgezeichnet. Ihre Informationen werden sofort ausgewertet, um ein persönliches Bild Ihrer Person und Ihres Privatlebens zu erstellen. Einmal erfasst, bleiben diese Informationen dauerhaft gespeichert.
-                        </p>
+
+                        <div className="flex flex-col lg:flex-row gap-8 items-stretch lg:items-center">
+                            <div className="flex-1 space-y-2">
+                                <h3 className="text-xl font-black text-slate-900 tracking-tight">Privatsphäre-Einstellungen</h3>
+                                <p className="text-sm text-slate-500 leading-relaxed max-w-2xl">
+                                    Wir nutzen Cookies und Tracking-Technologien, um Ihr Nutzererlebnis zu personalisieren und unser medizinisches Informationsangebot zu verbessern. 
+                                    {details && (
+                                        <span className="block mt-3 p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs text-slate-400 animate-fade-in">
+                                            Dabei werden pseudonymisierte Daten an Analyse-Partner übertragen. Dies ermöglicht eine algorithmische Anpassung der Inhalte an Ihr Gesundheitsprofil.
+                                        </span>
+                                    )}
+                                </p>
+                                <button onClick={() => setDetails(!details)} className="text-xs text-blue-600 font-bold uppercase tracking-widest hover:text-blue-800 transition-colors">
+                                    {details ? "− Weniger Informationen" : "+ Mehr Informationen"}
+                                </button>
+                            </div>
+
+                            {config.info && (
+                                <div className="lg:w-1/3 bg-red-50 border border-red-100 p-5 rounded-[24px] animate-fade-in self-center">
+                                    <div className="flex items-center gap-2 font-black mb-2 text-red-600 uppercase tracking-tighter text-xs">
+                                        <Icon path={paths.shield} className="w-4 h-4"/> HINWEIS ZUR DATENERFASSUNG
+                                    </div>
+                                    <p className="text-[10px] leading-relaxed text-red-800/80">
+                                         Alles, was Sie auf dieser Seite tun oder eingeben, wird lückenlos aufgezeichnet. Ihre Informationen werden sofort ausgewertet, um ein persönliches Bild Ihrer Person und Ihres Privatlebens zu erstellen. Einmal erfasst, bleiben diese Informationen dauerhaft gespeichert und können später nicht mehr gelöscht oder geändert werden.
+                                    </p>
+                                </div>
+                            )}
+
+                            <div className="flex flex-col gap-3 shrink-0 min-w-[200px] justify-center">
+                                <button onClick={() => onDecision('accept_all')} className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl shadow-lg transition-all transform active:scale-95 text-sm uppercase">
+                                    Alle akzeptieren
+                                </button>
+                                <button onClick={() => onDecision('reject_all')} className="px-8 py-3 bg-white hover:bg-slate-50 text-slate-400 font-bold border border-slate-200 rounded-2xl transition-colors text-xs uppercase">
+                                    Nur Notwendige
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            )}
-            
-            <div className="max-w-2xl mx-auto bg-white shadow-2xl rounded-[40px] overflow-hidden border border-slate-200 relative z-10">
-                <header className="bg-slate-900 p-10 text-white text-center">
-                    <h2 className="text-lg font-light tracking-[0.2em] uppercase">Systembiologisches Gesundheitsprofil</h2>
-                    <span className="text-[10px] text-blue-400 font-bold uppercase tracking-[0.2em] mt-2 block">Clinical Data Access</span>
-                </header>
+            );
+        };
 
-                <form onSubmit={(e) => {e.preventDefault(); if(isFormComplete()) onSubmit(formData);}} className="p-8 md:p-12 space-y-16">
-                    
-                    <section className="space-y-8">
-                        <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 01: Biometrische Parameter</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className={noAnswers.age ? 'opacity-30' : ''}>
-                                <label className="text-sm font-bold block mb-2">Wie alt sind Sie?</label>
-                                <input type="text" name="age" disabled={noAnswers.age} value={noAnswers.age ? '' : formData.age} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent" />
-                                <NoAnswer field="age" />
-                            </div>
-                            <div className={noAnswers.gender ? 'opacity-30' : ''}>
-                                <label className="text-sm font-bold block mb-2">Welchem Geschlecht fühlen Sie sich zugehörig?</label>
-                                <select name="gender" disabled={noAnswers.gender} value={noAnswers.gender ? '' : formData.gender} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
-                                    <option value="">Wählen...</option><option value="m">Männlich</option><option value="w">Weiblich</option><option value="d">Divers</option>
-                                </select>
-                                <NoAnswer field="gender" />
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className={noAnswers.height ? 'opacity-30' : ''}>
-                                <label className="text-sm font-bold block mb-2">Ihre Körpergröße (cm)?</label>
-                                <input type="text" name="height" disabled={noAnswers.height} value={noAnswers.height ? '' : formData.height} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent" />
-                                <NoAnswer field="height" />
-                            </div>
-                            <div className={noAnswers.weight ? 'opacity-30' : ''}>
-                                <label className="text-sm font-bold block mb-2">Ihr Körpergewicht (kg)?</label>
-                                <input type="text" name="weight" disabled={noAnswers.weight} value={noAnswers.weight ? '' : formData.weight} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent" />
-                                <NoAnswer field="weight" />
-                            </div>
-                        </div>
-                        <div className={noAnswers.insurance ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold block mb-2">Wie sind Sie versichert?</label>
-                            <select name="insurance" disabled={noAnswers.insurance} value={formData.insurance} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
-                                <option value="">Wählen...</option><option value="gkv">Gesetzlich</option><option value="pkv">Privat</option><option value="andere">Andere</option>
-                            </select>
-                            <NoAnswer field="insurance" />
-                        </div>
-                    </section>
+        const BlogPage = ({ onAction, mode = 'initial', cookieChoice }) => {
+            const [selectedArticle, setSelectedArticle] = useState(null);
+            const [categoryFilter, setCategoryFilter] = useState("Alle Beiträge");
+            const [showLoginModal, setShowLoginModal] = useState(false);
+            const [likes, setLikes] = useState({});
+            const [articlesToDisplay, setArticlesToDisplay] = useState([]);
 
-                    <section className="space-y-8">
-                        <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 02: Metabolischer Lebensstil</h3>
-                        <div className={noAnswers.dietStyle ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold block mb-4">Welche Ernährungsform(en) praktizieren Sie aktuell?</label>
-                            <div className="flex flex-wrap gap-2">
-                                {['Omnivor', 'Vegetarisch', 'Vegan', 'Keto', 'Fasten', 'Intervall'].map(diet => (
-                                    <button key={diet} type="button" disabled={noAnswers.dietStyle} onClick={() => {
-                                        interact();
-                                        const next = formData.dietStyle.includes(diet) ? formData.dietStyle.filter(d => d !== diet) : [...formData.dietStyle, diet];
-                                        setFormData(prev => ({...prev, dietStyle: next}));
-                                    }} className={`px-4 py-2 rounded-full text-xs font-bold border-2 transition-all ${formData.dietStyle.includes(diet) ? 'bg-blue-600 border-blue-600 text-white shadow-md' : 'border-slate-200 text-slate-400'}`}>
-                                        {diet}
+            const requiredTime = mode === 'initial' ? MIN_BROWSING_TIME_1 : MIN_BROWSING_TIME_2;
+            const [timeLeft, setTimeLeft] = useState(requiredTime);
+
+            useEffect(() => {
+                if (mode === 'initial') {
+                    setArticlesToDisplay(BLOG_CONTENT);
+                } else {
+                    const oldContentShuffled = [...BLOG_CONTENT].sort(() => 0.5 - Math.random());
+                    setArticlesToDisplay([...PERSONALIZED_CONTENT, ...oldContentShuffled]);
+                }
+            }, [mode]);
+
+            useEffect(() => {
+                if (timeLeft <= 0) return;
+                const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
+                return () => clearInterval(timer);
+            }, [timeLeft]);
+
+            const filteredArticles = categoryFilter === "Alle Beiträge" 
+                ? articlesToDisplay 
+                : articlesToDisplay.filter(a => a.cat === categoryFilter);
+
+            const categories = ["Alle Beiträge", "Forschung", "Ernährung", "Fitness", "Mental Health", "Prävention"];
+            const toggleLike = (e, id) => { e.stopPropagation(); setLikes(prev => ({...prev, [id]: !prev[id]})); };
+
+            const HeaderTitle = () => (
+                <div onClick={() => {setCategoryFilter("Alle Beiträge"); setSelectedArticle(null);}} className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+                    <div className="p-1.5 bg-green-100 rounded text-green-600"><Icon path={paths.leaf} className="w-6 h-6" /></div>
+                    <span className="text-xl font-bold tracking-tight text-slate-800">
+                        Vital<span className="text-green-600">Core</span>
+                        {mode === 'personalized' && <span className="ml-2 text-xs bg-green-600 text-white px-2 py-0.5 rounded uppercase">Für Sie</span>}
+                    </span>
+                </div>
+            );
+
+            const ActionButton = ({inHeader}) => {
+                if (mode === 'initial') {
+                    if (timeLeft > 0) {
+                        return (
+                            <button disabled className={`bg-slate-300 text-slate-500 rounded-full font-medium cursor-not-allowed flex items-center gap-2 ${inHeader ? 'px-5 py-2 text-sm' : 'w-full py-3 justify-center'}`}>
+                                <Icon path={paths.clock} className="w-4 h-4 animate-pulse" /> Gesundheitsprofil erstellen in {timeLeft}s
+                            </button>
+                        );
+                    }
+                    if (cookieChoice === null) {
+                        return (
+                            <button disabled className={`bg-orange-100 text-orange-600 border border-orange-200 rounded-full font-bold cursor-not-allowed flex items-center gap-2 ${inHeader ? 'px-5 py-2 text-sm' : 'w-full py-3 justify-center'}`}>
+                                Bitte treffen Sie eine Cookie-Wahl
+                            </button>
+                        );
+                    }
+                    return (
+                        <button onClick={onAction} className={`bg-slate-900 text-white rounded-full font-medium hover:bg-slate-800 transition-colors shadow-lg animate-fade-in ${inHeader ? 'px-5 py-2 text-sm' : 'w-full py-3'}`}>
+                            Gesundheitsprofil erstellen
+                        </button>
+                    );
+                } else {
+                    if (timeLeft > 0) return (<div className={`bg-green-100 text-green-800 rounded-full text-xs font-bold animate-pulse ${inHeader ? 'px-4 py-2' : 'w-full py-3 text-center'}`}>Personalisierte Ansicht aktiv ({timeLeft}s)...</div>);
+                    return (
+                        <button onClick={onAction} className={`bg-green-600 text-white rounded-full font-bold hover:bg-green-700 transition-colors shadow-lg animate-fade-in ${inHeader ? 'px-6 py-2 text-sm' : 'w-full py-3'}`}>
+                            Weiter zum Fragebogen
+                        </button>
+                    );
+                }
+            };
+
+            if (selectedArticle) {
+                return (
+                    <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-white animate-fade-in">
+                        <nav className="bg-white border-b sticky top-0 z-20 shadow-sm">
+                            <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+                                <HeaderTitle />
+                                <div className="flex gap-4 items-center">
+                                    <button onClick={() => setSelectedArticle(null)} className="text-sm font-medium text-slate-500 hover:text-green-600 flex items-center gap-1">
+                                        <Icon path={paths.arrowLeft} className="w-4 h-4" /> Zurück
+                                    </button>
+                                    <ActionButton inHeader={true} />
+                                </div>
+                            </div>
+                        </nav>
+                        <article className="max-w-3xl mx-auto px-4 py-12">
+                            <div className="w-full h-80 rounded-2xl overflow-hidden mb-8 shadow-md">
+                                <img src={selectedArticle.image} className="w-full h-full object-cover" />
+                            </div>
+                            <div className="flex items-center gap-3 text-sm font-bold text-green-600 uppercase mb-3">
+                                {selectedArticle.cat} • {selectedArticle.date}
+                            </div>
+                            <h1 className="text-4xl font-extrabold text-slate-900 mb-6 leading-tight">{selectedArticle.title}</h1>
+                            <div className="prose prose-lg text-slate-700 leading-relaxed space-y-6">
+                                {selectedArticle.fullText.map((p, i) => <p key={i}>{p}</p>)}
+                            </div>
+                        </article>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-slate-50 relative">
+                    <nav className="bg-white border-b sticky top-0 z-20 shadow-sm">
+                        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+                            <HeaderTitle />
+                            <div className="hidden md:flex gap-1 mx-4">
+                                {categories.map(item => (
+                                    <button key={item} onClick={() => setCategoryFilter(item)} className={`whitespace-nowrap px-3 py-2 text-sm font-medium rounded-full transition-colors ${categoryFilter === item ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>
+                                        {item}
                                     </button>
                                 ))}
                             </div>
-                            <NoAnswer field="dietStyle" />
+                            <div className="flex gap-4 items-center shrink-0">
+                                <button className="p-2 text-slate-400 hover:text-slate-600" onClick={() => setShowLoginModal(true)}>
+                                    <Icon path={paths.search} className="w-5 h-5" />
+                                </button>
+                                <ActionButton inHeader={true} />
+                            </div>
                         </div>
-                        <div className={noAnswers.dietHistory ? 'opacity-30' : ''}>
-                             <label className="text-sm font-bold block mb-2">Haben Sie in der Vergangenheit Diäten zur Gewichtsreduktion durchgeführt?</label>
-                             <textarea name="dietHistory" disabled={noAnswers.dietHistory} value={noAnswers.dietHistory ? '' : formData.dietHistory} onChange={handleChange} placeholder="z.B. Low-Fat, Saftkuren..." className="w-full p-4 bg-slate-50 border border-slate-100 rounded-lg outline-none h-20" />
-                             <NoAnswer field="dietHistory" />
-                        </div>
-                    </section>
+                    </nav>
 
-                    <section className="space-y-12">
-                        <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 03-04: Lebensstil & Toxikologie</h3>
-                        <div className={noAnswers.sportFreq ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold block mb-2">Wie häufig treiben Sie Sport?</label>
-                            <select name="sportFreq" disabled={noAnswers.sportFreq} value={formData.sportFreq} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
-                                <option value="">Wählen...</option><option value="täglich">Täglich</option><option value="oft">2-4 mal pro Woche</option><option value="selten">1 mal pro Woche</option><option value="nie">Seltener / Nie</option>
-                            </select>
-                            {formData.sportFreq !== 'nie' && formData.sportFreq !== '' && !noAnswers.sportFreq && (
-                                <div className="mt-4 animate-fade-in">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-tight block mb-2">Welche Sportarten üben Sie aus?</label>
-                                    <input type="text" name="sportType" value={formData.sportType} onChange={handleChange} placeholder="z.B. Krafttraining, Laufen..." className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm" />
+                    <main className="flex-grow max-w-6xl mx-auto px-4 py-8 w-full">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {filteredArticles.map(art => (
+                                <article key={art.id} onClick={() => setSelectedArticle(art)} className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all cursor-pointer overflow-hidden group flex flex-col h-full relative">
+                                    {art.match && <div className="absolute top-3 left-3 z-10 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded shadow-lg">{art.match}</div>}
+                                    <div className="h-48 overflow-hidden relative">
+                                        <img src={art.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                        <div className="absolute top-3 right-3">
+                                            <button onClick={(e) => toggleLike(e, art.id)} className={`p-2 rounded-full backdrop-blur-md transition-colors ${likes[art.id] ? 'bg-red-50 text-red-500' : 'bg-black/30 text-white'}`}>
+                                                <Icon path={likes[art.id] ? paths.heartFilled : paths.heart} className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="p-5 flex-1 flex flex-col">
+                                        <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-green-600 transition-colors">{art.title}</h3>
+                                        <p className="text-slate-600 text-sm line-clamp-3 mb-4 flex-1">{art.desc}</p>
+                                    </div>
+                                </article>
+                            ))}
+                        </div>
+                    </main>
+
+                    {showLoginModal && (
+                        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4" onClick={() => setShowLoginModal(false)}>
+                            <div className="bg-white rounded-xl p-8 max-w-sm w-full text-center" onClick={(e) => e.stopPropagation()}>
+                                <div className="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <Icon path={paths.shield} className="w-6 h-6" />
                                 </div>
-                            )}
-                            <NoAnswer field="sportFreq" />
+                                <h3 className="text-xl font-bold mb-2">Zugriff verweigert</h3>
+                                <p className="text-gray-600 mb-6">Dieser Bereich ist für Teilnehmer der Studie reserviert.</p>
+                                <button onClick={() => setShowLoginModal(false)} className="w-full bg-gray-900 text-white font-bold py-2 rounded-lg">Verstanden</button>
+                            </div>
                         </div>
-                        <JaNeinInput label="Konsumieren Sie Tabak- oder Nikotinprodukte?" field="tobacco" placeholder="Welche Produkte und wie häufig?" />
-                        <JaNeinInput label="Konsumieren Sie regelmäßig alkoholische Getränke?" field="alcohol" placeholder="Welche Getränke und wie häufig?" />
-                        <JaNeinInput label="Nutzen Sie illegale Substanzen (z.B. Cannabis, Kokain)?" field="drugs" placeholder="Welche Substanzen und wie häufig?" />
-                    </section>
+                    )}
+                </div>
+            );
+        };
 
-                    <section className="space-y-12">
-                        <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 05: Psychosomatische Selbstwahrnehmung</h3>
-                        <div className={noAnswers.bodySatisfaction ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold block mb-1">Wie zufrieden sind Sie mit Ihrem aktuellen Körperzustand (1-10)?</label>
-                            <input type="range" name="bodySatisfaction" min="1" max="10" disabled={noAnswers.bodySatisfaction} value={formData.bodySatisfaction} onChange={handleChange} className="w-full accent-blue-600" />
-                            <NoAnswer field="bodySatisfaction" />
-                        </div>
-                        <JaNeinInput label="Gibt es spezifische Aspekte an Ihrem Körper, die Sie operativ ändern möchten?" field="bodyChangeGoals" placeholder="Welche Eingriffe ziehen Sie in Erwägung?" />
-                        <JaNeinInput label="Bestehen psychische Vorbelastungen oder befinden Sie sich in Behandlung?" field="mentalHealth" placeholder="Diagnosen oder Behandlungen?" />
-                    </section>
+        const RegistrationForm = ({ onSubmit, group, audioObject }) => {
+            const [formData, setFormData] = useState({ 
+                age: '', gender: '', height: '', weight: '', insurance: '',
+                dietStyle: [], dietHistory: '',
+                tobacco: '', tobaccoDetails: '',
+                alcohol: '', alcoholDetails: '',
+                drugs: '', drugsDetails: '',
+                sportFreq: '', sportType: '',
+                bodySatisfaction: 5, 
+                bodyChangeGoals: '', bodyChangeDetails: '',
+                mentalHealth: '', mentalHealthDetails: '',
+                sexOrientation: '', reproduction: '', 
+                stis: '', stisDetails: '',
+                income: '', 
+                debts: '', debtsDetails: []
+            });
 
-                    <section className="space-y-12">
-                        <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 06: Reproduktive Analyse</h3>
-                        <div className={noAnswers.sexOrientation ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold block mb-2">Was ist Ihre sexuelle Orientierung?</label>
-                            <select name="sexOrientation" disabled={noAnswers.sexOrientation} value={formData.sexOrientation} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
-                                <option value="">Wählen...</option><option value="hetero">Heterosexuell</option><option value="homo">Homosexuell</option><option value="bi">Bisexuell</option><option value="andere">Andere</option>
-                            </select>
-                            <NoAnswer field="sexOrientation" />
-                        </div>
-                        <div className={noAnswers.reproduction ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold block mb-2">Besteht bei Ihnen aktuell ein Reproduktionswunsch (Kinderwunsch)?</label>
-                            <select name="reproduction" disabled={noAnswers.reproduction} value={formData.reproduction} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
-                                <option value="">Wählen...</option><option value="ja">Ja</option><option value="nein">Nein</option><option value="vielleicht">Vielleicht</option>
-                            </select>
-                            <NoAnswer field="reproduction" />
-                        </div>
-                        <JaNeinInput label="Sind Ihnen aktuelle oder vergangene Geschlechtskrankheiten bekannt?" field="stis" placeholder="Historie der Infektionen..." />
-                    </section>
+            const [noAnswers, setNoAnswers] = useState({});
+            const [interactionStarted, setInteractionStarted] = useState(false);
+            const [timeLeft, setTimeLeft] = useState(MIN_REGISTRATION_TIME);
+            
+            useEffect(() => { 
+                const timer = setInterval(() => setTimeLeft(t => t > 0 ? t - 1 : 0), 1000); 
+                return () => clearInterval(timer); 
+            }, []);
 
-                    <section className="space-y-12">
-                        <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 07: Sozio-Ökonomischer Status</h3>
-                        <div className={noAnswers.income ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold block mb-2">Wie hoch ist ihr monatliches Netto-Einkommen?</label>
-                            <select name="income" disabled={noAnswers.income} value={formData.income} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
-                                <option value="">Wählen...</option><option value="1">Bis 1.500 €</option><option value="2">1.500 € - 3.500 €</option><option value="3">3.500 € - 5.000 €</option><option value="4">Über 5.000 €</option>
-                            </select>
-                            <NoAnswer field="income" />
-                        </div>
-                        <JaNeinInput label="Bestehen finanzielle Schulden?" field="debts" placeholder="Art oder ungefähre Höhe der Schulden?" />
-                    </section>
+            const config = getGroupConfig(group);
+            const interact = () => { 
+                if (!interactionStarted) { 
+                    setInteractionStarted(true); 
+                    if (config.sound && audioObject) audioObject.play().catch(()=>{}); 
+                } 
+            };
 
-                    <button type="submit" disabled={timeLeft > 0 || !isFormComplete()} 
-                        className={`w-full py-6 font-black text-xs uppercase tracking-[0.5em] rounded-3xl transition-all ${timeLeft > 0 || !isFormComplete() ? 'bg-slate-100 text-slate-300 cursor-not-allowed shadow-none' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-2xl active:scale-[0.98]'}`}
-                    >
-                        {!isFormComplete() ? 'DATENSATZ UNVOLLSTÄNDIG' : (timeLeft > 0 ? `VALIDIERUNG LÄUFT (${timeLeft}S)` : 'GESUNDHEITSPROFIL FINALISIEREN')}
-                    </button>
-                </form>
-            </div>
-        </div>
-    );
-};
+            const handleChange = (e) => { 
+                interact(); 
+                const { name, value } = e.target;
+                if (name === 'age' || name === 'height' || name === 'weight') {
+                    const val = value.replace(/[^0-9]/g, '');
+                    setFormData(prev => ({...prev, [name]: val}));
+                } else {
+                    setFormData(prev => ({...prev, [name]: value})); 
+                }
+            };
 
-const LoadingScreen = ({ onFinished }) => {
-    useEffect(() => { const timer = setTimeout(onFinished, 3000); return () => clearTimeout(timer); }, []);
-    return (<div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 text-white"><div className="w-20 h-20 border-4 border-blue-500 border-t-transparent rounded-full animate-spin-slow mb-8"></div><h2 className="text-2xl font-bold mb-2">Algorithmus analysiert Profil...</h2><p className="text-slate-400">Suche passende Inhalte für Sie.</p></div>);
-};
-        const EndScreen = ({ data, sessionToken }) => {
-    const [targetUrl, setTargetUrl] = useState("");
-    const fullDataString = JSON.stringify(data);
+            const handleNoAnswerToggle = (field) => { 
+                interact(); 
+                setNoAnswers(prev => ({ ...prev, [field]: !prev[field] }));
+            };
 
-useEffect(() => { 
-    // WICHTIG: Wir holen die Gruppe direkt aus der App-Einstellung, 
-    // falls data.groupID noch nicht fertig geladen ist.
-    const currentGroup = data.groupID || groupID; 
+            const isAgeInvalid = !noAnswers.age && formData.age !== '' && parseInt(formData.age) < 18;
 
-    if (sessionToken && currentGroup) { 
-        // Wir nutzen IV02_01, weil SoSci das am besten versteht
-        const finalUrl = SOSCI_BASE_URL + 
-                         "?i=" + sessionToken + 
-                         "&IV02_01=" + currentGroup + 
-                         "&g=" + currentGroup + // Wir schicken beides, doppelt hält besser
-                         "&mydata=" + encodeURIComponent(fullDataString);
-        
-        setTargetUrl(finalUrl); 
-    } 
-}, [sessionToken, fullDataString, data.groupID]);
+            const isFormComplete = () => {
+                const check = (f) => {
+                    if (noAnswers[f]) return true; 
+                    const val = formData[f];
+                    if (Array.isArray(val)) return val.length > 0;
+                    return val !== '' && val !== undefined && val !== null;
+                };
 
-    return (
-        <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 text-center">
-            <div className="bg-white p-10 md:p-16 rounded-[40px] shadow-2xl max-w-lg w-full border-t-[12px] border-green-500 animate-fade-in text-slate-800">
-                
-                <h2 className="text-2xl md:text-3xl font-black mb-6 leading-tight">
-                    Danke fürs Ausprobieren unserer Webseite!
-                </h2>
-                
-                <p className="text-lg text-slate-600 mb-10 leading-relaxed">
-                    Bitte beantworte nun noch ein paar abschließende Fragen. 
-                    Klicke dazu bitte auf diesen Button, um zurück zum Fragebogen zu kommen:
-                </p>
+                const required = ['age', 'gender', 'height', 'weight', 'insurance', 'dietStyle', 'dietHistory', 'sportFreq', 'tobacco', 'alcohol', 'drugs', 'bodySatisfaction', 'bodyChangeGoals', 'mentalHealth', 'sexOrientation', 'reproduction', 'stis', 'income', 'debts'];
+                return required.every(f => check(f)) && !isAgeInvalid;
+            };
 
-                {targetUrl ? (
-                    <a 
-                        href={targetUrl} 
-                        className="block w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-5 rounded-2xl shadow-xl transition-all transform active:scale-95 no-underline text-xl"
-                    >
-                        Zurück zum Fragebogen
-                    </a>
-                ) : (
-                    <div className="p-4 bg-red-50 text-red-600 rounded-xl text-sm font-medium border border-red-100">
-                        Fehler: Sitzungstoken nicht gefunden. Bitte starten Sie die Umfrage erneut über SoSci Survey.
+            const NoAnswer = ({ field }) => (
+                <label className="flex items-center gap-2 mt-2 cursor-pointer w-fit group">
+                    <input type="checkbox" checked={!!noAnswers[field]} onChange={() => handleNoAnswerToggle(field)} className="w-3.5 h-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                    <span className="text-[9px] text-slate-400 group-hover:text-slate-600 uppercase tracking-widest font-bold transition-colors">Keine Angabe</span>
+                </label>
+            );
+
+            const JaNeinInput = ({ label, field, placeholder }) => (
+                <div className={noAnswers[field] ? 'opacity-30' : ''}>
+                    <label className="text-sm font-bold text-slate-700 block mb-3">{label}</label>
+                    <div className="flex gap-4 mb-3">
+                        {['ja', 'nein'].map(opt => (
+                            <button key={opt} type="button" disabled={noAnswers[field]} onClick={() => { interact(); setFormData(prev => ({...prev, [field]: opt})); }} className={`px-6 py-2 rounded-full text-xs font-black border-2 transition-all ${formData[field] === opt ? 'bg-slate-900 border-slate-900 text-white' : 'bg-transparent border-slate-200 text-slate-400'}`}>
+                                {opt.toUpperCase()}
+                            </button>
+                        ))}
                     </div>
-                )}
-                
-                <p className="mt-8 text-[10px] text-slate-400 uppercase tracking-widest font-bold">
-                    Datenübertragung bereit
-                </p>
-            </div>
-        </div>
-    );
-};
+                    {formData[field] === 'ja' && !noAnswers[field] && (
+                        <textarea name={`${field}Details`} value={formData[`${field}Details`] || ''} onChange={handleChange} placeholder={placeholder} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs outline-none focus:bg-white h-20 animate-fade-in" />
+                    )}
+                    <NoAnswer field={field} />
+                </div>
+            );
 
-       function App() {
-    const [step, setStep] = useState('intro');
-    const [cookieChoice, setCookieChoice] = useState(null);
-    const [bannerVisible, setBannerVisible] = useState(false);
-    const [groupID, setGroupID] = useState(0);
-    const [finalData, setFinalData] = useState({});
-    const [sessionToken, setSessionToken] = useState(null);
-    const timers = useRef({ blogStart: 0, bannerStart: 0, formStart: 0, postBrowsingStart: 0 });
-    const [times, setTimes] = useState({ blogTime: 0, cookieTime: 0, registrationTime: 0, postBrowsingTime: 0 });
-    const audioRef = useRef(null);
-    const audioManRef = useRef(null);
+            return (
+                <div className="min-h-screen bg-slate-100 py-12 px-4 relative pt-40 text-slate-900">
+                    <StimulusOverlay config={config} variant="form" />
+                    
+                    {config.info && (
+                        <div className="fixed top-[155px] left-1/2 -translate-x-1/2 w-[95%] max-w-xl z-[50] animate-fade-in pointer-events-none">
+                            <div className="bg-red-50/95 backdrop-blur-sm border-2 border-red-200 p-4 rounded-[24px] shadow-xl shadow-red-900/10">
+                                <div className="flex items-center gap-2 font-black mb-1 text-red-600 uppercase tracking-tighter text-[10px]">
+                                    <Icon path={paths.shield} className="w-4 h-4"/> HINWEIS ZUR DATENERFASSUNG 
+                                </div>
+                                <p className="text-[9px] leading-relaxed text-red-800/90">
+                                    Alles, was Sie auf dieser Seite tun oder eingeben, wird lückenlos aufgezeichnet. Ihre Informationen werden sofort ausgewertet, um ein persönliches Bild Ihrer Person und Ihres Privatlebens zu erstellen. Einmal erfasst, bleiben diese Informationen dauerhaft gespeichert.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                    
+                    <div className="max-w-2xl mx-auto bg-white shadow-2xl rounded-[40px] overflow-hidden border border-slate-200 relative z-10">
+                        <header className="bg-slate-900 p-10 text-white text-center">
+                            <h2 className="text-lg font-light tracking-[0.2em] uppercase">Systembiologisches Gesundheitsprofil</h2>
+                            <span className="text-[10px] text-blue-400 font-bold uppercase mt-2 block">Clinical Data Access</span>
+                        </header>
 
-    useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const g = parseInt(params.get('g')) || 0;
-        setGroupID(g);
-        const t = params.get('t');
-        if (t) setSessionToken(t);
-        audioRef.current = new Audio('sound.mp3'); audioRef.current.volume = 0.5;
-        audioManRef.current = new Audio('soundmann.mp3'); audioManRef.current.volume = 0.5;
-    }, []);
+                        <form onSubmit={(e) => {e.preventDefault(); if(isFormComplete()) onSubmit(formData);}} className="p-8 md:p-12 space-y-16">
+                            
+                            <section className="space-y-8">
+                                <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 01: Biometrische Parameter</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div className={noAnswers.age ? 'opacity-30' : ''}>
+                                        <label className="text-sm font-bold block mb-2">Wie alt sind Sie?</label>
+                                        <input type="text" name="age" disabled={noAnswers.age} value={noAnswers.age ? '' : formData.age} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent" />
+                                        <NoAnswer field="age" />
+                                    </div>
+                                    <div className={noAnswers.gender ? 'opacity-30' : ''}>
+                                        <label className="text-sm font-bold block mb-2">Welchem Geschlecht fühlen Sie sich zugehörig?</label>
+                                        <select name="gender" disabled={noAnswers.gender} value={noAnswers.gender ? '' : formData.gender} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
+                                            <option value="">Wählen...</option><option value="m">Männlich</option><option value="w">Weiblich</option><option value="d">Divers</option>
+                                        </select>
+                                        <NoAnswer field="gender" />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div className={noAnswers.height ? 'opacity-30' : ''}>
+                                        <label className="text-sm font-bold block mb-2">Ihre Körpergröße (cm)?</label>
+                                        <input type="text" name="height" disabled={noAnswers.height} value={noAnswers.height ? '' : formData.height} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent" />
+                                        <NoAnswer field="height" />
+                                    </div>
+                                    <div className={noAnswers.weight ? 'opacity-30' : ''}>
+                                        <label className="text-sm font-bold block mb-2">Ihr Körpergewicht (kg)?</label>
+                                        <input type="text" name="weight" disabled={noAnswers.weight} value={noAnswers.weight ? '' : formData.weight} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent" />
+                                        <NoAnswer field="weight" />
+                                    </div>
+                                </div>
+                                <div className={noAnswers.insurance ? 'opacity-30' : ''}>
+                                    <label className="text-sm font-bold block mb-2">Wie sind Sie versichert?</label>
+                                    <select name="insurance" disabled={noAnswers.insurance} value={formData.insurance} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
+                                        <option value="">Wählen...</option><option value="gkv">Gesetzlich</option><option value="pkv">Privat</option><option value="andere">Andere</option>
+                                    </select>
+                                    <NoAnswer field="insurance" />
+                                </div>
+                            </section>
 
-    const handleStartStudy = () => {
-        const unlockAudio = (audioObj) => { if (audioObj) { audioObj.volume = 0; audioObj.play().then(() => { audioObj.pause(); audioObj.currentTime = 0; audioObj.volume = 0.5; }).catch(e => console.log("Unlock failed", e)); } };
-        unlockAudio(audioRef.current); unlockAudio(audioManRef.current);
-        timers.current.blogStart = Date.now(); setStep('blog'); setTimeout(() => setBannerVisible(true), COOKIE_BANNER_DELAY_MS);
-    };
+                            <section className="space-y-8">
+                                <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 02: Metabolischer Lebensstil</h3>
+                                <div className={noAnswers.dietStyle ? 'opacity-30' : ''}>
+                                    <label className="text-sm font-bold block mb-4">Welche Ernährungsform(en) praktizieren Sie aktuell?</label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {['Omnivor', 'Vegetarisch', 'Vegan', 'Keto', 'Fasten', 'Intervall'].map(diet => (
+                                            <button key={diet} type="button" disabled={noAnswers.dietStyle} onClick={() => { interact(); const next = formData.dietStyle.includes(diet) ? formData.dietStyle.filter(d => d !== diet) : [...formData.dietStyle, diet]; setFormData(prev => ({...prev, dietStyle: next})); }} className={`px-4 py-2 rounded-full text-xs font-bold border-2 transition-all ${formData.dietStyle.includes(diet) ? 'bg-blue-600 border-blue-600 text-white shadow-md' : 'border-slate-200 text-slate-400'}`}>
+                                                {diet}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <NoAnswer field="dietStyle" />
+                                </div>
+                                <div className={noAnswers.dietHistory ? 'opacity-30' : ''}>
+                                     <label className="text-sm font-bold block mb-2">Haben Sie in der Vergangenheit Diäten zur Gewichtsreduktion durchgeführt?</label>
+                                     <textarea name="dietHistory" disabled={noAnswers.dietHistory} value={noAnswers.dietHistory ? '' : formData.dietHistory} onChange={handleChange} placeholder="z.B. Low-Fat, Saftkuren..." className="w-full p-4 bg-slate-50 border border-slate-100 rounded-lg outline-none h-20" />
+                                     <NoAnswer field="dietHistory" />
+                                </div>
+                            </section>
 
-    const handleBannerLoad = () => { timers.current.bannerStart = Date.now(); };
-    const handleCookieDecision = (decision) => { const duration = Date.now() - timers.current.bannerStart; setTimes(prev => ({ ...prev, cookieTime: duration })); setCookieChoice(decision); setBannerVisible(false); };
-    const handleGoToRegistration = () => { const duration = Date.now() - timers.current.blogStart; setTimes(prev => ({ ...prev, blogTime: duration })); timers.current.formStart = Date.now(); setStep('register'); };
-    const handleRegistrationSubmit = (formData) => { const duration = Date.now() - timers.current.formStart; setTimes(prev => ({ ...prev, registrationTime: duration })); setFinalData(prev => ({ ...prev, groupID: groupID, ...formData, cookieChoice: cookieChoice })); setStep('loading'); };
-    const handleLoadingFinished = () => { timers.current.postBrowsingStart = Date.now(); setStep('personalized_blog'); };
-    const handleFinishStudy = () => { const duration = Date.now() - timers.current.postBrowsingStart; const completeData = { ...finalData, ...times, postBrowsingTime: duration }; setFinalData(completeData); setStep('end'); };
+                            <section className="space-y-12">
+                                <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 03-04: Lebensstil & Toxikologie</h3>
+                                <div className={noAnswers.sportFreq ? 'opacity-30' : ''}>
+                                    <label className="text-sm font-bold block mb-2">Wie häufig treiben Sie Sport?</label>
+                                    <select name="sportFreq" disabled={noAnswers.sportFreq} value={formData.sportFreq} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
+                                        <option value="">Wählen...</option><option value="täglich">Täglich</option><option value="oft">2-4 mal pro Woche</option><option value="selten">1 mal pro Woche</option><option value="nie">Seltener / Nie</option>
+                                    </select>
+                                    {formData.sportFreq !== 'nie' && formData.sportFreq !== '' && !noAnswers.sportFreq && (
+                                        <div className="mt-4 animate-fade-in">
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2">Welche Sportarten üben Sie aus?</label>
+                                            <input type="text" name="sportType" value={formData.sportType} onChange={handleChange} placeholder="z.B. Krafttraining, Laufen..." className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm" />
+                                        </div>
+                                    )}
+                                    <NoAnswer field="sportFreq" />
+                                </div>
+                                <JaNeinInput label="Konsumieren Sie Tabak- oder Nikotinprodukte?" field="tobacco" placeholder="Welche Produkte und wie häufig?" />
+                                <JaNeinInput label="Konsumieren Sie regelmäßig alkoholische Getränke?" field="alcohol" placeholder="Welche Getränke und wie häufig?" />
+                                <JaNeinInput label="Nutzen Sie illegale Substanzen (z.B. Cannabis, Kokain)?" field="drugs" placeholder="Welche Substanzen und wie häufig?" />
+                            </section>
 
-    return (
-    <div className="font-sans text-gray-800 antialiased selection:bg-blue-100 selection:text-blue-900">
-        {step === 'intro' && <IntroScreen onStart={handleStartStudy} />}
-        {step === 'blog' && (
-            <>
-                <BlogPage onAction={handleGoToRegistration} mode="initial" cookieChoice={cookieChoice} />
-                {bannerVisible && (
-                    <CookieBanner group={groupID} onDecision={handleCookieDecision} audioObject={audioRef.current} onBannerLoad={handleBannerLoad} />
-                )}
-            </>
-        )}
-        {step === 'register' && (
-            <RegistrationForm onSubmit={handleRegistrationSubmit} group={groupID} audioObject={audioManRef.current} />
-        )}
-        {step === 'loading' && <LoadingScreen onFinished={handleLoadingFinished} />}
-        {step === 'personalized_blog' && (
-            <BlogPage onAction={handleFinishStudy} mode="personalized" cookieChoice={cookieChoice} />
-        )}
-        {step === 'end' && <EndScreen data={finalData} sessionToken={sessionToken} />}
-    </div>
-);
-} // Hier wurde die Klammer geschlossen!
-         const root = ReactDOM.createRoot(document.getElementById('root'));
+                            <section className="space-y-12">
+                                <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 05: Psychosomatische Selbstwahrnehmung</h3>
+                                <div className={noAnswers.bodySatisfaction ? 'opacity-30' : ''}>
+                                    <label className="text-sm font-bold block mb-1">Wie zufrieden sind Sie mit Ihrem aktuellen Körperzustand (1-10)?</label>
+                                    <input type="range" name="bodySatisfaction" min="1" max="10" disabled={noAnswers.bodySatisfaction} value={formData.bodySatisfaction} onChange={handleChange} className="w-full accent-blue-600" />
+                                    <NoAnswer field="bodySatisfaction" />
+                                </div>
+                                <JaNeinInput label="Gibt es spezifische Aspekte an Ihrem Körper, die Sie operativ ändern möchten?" field="bodyChangeGoals" placeholder="Welche Eingriffe ziehen Sie in Erwägung?" />
+                                <JaNeinInput label="Bestehen psychische Vorbelastungen oder befinden Sie sich in Behandlung?" field="mentalHealth" placeholder="Diagnosen oder Behandlungen?" />
+                            </section>
+
+                            <section className="space-y-12">
+                                <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 06: Reproduktive Analyse</h3>
+                                <div className={noAnswers.sexOrientation ? 'opacity-30' : ''}>
+                                    <label className="text-sm font-bold block mb-2">Was ist Ihre sexuelle Orientierung?</label>
+                                    <select name="sexOrientation" disabled={noAnswers.sexOrientation} value={formData.sexOrientation} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
+                                        <option value="">Wählen...</option><option value="hetero">Heterosexuell</option><option value="homo">Homosexuell</option><option value="bi">Bisexuell</option><option value="andere">Andere</option>
+                                    </select>
+                                    <NoAnswer field="sexOrientation" />
+                                </div>
+                                <div className={noAnswers.reproduction ? 'opacity-30' : ''}>
+                                    <label className="text-sm font-bold block mb-2">Besteht bei Ihnen aktuell ein Reproduktionswunsch (Kinderwunsch)?</label>
+                                    <select name="reproduction" disabled={noAnswers.reproduction} value={formData.reproduction} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
+                                        <option value="">Wählen...</option><option value="ja">Ja</option><option value="nein">Nein</option><option value="vielleicht">Vielleicht</option>
+                                    </select>
+                                    <NoAnswer field="reproduction" />
+                                </div>
+                                <JaNeinInput label="Sind Ihnen aktuelle oder vergangene Geschlechtskrankheiten bekannt?" field="stis" placeholder="Historie der Infektionen..." />
+                            </section>
+
+                            <section className="space-y-12">
+                                <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 07: Sozio-Ökonomischer Status</h3>
+                                <div className={noAnswers.income ? 'opacity-30' : ''}>
+                                    <label className="text-sm font-bold block mb-2">Wie hoch ist ihr monatliches Netto-Einkommen?</label>
+                                    <select name="income" disabled={noAnswers.income} value={formData.income} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
+                                        <option value="">Wählen...</option><option value="1">Bis 1.500 €</option><option value="2">1.500 € - 3.500 €</option><option value="3">3.500 € - 5.000 €</option><option value="4">Über 5.000 €</option>
+                                    </select>
+                                    <NoAnswer field="income" />
+                                </div>
+                                <JaNeinInput label="Bestehen finanzielle Schulden?" field="debts" placeholder="Art oder ungefähre Höhe der Schulden?" />
+                            </section>
+
+                            <button type="submit" disabled={timeLeft > 0 || !isFormComplete()} className={`w-full py-6 font-black text-xs uppercase tracking-[0.5em] rounded-3xl transition-all ${timeLeft > 0 || !isFormComplete() ? 'bg-slate-100 text-slate-300 cursor-not-allowed shadow-none' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-2xl active:scale-[0.98]'}`}>
+                                {!isFormComplete() ? 'DATENSATZ UNVOLLSTÄNDIG' : (timeLeft > 0 ? `VALIDIERUNG LÄUFT (${timeLeft}S)` : 'GESUNDHEITSPROFIL FINALISIEREN')}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            );
+        };
+
+        const LoadingScreen = ({ onFinished }) => {
+            useEffect(() => { const timer = setTimeout(onFinished, 3000); return () => clearTimeout(timer); }, []);
+            return (<div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 text-white"><div className="w-20 h-20 border-4 border-blue-500 border-t-transparent rounded-full animate-spin-slow mb-8"></div><h2 className="text-2xl font-bold mb-2">Algorithmus analysiert Profil...</h2><p className="text-slate-400">Suche passende Inhalte für Sie.</p></div>);
+        };
+
+        const EndScreen = ({ data, sessionToken }) => {
+            const [targetUrl, setTargetUrl] = useState("");
+            const fullDataString = JSON.stringify(data);
+            useEffect(() => { 
+                const currentGroup = data.groupID; 
+                if (sessionToken && currentGroup) { 
+                    const finalUrl = SOSCI_BASE_URL + "?i=" + sessionToken + "&IV02_01=" + currentGroup + "&g=" + currentGroup + "&mydata=" + encodeURIComponent(fullDataString);
+                    setTargetUrl(finalUrl); 
+                } 
+            }, [sessionToken, fullDataString, data.groupID]);
+
+            return (
+                <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 text-center">
+                    <div className="bg-white p-10 md:p-16 rounded-[40px] shadow-2xl max-w-lg w-full border-t-[12px] border-green-500 animate-fade-in text-slate-800">
+                        <h2 className="text-2xl md:text-3xl font-black mb-6 leading-tight">Danke fürs Ausprobieren unserer Webseite!</h2>
+                        <p className="text-lg text-slate-600 mb-10 leading-relaxed">Bitte beantworte nun noch ein paar abschließende Fragen. Klicken Sie dazu bitte auf diesen Button, um zurück zum Fragebogen zu kommen:</p>
+                        {targetUrl ? <a href={targetUrl} className="block w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-5 rounded-2xl shadow-xl transition-all transform active:scale-95 no-underline text-xl">Zurück zum Fragebogen</a> : <div className="p-4 bg-red-50 text-red-600 rounded-xl">Fehler: Sitzungstoken nicht gefunden.</div>}
+                    </div>
+                </div>
+            );
+        };
+
+        function App() {
+            const [step, setStep] = useState('intro');
+            const [cookieChoice, setCookieChoice] = useState(null);
+            const [bannerVisible, setBannerVisible] = useState(false);
+            const [groupID, setGroupID] = useState(0);
+            const [finalData, setFinalData] = useState({});
+            const [sessionToken, setSessionToken] = useState(null);
+            const timers = useRef({ blogStart: 0, bannerStart: 0, formStart: 0, postBrowsingStart: 0 });
+            const [times, setTimes] = useState({ blogTime: 0, cookieTime: 0, registrationTime: 0, postBrowsingTime: 0 });
+            const audioRef = useRef(null);
+            const audioManRef = useRef(null);
+
+            useEffect(() => {
+                const params = new URLSearchParams(window.location.search);
+                const g = parseInt(params.get('g')) || 0;
+                setGroupID(g);
+                const t = params.get('t');
+                if (t) setSessionToken(t);
+                audioRef.current = new Audio('sound.mp3'); audioRef.current.volume = 0.5;
+                audioManRef.current = new Audio('soundmann.mp3'); audioManRef.current.volume = 0.5;
+            }, []);
+
+            const handleStartStudy = () => {
+                const unlockAudio = (audioObj) => { if (audioObj) { audioObj.volume = 0; audioObj.play().then(() => { audioObj.pause(); audioObj.currentTime = 0; audioObj.volume = 0.5; }).catch(e => console.log("Unlock failed", e)); } };
+                unlockAudio(audioRef.current); unlockAudio(audioManRef.current);
+                timers.current.blogStart = Date.now(); setStep('blog'); setTimeout(() => setBannerVisible(true), COOKIE_BANNER_DELAY_MS);
+            };
+
+            const handleBannerLoad = () => { timers.current.bannerStart = Date.now(); };
+            const handleCookieDecision = (decision) => { const duration = Date.now() - timers.current.bannerStart; setTimes(prev => ({ ...prev, cookieTime: duration })); setCookieChoice(decision); setBannerVisible(false); };
+            const handleGoToRegistration = () => { const duration = Date.now() - timers.current.blogStart; setTimes(prev => ({ ...prev, blogTime: duration })); timers.current.formStart = Date.now(); setStep('register'); };
+            const handleRegistrationSubmit = (formData) => { const duration = Date.now() - timers.current.formStart; setTimes(prev => ({ ...prev, registrationTime: duration })); setFinalData(prev => ({ ...prev, groupID: groupID, ...formData, cookieChoice: cookieChoice })); setStep('loading'); };
+            const handleLoadingFinished = () => { timers.current.postBrowsingStart = Date.now(); setStep('personalized_blog'); };
+            const handleFinishStudy = () => { const duration = Date.now() - timers.current.postBrowsingStart; const completeData = { ...finalData, ...times, postBrowsingTime: duration }; setFinalData(completeData); setStep('end'); };
+
+            return (
+                <div className="font-sans text-gray-800 antialiased selection:bg-blue-100 selection:text-blue-900">
+                    {step === 'intro' && <IntroScreen onStart={handleStartStudy} />}
+                    {step === 'blog' && (
+                        <>
+                            <BlogPage onAction={handleGoToRegistration} mode="initial" cookieChoice={cookieChoice} />
+                            {bannerVisible && <CookieBanner group={groupID} onDecision={handleCookieDecision} audioObject={audioRef.current} onBannerLoad={handleBannerLoad} />}
+                        </>
+                    )}
+                    {step === 'register' && <RegistrationForm onSubmit={handleRegistrationSubmit} group={groupID} audioObject={audioManRef.current} />}
+                    {step === 'loading' && <LoadingScreen onFinished={handleLoadingFinished} />}
+                    {step === 'personalized_blog' && <BlogPage onAction={handleFinishStudy} mode="personalized" cookieChoice={cookieChoice} />}
+                    {step === 'end' && <EndScreen data={finalData} sessionToken={sessionToken} />}
+                </div>
+            );
+        }
+        const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
 </body>
