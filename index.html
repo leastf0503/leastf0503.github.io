@@ -993,13 +993,18 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
     const [targetUrl, setTargetUrl] = useState("");
     const fullDataString = JSON.stringify(data);
 
-    useEffect(() => { 
-        if (sessionToken) { 
-            // Hier wird der fertige Link mit deinen Daten generiert
-            const finalUrl = `${SOSCI_BASE_URL}?i=${sessionToken}&g=${data.groupID}&mydata=${encodeURIComponent(fullDataString)}`;
-            setTargetUrl(finalUrl); 
-        } 
-    }, [sessionToken, fullDataString]);
+  useEffect(() => { 
+    // Wir prüfen, ob der Token UND die Gruppennummer da sind
+    if (sessionToken && data && data.groupID) { 
+        // Wir stellen sicher, dass groupID eine saubere Zahl ist
+        const gId = data.groupID;
+        
+        // Hier wird der fertige Link generiert
+        const finalUrl = `${SOSCI_BASE_URL}?i=${sessionToken}&g=${gId}&mydata=${encodeURIComponent(fullDataString)}`; 
+        
+        setTargetUrl(finalUrl); 
+    } 
+}, [sessionToken, fullDataString, data.groupID]); // Wir fügen data.groupID als Beobachtung hinzu
 
     return (
         <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 text-center">
