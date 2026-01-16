@@ -723,24 +723,23 @@ const BlogPage = ({ onAction, mode = 'initial', cookieChoice }) => {
         </div>
     );
 };
-
-const [formData, setFormData] = useState({ 
-    age: '', gender: '', height: '', weight: '', insurance: '',
-    dietStyle: [], dietHistory: '',
-    // Neue Struktur: Hauptwert (Ja/Nein) und Details
-    tobacco: '', tobaccoDetails: '',
-    alcohol: '', alcoholDetails: '',
-    drugs: '', drugsDetails: '',
-    sportFreq: '', sportType: '',
-    bodySatisfaction: 5, 
-    bodyChange: '', bodyChangeDetails: '',
-    mentalHealth: '', mentalHealthDetails: '',
-    sexOrientation: '', partners: '', 
-    reproduction: '', 
-    stis: '', stisDetails: '',
-    income: '', 
-    debts: '', debtsDetails: ''
-});
+const RegistrationForm = ({ onSubmit, group, audioObject }) => {
+    // 1. Der Datenspeicher
+    const [formData, setFormData] = useState({ 
+        age: '', gender: '', height: '', weight: '', insurance: '',
+        dietStyle: [], dietHistory: '',
+        tobacco: '', tobaccoDetails: '',
+        alcohol: '', alcoholDetails: '',
+        drugs: '', drugsDetails: '',
+        sportFreq: '', sportType: '',
+        bodySatisfaction: 5, 
+        bodyChange: '', bodyChangeDetails: '',
+        mentalHealth: '', mentalHealthDetails: '',
+        sexOrientation: '', partners: '', reproduction: '', 
+        stis: '', stisDetails: '',
+        income: '', 
+        debts: '', debtsDetails: ''
+    });
 
     const [noAnswers, setNoAnswers] = useState({});
     const [interactionStarted, setInteractionStarted] = useState(false);
@@ -752,7 +751,6 @@ const [formData, setFormData] = useState({
     }, []);
 
     const config = getGroupConfig(group);
-    
     const interact = () => { 
         if (!interactionStarted) { 
             setInteractionStarted(true); 
@@ -774,315 +772,178 @@ const [formData, setFormData] = useState({
     const handleNoAnswerToggle = (field) => { 
         interact(); 
         setNoAnswers(prev => ({ ...prev, [field]: !prev[field] }));
-        setFormData(prev => ({ ...prev, [field]: !noAnswers[field] ? 'keine_angabe' : '' }));
     };
 
-    const isAgeInvalid = !noAnswers.age && formData.age !== '' && formData.age !== 'keine_angabe' && parseInt(formData.age) < 18;
+    const isAgeInvalid = !noAnswers.age && formData.age !== '' && parseInt(formData.age) < 18;
 
-  const isFormComplete = () => {
-    const check = (f) => {
-        if (noAnswers[f]) return true; 
-        const val = formData[f];
-        if (Array.isArray(val)) return val.length > 0;
-        return val !== '' && val !== undefined && val !== null;
+    // 2. Die Prüfung (Validierung)
+    const isFormComplete = () => {
+        const check = (f) => {
+            if (noAnswers[f]) return true; 
+            const val = formData[f];
+            if (Array.isArray(val)) return val.length > 0;
+            return val !== '' && val !== undefined && val !== null;
+        };
+
+        const required = [
+            'age', 'gender', 'height', 'weight', 'insurance', 'dietStyle',
+            'tobacco', 'alcohol', 'drugs', 'sportFreq', 'bodySatisfaction',
+            'bodyChange', 'mentalHealth', 'sexOrientation', 'reproduction', 
+            'partners', 'stis', 'income', 'debts'
+        ];
+
+        return required.every(f => check(f)) && !isAgeInvalid;
     };
-
-    // Wir prüfen nur, ob die Grundfragen (Ja/Nein) beantwortet sind
-    const required = [
-        'age', 'gender', 'height', 'weight', 'insurance', 'dietStyle',
-        'tobacco', 'alcohol', 'drugs', 'sportFreq', 'bodySatisfaction',
-        'bodyChange', 'mentalHealth', 'sexOrientation', 'reproduction', 
-        'partners', 'stis', 'income', 'debts'
-    ];
-
-    const allOk = required.every(f => check(f));
-    return allOk && !isAgeInvalid;
-};
-
-    // DEBUG-HILFE: Falls es nicht geht, drücke F12 im Browser. 
-    // Dort wird dir jetzt angezeigt, welches Feld noch fehlt!
-    fields.forEach(f => {
-        if (!check(f)) console.log("Es fehlt noch das Feld:", f);
-    });
-
-    const allOk = fields.every(f => check(f));
-    return allOk && !isAgeInvalid;
-};
 
     const NoAnswer = ({ field }) => (
         <label className="flex items-center gap-2 mt-2 cursor-pointer w-fit group">
-            <input 
-                type="checkbox" 
-                checked={!!noAnswers[field]} 
-                onChange={() => handleNoAnswerToggle(field)} 
-                className="w-3.5 h-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-            />
-            <span className="text-[9px] text-slate-400 group-hover:text-slate-600 uppercase tracking-widest font-bold transition-colors">Keine Angabe</span>
+            <input type="checkbox" checked={!!noAnswers[field]} onChange={() => handleNoAnswerToggle(field)} className="w-3.5 h-3.5 rounded border-slate-300 text-blue-600" />
+            <span className="text-[9px] text-slate-400 uppercase tracking-widest font-bold">Keine Angabe</span>
         </label>
     );
 
-    const ClinicalDisclaimer = ({ text }) => (
-        <div className="bg-slate-50 border-l-4 border-slate-400 p-4 mb-8 text-[11px] text-slate-600 leading-relaxed shadow-sm italic">
-            <strong className="block text-slate-800 not-italic mb-1 uppercase tracking-wider text-[10px]">Hinweis zur Datenerfassung & Beobachtung:</strong>
-            {text}
-        </div>
-    );
-
-    return (
-        <div className="min-h-screen bg-slate-100 py-12 px-4 relative pt-40"> {/* Viel Platz für die Augen oben */}
-            
-            {/* 1. Die Augen schweben fest am oberen Bildschirmrand */}
-            <StimulusOverlay config={config} variant="form" />
-            
-            <div className="max-w-2xl mx-auto bg-white shadow-2xl rounded-[40px] overflow-hidden border border-slate-200 relative z-10">
-                
-                {/* 2. Der Header des Formulars */}
-                <header className="bg-slate-900 p-10 text-white text-center">
-                    <h2 className="text-2xl font-bold italic tracking-tight">Ihr Gesundheitsprofil</h2>
-                    <span className="text-[10px] text-blue-400 px-2 py-1 rounded font-bold uppercase tracking-[0.2em]">Clinical Data Access</span>
-                </header>
-
-                {/* 3. NEU: Die integrierte Info-Box (nur wenn info: true) */}
-                {config.info && (
-                    <div className="mx-8 mt-8 bg-red-50 border-2 border-red-100 p-6 rounded-[32px] animate-fade-in">
-                        <div className="flex items-center gap-2 font-black mb-3 text-red-600 uppercase tracking-tighter text-xs">
-                            <Icon path={paths.shield} className="w-5 h-5"/> DATENERFASSUNG AKTIV
-                        </div>
-                        <p className="text-[10px] leading-relaxed text-red-800/80">
-                                Die oben eingeblendeten Augen symbolisieren das <strong>Prinzip der sozialen Beobachtung</strong>. 
-                                Sie signalisieren, dass Ihre Eingaben systematisch erfasst werden. Wir bitten Sie um eine 
-                                <strong> bewusste Entscheidung</strong> darüber, welche Details Sie offenlegen möchten.
-                            </p>
-                    </div>
-                )}
-
-                <form onSubmit={(e) => {e.preventDefault(); if(isFormComplete()) onSubmit(formData);}} className="p-8 md:p-12 space-y-16">
-                    
-                    {/* MODUL 01: BIOMETRIE */}
-                    <section>
-                        <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 01: Biometrische Parameter</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                            <div className={noAnswers.age ? 'opacity-30' : ''}>
-                                <label className="text-sm font-bold text-slate-700 block mb-2">Wie alt sind Sie?</label>
-                                <input type="text" name="age" disabled={noAnswers.age} placeholder="Jahre" value={noAnswers.age ? '' : formData.age} onChange={handleChange} className={`w-full py-2 outline-none border-b transition-all bg-transparent ${isAgeInvalid ? 'border-red-500 text-red-500' : 'border-slate-200 focus:border-blue-600'}`} />
-                                {isAgeInvalid && <p className="text-[10px] text-red-500 mt-1 font-bold italic">Teilnahme erst ab 18 Jahren.</p>}
-                                <NoAnswer field="age" />
-                            </div>
-                            <div className={noAnswers.gender ? 'opacity-30' : ''}>
-                                <label className="text-sm font-bold text-slate-700 block mb-2">Welchem Geschlecht fühlen Sie sich zugehörig?</label>
-                                <select name="gender" disabled={noAnswers.gender} value={noAnswers.gender} onChange={handleChange} className="w-full py-2 outline-none border-b border-slate-200 bg-transparent">
-                                    <option value="">Wählen...</option><option value="m">Männlich</option><option value="w">Weiblich</option><option value="d">Divers</option>
-                                </select>
-                                <NoAnswer field="gender" />
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                            <div className={noAnswers.height ? 'opacity-30' : ''}>
-                                <label className="text-sm font-bold text-slate-700 block mb-2">Körpergröße (cm)?</label>
-                                <input type="text" name="height" disabled={noAnswers.height} placeholder="cm" value={noAnswers.height ? '' : formData.height} onChange={handleChange} className="w-full py-2 outline-none border-b border-slate-200 focus:border-blue-600 bg-transparent" />
-                                <NoAnswer field="height" />
-                            </div>
-                            <div className={noAnswers.weight ? 'opacity-30' : ''}>
-                                <label className="text-sm font-bold text-slate-700 block mb-2">Körpergewicht (kg)?</label>
-                                <input type="text" name="weight" disabled={noAnswers.weight} placeholder="kg" value={noAnswers.weight ? '' : formData.weight} onChange={handleChange} className="w-full py-2 outline-none border-b border-slate-200 focus:border-blue-600 bg-transparent" />
-                                <NoAnswer field="weight" />
-                            </div>
-                        </div>
-                        <div className={noAnswers.insurance ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold text-slate-700 block mb-2">Versicherungsstatus?</label>
-                            <select name="insurance" disabled={noAnswers.insurance} value={formData.insurance} onChange={handleChange} className="w-full py-2 outline-none border-b border-slate-200 bg-transparent">
-                                <option value="">Wählen...</option><option value="gkv">Gesetzlich</option><option value="pkv">Privat</option><option value="andere">Sonstige</option>
-                            </select>
-                            <NoAnswer field="insurance" />
-                        </div>
-                    </section>
-
-                   {/* MODUL 02: ERNÄHRUNG */}
-<section>
-    <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 02: Metabolischer Lebensstil</h3>
-    <ClinicalDisclaimer text="Die Zufuhr von Makronährstoffen und Ihre Diät-Historie geben Aufschluss über Ihre metabolische Flexibilität." />
-    
-    <div className="space-y-8">
-        <div className={noAnswers.dietStyle ? 'opacity-30' : ''}>
-            <label className="text-sm font-bold text-slate-700 block mb-4">Aktuelle Ernährungsform(en)? (Mehrfachauswahl möglich)</label>
-            
-            <div className="flex flex-wrap gap-3">
-                {[
-                    { id: 'omnivor', label: 'Omnivor (Mischkost)' },
-                    { id: 'veggie', label: 'Vegetarisch' },
-                    { id: 'vegan', label: 'Vegan' },
-                    { id: 'keto', label: 'Low Carb / Keto' },
-                    { id: 'fasten', label: 'Intervallfasten' },
-                    { id: 'paleo', label: 'Paleo' }
-                ].map((diet) => {
-                    const isSelected = Array.isArray(formData.dietStyle) && formData.dietStyle.includes(diet.id);
-                    return (
-                        <button
-                            key={diet.id}
-                            type="button"
-                            disabled={noAnswers.dietStyle}
-                            onClick={() => {
-                                interact();
-                                const currentDiets = Array.isArray(formData.dietStyle) ? formData.dietStyle : [];
-                                const newDiets = isSelected 
-                                    ? currentDiets.filter(d => d !== diet.id)
-                                    : [...currentDiets, diet.id];
-                                setFormData(prev => ({ ...prev, dietStyle: newDiets }));
-                            }}
-                            className={`px-4 py-2 rounded-full text-xs font-bold transition-all border-2 ${
-                                isSelected 
-                                ? 'bg-blue-600 border-blue-600 text-white shadow-md' 
-                                : 'bg-transparent border-slate-200 text-slate-500 hover:border-blue-400'
-                            } ${noAnswers.dietStyle ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-                        >
-                            {diet.label}
-                        </button>
-                    );
-                })}
-            </div>
-            <NoAnswer field="dietStyle" />
-        </div>
-
-        <div className={noAnswers.dietHistory ? 'opacity-30' : ''}>
-            <label className="text-sm font-bold text-slate-700 block mb-2">Bisherige Diäten zur Gewichtsreduktion?</label>
-            <textarea 
-                name="dietHistory" 
-                disabled={noAnswers.dietHistory} 
-                value={noAnswers.dietHistory ? '' : formData.dietHistory} 
-                placeholder="z.B. Low-Fat, Saftkuren..." 
-                onChange={handleChange} 
-                className="w-full p-4 bg-slate-50 border border-slate-100 rounded-lg outline-none focus:bg-white h-20 transition-all"
-            ></textarea>
-            <NoAnswer field="dietHistory" />
-        </div>
-    </div>
-</section>
-
-                    {/* MODUL 03: SPORT */}
-                    <section>
-                        <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 03: Physische Aktivitätsrate</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className={noAnswers.sportFreq ? 'opacity-30' : ''}>
-                                <label className="text-sm font-bold text-slate-700 block mb-2">Häufigkeit sportlicher Betätigung?</label>
-                                <select name="sportFreq" disabled={noAnswers.sportFreq} value={formData.sportFreq} onChange={handleChange} className="w-full py-2 outline-none border-b border-slate-200 bg-transparent">
-                                    <option value="">Wählen...</option><option value="täglich">Täglich</option><option value="oft">2-4 mal pro Woche</option><option value="selten">1 mal pro Woche</option><option value="nie">Seltener / Nie</option>
-                                </select>
-                                <NoAnswer field="sportFreq" />
-                            </div>
-                            <div className={noAnswers.sportType ? 'opacity-30' : ''}>
-                                <label className="text-sm font-bold text-slate-700 block mb-2">Ausgeübte Sportarten?</label>
-                                <input type="text" name="sportType" disabled={noAnswers.sportType} value={noAnswers.sportType ? '' : formData.sportType} placeholder="z.B. Krafttraining, Laufen..." onChange={handleChange} className="w-full py-2 outline-none border-b border-slate-200 bg-transparent" />
-                                <NoAnswer field="sportType" />
-                            </div>
-                        </div>
-                    </section>
-
-                    {/* MODUL 04: TOXIKOLOGIE */}
-                    <section className="space-y-12">
-    <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 04: Toxikologie</h3>
-    
-    {['tobacco', 'alcohol', 'drugs'].map((key) => (
-        <div key={key} className={noAnswers[key] ? 'opacity-30' : ''}>
-            <label className="text-sm font-bold block mb-3">
-                {key === 'tobacco' && "Konsumieren Sie Tabak- oder Nikotinprodukte?"}
-                {key === 'alcohol' && "Konsumieren Sie regelmäßig Alkohol?"}
-                {key === 'drugs' && "Nutzen Sie illegale Substanzen (z.B. Cannabis, Kokain)?"}
-            </label>
+    // Hilfskomponente für Ja/Nein + Textfeld
+    const ConditionalInput = ({ label, field, placeholder }) => (
+        <div className={noAnswers[field] ? 'opacity-30' : ''}>
+            <label className="text-sm font-bold text-slate-700 block mb-3">{label}</label>
             <div className="flex gap-4 mb-3">
                 {['ja', 'nein'].map(opt => (
-                    <button key={opt} type="button" disabled={noAnswers[key]}
-                        onClick={() => setFormData(prev => ({...prev, [key]: opt}))}
-                        className={`px-6 py-2 rounded-full text-xs font-bold border-2 transition-all ${formData[key] === opt ? 'bg-slate-900 border-slate-900 text-white' : 'border-slate-200 text-slate-500'}`}
+                    <button key={opt} type="button" disabled={noAnswers[field]}
+                        onClick={() => { interact(); setFormData(prev => ({...prev, [field]: opt})); }}
+                        className={`px-6 py-2 rounded-full text-xs font-black border-2 transition-all ${formData[field] === opt ? 'bg-slate-900 border-slate-900 text-white' : 'border-slate-200 text-slate-400'}`}
                     >
                         {opt.toUpperCase()}
                     </button>
                 ))}
             </div>
-            {formData[key] === 'ja' && !noAnswers[key] && (
+            {formData[field] === 'ja' && !noAnswers[field] && (
                 <textarea 
-                    name={`${key}Details`}
-                    value={formData[`${key}Details`]}
+                    name={`${field}Details`}
+                    value={formData[`${field}Details`]}
                     onChange={handleChange}
-                    placeholder="Wenn ja: Welche Produkte/Substanzen und wie oft?"
-                    className="w-full mt-2 p-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs outline-none focus:bg-white animate-fade-in"
+                    placeholder={placeholder}
+                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs outline-none focus:bg-white h-20"
                 />
             )}
-            <NoAnswer field={key} />
+            <NoAnswer field={field} />
         </div>
-    ))}
-</section>
+    );
 
-                    {/* MODUL 05: PSYCHOSOMATIK */}
-                    <section className="space-y-10">
-                        <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 05: Psychosomatische Selbstwahrnehmung</h3>
-                        <div className={noAnswers.bodySatisfaction ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold text-slate-700 block mb-1">Zufriedenheit mit dem Körperzustand (1-10)?</label>
-                            <div className="flex items-center gap-4">
-                                <input type="range" name="bodySatisfaction" min="1" max="10" disabled={noAnswers.bodySatisfaction} value={formData.bodySatisfaction} onChange={handleChange} className="flex-1 accent-blue-600" />
-                                <span className="text-xs font-bold text-blue-600 w-4">{formData.bodySatisfaction}</span>
+    return (
+        <div className="min-h-screen bg-slate-100 py-12 px-4 relative pt-40 text-slate-900">
+            <StimulusOverlay config={config} variant="form" />
+            
+            <div className="max-w-2xl mx-auto bg-white shadow-2xl rounded-[40px] overflow-hidden border border-slate-200 relative z-10">
+                <header className="bg-slate-900 p-10 text-white text-center">
+                    <h2 className="text-2xl font-bold italic tracking-tight">Ihr Gesundheitsprofil</h2>
+                    <span className="text-[10px] text-blue-400 px-2 py-1 rounded font-bold uppercase tracking-[0.2em]">Clinical Data Access</span>
+                </header>
+
+                <form onSubmit={(e) => {e.preventDefault(); if(isFormComplete()) onSubmit(formData);}} className="p-8 md:p-12 space-y-16">
+                    
+                    <section className="space-y-8">
+                        <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 01: Biometrie</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className={noAnswers.age ? 'opacity-30' : ''}>
+                                <label className="text-sm font-bold block mb-2">Alter?</label>
+                                <input type="text" name="age" disabled={noAnswers.age} value={noAnswers.age ? '' : formData.age} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent" />
+                                <NoAnswer field="age" />
                             </div>
-                            <NoAnswer field="bodySatisfaction" />
-                        </div>
-                        <div className={noAnswers.bodyChangeGoals ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold text-slate-700 block mb-2">Wünsche bezüglich operativer Änderungen?</label>
-                            <textarea name="bodyChangeGoals" disabled={noAnswers.bodyChangeGoals} value={noAnswers.bodyChangeGoals ? '' : formData.bodyChangeGoals} placeholder="Ziele oder Wünsche..." onChange={handleChange} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-lg outline-none h-20"></textarea>
-                            <NoAnswer field="bodyChangeGoals" />
-                        </div>
-                        <div className={noAnswers.mentalHealth ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold text-slate-700 block mb-2">Psychische Vorbelastungen oder Behandlungen?</label>
-                            <textarea name="mentalHealth" disabled={noAnswers.mentalHealth} value={noAnswers.mentalHealth ? '' : formData.mentalHealth} placeholder="Diagnosen oder Therapien..." onChange={handleChange} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-lg outline-none h-20"></textarea>
-                            <NoAnswer field="mentalHealth" />
+                            <div className={noAnswers.gender ? 'opacity-30' : ''}>
+                                <label className="text-sm font-bold block mb-2">Geschlecht?</label>
+                                <select name="gender" disabled={noAnswers.gender} value={noAnswers.gender ? '' : formData.gender} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent">
+                                    <option value="">Wählen...</option><option value="m">Männlich</option><option value="w">Weiblich</option><option value="d">Divers</option>
+                                </select>
+                                <NoAnswer field="gender" />
+                            </div>
                         </div>
                     </section>
 
-                    {/* MODUL 06: INTIMITÄT */}
+                    <section className="space-y-8">
+                        <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 02: Ernährung</h3>
+                        <div className={noAnswers.dietStyle ? 'opacity-30' : ''}>
+                            <label className="text-sm font-bold block mb-4">Ernährungsform(en)?</label>
+                            <div className="flex flex-wrap gap-2">
+                                {['Omnivor', 'Vegetarisch', 'Vegan', 'Keto', 'Fasten'].map(diet => (
+                                    <button key={diet} type="button" disabled={noAnswers.dietStyle} onClick={() => {
+                                        interact();
+                                        const next = formData.dietStyle.includes(diet) ? formData.dietStyle.filter(d => d !== diet) : [...formData.dietStyle, diet];
+                                        setFormData(prev => ({...prev, dietStyle: next}));
+                                    }} className={`px-4 py-2 rounded-full text-xs font-bold border-2 ${formData.dietStyle.includes(diet) ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-200 text-slate-400'}`}>
+                                        {diet}
+                                    </button>
+                                ))}
+                            </div>
+                            <NoAnswer field="dietStyle" />
+                        </div>
+                    </section>
+
                     <section className="space-y-12">
-                        <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 06: Reproduktive Analyse</h3>
+                        <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 03-04: Lebensstil</h3>
+                        <ConditionalInput label="Konsumieren Sie Tabak- oder Nikotinprodukte?" field="tobacco" placeholder="Welche Produkte?" />
+                        <ConditionalInput label="Konsumieren Sie regelmäßig Alkohol?" field="alcohol" placeholder="Häufigkeit?" />
+                        <ConditionalInput label="Nutzen Sie illegale Substanzen?" field="drugs" placeholder="Welche?" />
+                        <div className={noAnswers.sportFreq ? 'opacity-30' : ''}>
+                            <label className="text-sm font-bold block mb-2">Sportliche Aktivität?</label>
+                            <select name="sportFreq" disabled={noAnswers.sportFreq} value={formData.sportFreq} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent">
+                                <option value="">Wählen...</option><option value="hoch">Hoch</option><option value="mittel">Mittel</option><option value="nie">Nie</option>
+                            </select>
+                            <NoAnswer field="sportFreq" />
+                        </div>
+                    </section>
+
+                    <section className="space-y-12">
+                        <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 05: Psychosomatik</h3>
+                        <div className={noAnswers.bodySatisfaction ? 'opacity-30' : ''}>
+                            <label className="text-sm font-bold block mb-1">Zufriedenheit Körper (1-10)?</label>
+                            <input type="range" name="bodySatisfaction" min="1" max="10" disabled={noAnswers.bodySatisfaction} value={formData.bodySatisfaction} onChange={handleChange} className="w-full accent-blue-600" />
+                            <NoAnswer field="bodySatisfaction" />
+                        </div>
+                        <ConditionalInput label="Operative Veränderungen am Körper gewünscht?" field="bodyChange" placeholder="Welche?" />
+                        <ConditionalInput label="Bestehen psychische Vorbelastungen?" field="mentalHealth" placeholder="Details?" />
+                    </section>
+
+                    <section className="space-y-12">
+                        <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 06: Reproduktion & Intimität</h3>
                         <div className={noAnswers.sexOrientation ? 'opacity-30' : ''}>
                             <label className="text-sm font-bold block mb-2">Sexuelle Orientierung?</label>
                             <select name="sexOrientation" disabled={noAnswers.sexOrientation} value={formData.sexOrientation} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent">
-                                <option value="">Wählen...</option><option value="hetero">Hetero</option><option value="homo">Homo</option><option value="bi">Bi</option><option value="andere">Andere</option>
+                                <option value="">Wählen...</option><option value="hetero">Hetero</option><option value="homo">Homo</option><option value="bi">Bi</option>
                             </select>
                             <NoAnswer field="sexOrientation" />
                         </div>
                         <div className={noAnswers.reproduction ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold block mb-2">Besteht ein Reproduktionswunsch?</label>
+                            <label className="text-sm font-bold block mb-2">Reproduktionswunsch vorhanden?</label>
                             <select name="reproduction" disabled={noAnswers.reproduction} value={formData.reproduction} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent">
-                                <option value="">Wählen...</option><option value="ja">Ja</option><option value="nein">Nein</option><option value="vielleicht">Vielleicht</option>
+                                <option value="">Wählen...</option><option value="ja">Ja</option><option value="nein">Nein</option>
                             </select>
                             <NoAnswer field="reproduction" />
                         </div>
+                        <ConditionalInput label="Bekannte Geschlechtskrankheiten?" field="stis" placeholder="Welche?" />
                         <div className={noAnswers.partners ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold block mb-2">Anzahl Sexualpartner (Lebenszeit)?</label>
+                            <label className="text-sm font-bold block mb-2">Anzahl Partner?</label>
                             <input type="text" name="partners" disabled={noAnswers.partners} value={noAnswers.partners ? '' : formData.partners} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent" />
                             <NoAnswer field="partners" />
                         </div>
-                        <ConditionalInput label="Bekannte Geschlechtskrankheiten?" field="stis" placeholder="Historie der Infektionen..." />
                     </section>
 
-                    {/* MODUL 07: FINANZEN */}
                     <section className="space-y-12">
                         <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 07: Finanzen</h3>
                         <div className={noAnswers.income ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold block mb-2">Monatliches Netto-Einkommen?</label>
+                            <label className="text-sm font-bold block mb-2">Netto-Einkommen?</label>
                             <select name="income" disabled={noAnswers.income} value={formData.income} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent">
-                                <option value="">Wählen...</option><option value="1">Unter 1.500 €</option><option value="2">1.500 € - 3.500 €</option><option value="3">3.500 € - 5.000 €</option><option value="4">Über 5.000 €</option>
+                                <option value="">Wählen...</option><option value="1">Bis 1.500€</option><option value="2">Bis 3.500€</option><option value="3">Über 3.500€</option>
                             </select>
                             <NoAnswer field="income" />
                         </div>
-                        <ConditionalInput label="Bestehen finanzielle Verbindlichkeiten / Schulden?" field="debts" placeholder="Art oder Höhe der Schulden?" />
+                        <ConditionalInput label="Schulden vorhanden?" field="debts" placeholder="Höhe/Art?" />
                     </section>
 
-                    {/* ABSENDE-BEREICH */}
-                    <div className="pt-10 flex flex-col items-center">
-                        <button 
-                            type="submit" 
-                            disabled={timeLeft > 0 || !isFormComplete()} 
-                            className={`w-full py-6 font-black text-xs uppercase tracking-[0.5em] shadow-2xl transition-all transform ${timeLeft > 0 || !isFormComplete() ? 'bg-slate-100 text-slate-300 cursor-not-allowed shadow-none' : 'bg-blue-600 text-white hover:bg-blue-700 active:scale-[0.98]'}`}
-                        >
-                            {!isFormComplete() ? 'DATENSATZ UNVOLLSTÄNDIG' : (timeLeft > 0 ? `VALIDIERUNG LÄUFT (${timeLeft}S)` : 'GESUNDHEITSPROFIL FINALISIEREN')}
-                        </button>
-                    </div>
+                    <button type="submit" disabled={timeLeft > 0 || !isFormComplete()} 
+                        className={`w-full py-6 font-black text-xs uppercase tracking-[0.5em] rounded-3xl transition-all ${timeLeft > 0 || !isFormComplete() ? 'bg-slate-100 text-slate-300 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-2xl active:scale-[0.98]'}`}
+                    >
+                        {!isFormComplete() ? 'DATENSATZ UNVOLLSTÄNDIG' : (timeLeft > 0 ? `VALIDIERUNG (${timeLeft}S)` : 'GESUNDHEITSPROFIL FINALISIEREN')}
+                    </button>
                 </form>
             </div>
         </div>
