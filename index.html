@@ -360,7 +360,7 @@
             );
         };
 
-        const BlogPage = ({ onAction, mode = 'initial', cookieChoice }) => {
+       const BlogPage = ({ onAction, mode = 'initial', cookieChoice }) => {
             const [selectedArticle, setSelectedArticle] = useState(null);
             const [categoryFilter, setCategoryFilter] = useState("Alle Beiträge");
             const [showLoginModal, setShowLoginModal] = useState(false);
@@ -433,8 +433,40 @@
                 }
             };
 
-           if (selectedArticle) {
-   return (
+            if (selectedArticle) {
+                return (
+                    <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-white animate-fade-in">
+                        <nav className="bg-white border-b sticky top-0 z-20 shadow-sm px-4 h-16 flex items-center justify-between">
+                            <HeaderTitle />
+                            <div className="flex gap-4 items-center">
+                                <button onClick={() => setSelectedArticle(null)} className="text-sm font-medium text-slate-500 hover:text-green-600 flex items-center gap-1">
+                                    <Icon path={paths.arrowLeft} className="w-4 h-4" /> Zurück
+                                </button>
+                                <ActionButton inHeader={true} />
+                            </div>
+                        </nav>
+                        <article className="max-w-3xl mx-auto px-4 py-12">
+                            <div className="w-full h-80 rounded-2xl overflow-hidden mb-8 shadow-md">
+                                <img src={selectedArticle.image} className="w-full h-full object-cover" />
+                            </div>
+                            <div className="flex items-center gap-3 text-sm font-bold text-green-600 uppercase tracking-wider mb-3">
+                                {selectedArticle.cat} • {selectedArticle.date || "Aktuell"}
+                            </div>
+                            <h1 className="text-4xl font-extrabold text-slate-900 mb-6 leading-tight">{selectedArticle.title}</h1>
+                            <div className="flex items-center gap-3 text-slate-500 mb-8 pb-8 border-b">
+                                <span className="font-medium">{selectedArticle.author}</span>
+                                <span>•</span>
+                                <span className="flex items-center gap-1"><Icon path={paths.clock} className="w-4 h-4" /> {selectedArticle.time} Lesezeit</span>
+                            </div>
+                            <div className="prose prose-lg text-slate-700 leading-relaxed space-y-6">
+                                {selectedArticle.fullText.map((p, i) => <p key={i}>{p}</p>)}
+                            </div>
+                        </article>
+                    </div>
+                );
+            }
+
+            return (
                 <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-slate-50 relative">
                     <nav className="bg-white border-b sticky top-0 z-20 shadow-sm">
                         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
