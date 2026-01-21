@@ -710,7 +710,7 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
                     <p className={`text-[9px] leading-relaxed ${config.info ? 'text-red-800/90' : 'text-blue-800/90'}`}>
                         {config.info 
                             ? "Alles, was Sie auf dieser Seite tun oder eingeben, wird lückenlos aufgezeichnet. Ihre Informationen werden sofort ausgewertet, um ein persönliches Bild Ihrer Person und Ihres Privatlebens zu erstellen. Einmal erfasst, bleiben diese Informationen dauerhaft gespeichert."
-                            : "VitalCore bietet Ihnen eine moderne Plattform für fundiertes medizinisches Wissen und individuelle Gesundheitsanalysen. Wir laden Sie ein, die verschiedenen Bereiche unseres Portals zu erkunden und unsere Funktionen zu nutzen, um Ihre persönlichen Ziele für mehr Wohlbefinden und Vitalität im Alltag zu erreichen."
+                            : "VitalCore bietet Ihnen eine moderne Plattform für medizinisches Wissen und individuelle Gesundheitsanalysen."
                         }
                     </p>
                 </div>
@@ -802,15 +802,68 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
                     </section>
 
                     <section className="space-y-12">
-                        <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 05: Psychosomatische Selbstwahrnehmung</h3>
-                        <div className={noAnswers.bodySatisfaction ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold block mb-1">Wie zufrieden sind Sie mit Ihrem aktuellen Körperzustand (1-10)?</label>
-                            <input type="range" name="bodySatisfaction" min="1" max="10" disabled={noAnswers.bodySatisfaction} value={formData.bodySatisfaction} onChange={handleChange} className="w-full accent-blue-600" />
-                            <NoAnswer field="bodySatisfaction" noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
-                        </div>
-                        <JaNeinInput label="Gibt es spezifische Aspekte an Ihrem Körper, die Sie operativ ändern möchten?" field="bodyChangeGoals" placeholder="Welche Eingriffe ziehen Sie in Erwägung?" formData={formData} setFormData={setFormData} noAnswers={noAnswers} setNoAnswers={setNoAnswers} interact={interact} />
-                        <JaNeinInput label="Bestehen psychische Vorbelastungen oder befinden Sie sich in Behandlung?" field="mentalHealth" placeholder="Diagnosen oder Behandlungen?" formData={formData} setFormData={setFormData} noAnswers={noAnswers} setNoAnswers={setNoAnswers} interact={interact} />
-                    </section>
+    <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">
+        Modul 05: Psychosomatische Selbstwahrnehmung
+    </h3>
+    
+    <div className={noAnswers.bodySatisfaction ? 'opacity-30' : ''}>
+        <label className="text-sm font-bold block mb-1">
+            Wie zufrieden sind Sie mit Ihrem aktuellen Körperzustand (1-10)?
+        </label>
+        
+        {/* Der Slider */}
+        <input 
+            type="range" 
+            name="bodySatisfaction" 
+            min="1" 
+            max="10" 
+            disabled={noAnswers.bodySatisfaction} 
+            value={formData.bodySatisfaction} 
+            onChange={handleChange} 
+            className="w-full accent-blue-600 cursor-pointer" 
+        />
+        
+        {/* Die Zahlenskala von 1 bis 10 */}
+        <div className="flex justify-between px-1 mt-2 text-[10px] text-slate-400 font-bold select-none">
+            {[...Array(10)].map((_, i) => {
+                const val = i + 1;
+                const isActive = formData.bodySatisfaction == val && !noAnswers.bodySatisfaction;
+                return (
+                    <span 
+                        key={val} 
+                        className={`transition-all duration-200 ${isActive ? 'text-blue-600 scale-150' : ''}`}
+                    >
+                        {val}
+                    </span>
+                );
+            })}
+        </div>
+        
+        <NoAnswer field="bodySatisfaction" noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
+    </div>
+
+    <JaNeinInput 
+        label="Gibt es spezifische Aspekte an Ihrem Körper, die Sie operativ ändern möchten?" 
+        field="bodyChangeGoals" 
+        placeholder="Welche Eingriffe ziehen Sie in Erwägung?" 
+        formData={formData} 
+        setFormData={setFormData} 
+        noAnswers={noAnswers} 
+        setNoAnswers={setNoAnswers} 
+        interact={interact} 
+    />
+    
+    <JaNeinInput 
+        label="Bestehen psychische Vorbelastungen oder befinden Sie sich in Behandlung?" 
+        field="mentalHealth" 
+        placeholder="Diagnosen oder Behandlungen?" 
+        formData={formData} 
+        setFormData={setFormData} 
+        noAnswers={noAnswers} 
+        setNoAnswers={setNoAnswers} 
+        interact={interact} 
+    />
+</section>
 
                     <section className="space-y-12">
                         <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 06: Reproduktive Analyse</h3>
