@@ -292,6 +292,8 @@
     const [played, setPlayed] = useState(false);
     const [selected, setSelected] = useState(null);
     const [error, setError] = useState(false);
+    const [success, setSuccess] = useState(false); // Neuer Status für Erfolg
+    const audioRef = useRef(null); // Speicher für das Audio-Objekt
 
     const options = [
         { id: 'dog', label: 'Hundebellen' },
@@ -301,15 +303,35 @@
     ];
 
     const handlePlay = () => {
-        const audio = new Audio(audioFile);
-        audio.play().catch(e => console.error("Audio Playback failed", e));
+        // Falls schon ein Ton läuft, stoppen wir ihn erst (verhindert Echo)
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+        }
+        audioRef.current = new Audio(audioFile);
+        audioRef.current.play().catch(e => console.error("Audio Playback failed", e));
         setPlayed(true);
     };
 
     const checkResult = (id) => {
+        if (success) return; // Verhindert Mehrfachklicks bei Erfolg
+
         setSelected(id);
         if (id === 'bell') {
-            onPassed(); // Erfolg! Weiter zum Blog
+            // 1. TON SOFORT STOPPEN
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.currentTime = 0;
+            }
+            
+            // 2. ERFOLGSMELDUNG ANZEIGEN
+            setSuccess(true);
+            
+            // 3. VERZÖGERUNG (2 Sek.), dann weiter zum Blog
+            setTimeout(() => {
+                onPassed(); 
+            }, 2000);
+
         } else {
             setError(true);
             setTimeout(() => { setError(false); setSelected(null); }, 2000);
@@ -319,35 +341,53 @@
     return (
         <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
             <div className="bg-white max-w-md w-full p-10 rounded-[40px] shadow-2xl text-center animate-fade-in">
-                <h2 className="text-2xl font-black mb-6 uppercase tracking-tight">Audio-Check</h2>
-                <p className="text-slate-600 mb-8 text-sm leading-relaxed">
-                    Um fortzufahren, müssen wir sicherstellen, dass Ihr Ton funktioniert. 
-                    Klicken Sie auf den Button und wählen Sie aus, was Sie hören.
-                </p>
+                
+                {/* Dynamischer Titel */}
+                <h2 className={`text-2xl font-black mb-6 uppercase tracking-tight transition-colors ${success ? 'text-green-600' : 'text-slate-900'}`}>
+                    {success ? '✓ Korrekt!' : 'Audio-Check'}
+                </h2>
 
-                <button 
-                    onClick={handlePlay}
-                    className={`w-full py-4 mb-8 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all ${played ? 'bg-slate-100 text-slate-400' : 'bg-blue-600 text-white shadow-lg active:scale-95'}`}
-                >
-                    <Icon path={paths.activity} className="w-5 h-5" />
-                    {played ? "Ton wurde abgespielt" : "Ton abspielen"}
-                </button>
+                {!success ? (
+                    <>
+                        <p className="text-slate-600 mb-8 text-sm leading-relaxed">
+                            Um fortzufahren, müssen wir sicherstellen, dass Ihr Ton funktioniert. 
+                            Klicken Sie auf den Button und wählen Sie aus, was Sie hören.
+                        </p>
 
-                {played && (
-                    <div className="grid grid-cols-1 gap-3 animate-fade-in">
-                        {options.map(opt => (
-                            <button
-                                key={opt.id}
-                                onClick={() => checkResult(opt.id)}
-                                className={`py-3 rounded-xl border-2 font-bold transition-all ${
-                                    selected === opt.id 
-                                        ? (opt.id === 'bell' ? 'border-green-500 bg-green-50 text-green-700' : 'border-red-500 bg-red-50 text-red-700')
-                                        : 'border-slate-100 hover:border-blue-200 text-slate-600'
-                                }`}
-                            >
-                                {opt.label}
-                            </button>
-                        ))}
+                        <button 
+                            onClick={handlePlay}
+                            className={`w-full py-4 mb-8 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all ${played ? 'bg-slate-100 text-slate-400' : 'bg-blue-600 text-white shadow-lg active:scale-95'}`}
+                        >
+                            <Icon path={paths.activity} className="w-5 h-5" />
+                            {played ? "Ton wird/wurde abgespielt" : "Ton abspielen"}
+                        </button>
+
+                        {played && (
+                            <div className="grid grid-cols-1 gap-3 animate-fade-in">
+                                {options.map(opt => (
+                                    <button
+                                        key={opt.id}
+                                        onClick={() => checkResult(opt.id)}
+                                        className={`py-3 rounded-xl border-2 font-bold transition-all ${
+                                            selected === opt.id 
+                                                ? (opt.id === 'bell' ? 'border-green-500 bg-green-50 text-green-700' : 'border-red-500 bg-red-50 text-red-700')
+                                                : 'border-slate-100 hover:border-blue-200 text-slate-600'
+                                        }`}
+                                    >
+                                        {opt.label}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </>
+                ) : (
+                    /* ERFOLGS-ANSICHT */
+                    <div className="py-10 animate-fade-in">
+                        <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <Icon path={paths.check} className="w-10 h-10" />
+                        </div>
+                        <p className="text-green-700 font-bold text-lg">Audiotest bestanden!</p>
+                        <p className="text-slate-400 text-xs mt-2">Die Webseite wird geladen...</p>
                     </div>
                 )}
                 
@@ -356,7 +396,6 @@
         </div>
     );
 };
-
         const StimulusOverlay = ({ config, variant = "banner" }) => {
     if (!config || !config.eyes) return null;
     const eyeColor = variant === 'banner' ? '#3b82f6' : '#5D4037';
