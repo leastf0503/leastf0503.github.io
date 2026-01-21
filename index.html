@@ -530,246 +530,306 @@
             );
         };
 
-        const RegistrationForm = ({ onSubmit, group, audioObject }) => {
-            const [formData, setFormData] = useState({ 
-                age: '', gender: '', height: '', weight: '', insurance: '',
-                dietStyle: [], dietHistory: '',
-                tobacco: '', tobaccoDetails: '',
-                alcohol: '', alcoholDetails: '',
-                drugs: '', drugsDetails: '',
-                sportFreq: '', sportType: '',
-                bodySatisfaction: 5, 
-                bodyChangeGoals: '', bodyChangeDetails: '',
-                mentalHealth: '', mentalHealthDetails: '',
-                sexOrientation: '', reproduction: '', 
-                stis: '', stisDetails: '',
-                income: '', 
-                debts: '', debtsDetails: []
-            });
+       // 1. Helfer-Komponenten nach draußen geschoben, damit der Fokus beim Tippen bleibt
+const NoAnswer = ({ field, noAnswers, setNoAnswers }) => (
+    <label className="flex items-center gap-2 mt-2 cursor-pointer w-fit group">
+        <input 
+            type="checkbox" 
+            checked={!!noAnswers[field]} 
+            onChange={() => setNoAnswers(prev => ({ ...prev, [field]: !prev[field] }))} 
+            className="w-3.5 h-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" 
+        />
+        <span className="text-[9px] text-slate-400 group-hover:text-slate-600 uppercase tracking-widest font-bold transition-colors">Keine Angabe</span>
+    </label>
+);
 
-            const [noAnswers, setNoAnswers] = useState({});
-            const [interactionStarted, setInteractionStarted] = useState(false);
-            const [timeLeft, setTimeLeft] = useState(MIN_REGISTRATION_TIME);
+const JaNeinInput = ({ label, field, placeholder, formData, setFormData, noAnswers, setNoAnswers, interact }) => {
+    const handleTextChange = (e) => {
+        interact();
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    return (
+        <div className={noAnswers[field] ? 'opacity-30' : ''}>
+            <label className="text-sm font-bold text-slate-700 block mb-3">{label}</label>
+            <div className="flex gap-4 mb-3">
+                {['ja', 'nein'].map(opt => (
+                    <button 
+                        key={opt} 
+                        type="button" 
+                        disabled={noAnswers[field]} 
+                        onClick={() => { interact(); setFormData(prev => ({...prev, [field]: opt})); }} 
+                        className={`px-6 py-2 rounded-full text-xs font-black border-2 transition-all ${formData[field] === opt ? 'bg-slate-900 border-slate-900 text-white' : 'bg-transparent border-slate-200 text-slate-400'}`}
+                    >
+                        {opt.toUpperCase()}
+                    </button>
+                ))}
+            </div>
+            {formData[field] === 'ja' && !noAnswers[field] && (
+                <textarea 
+                    name={`${field}Details`} 
+                    value={formData[`${field}Details`] || ''} 
+                    onChange={handleTextChange} 
+                    placeholder={placeholder} 
+                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs outline-none focus:bg-white h-20 animate-fade-in" 
+                />
+            )}
+            <NoAnswer field={field} noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
+        </div>
+    );
+};
+        // 1. Helfer-Komponenten nach draußen geschoben, damit der Fokus beim Tippen bleibt
+const NoAnswer = ({ field, noAnswers, setNoAnswers }) => (
+    <label className="flex items-center gap-2 mt-2 cursor-pointer w-fit group">
+        <input 
+            type="checkbox" 
+            checked={!!noAnswers[field]} 
+            onChange={() => setNoAnswers(prev => ({ ...prev, [field]: !prev[field] }))} 
+            className="w-3.5 h-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" 
+        />
+        <span className="text-[9px] text-slate-400 group-hover:text-slate-600 uppercase tracking-widest font-bold transition-colors">Keine Angabe</span>
+    </label>
+);
+
+const JaNeinInput = ({ label, field, placeholder, formData, setFormData, noAnswers, setNoAnswers, interact }) => {
+    const handleTextChange = (e) => {
+        interact();
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    return (
+        <div className={noAnswers[field] ? 'opacity-30' : ''}>
+            <label className="text-sm font-bold text-slate-700 block mb-3">{label}</label>
+            <div className="flex gap-4 mb-3">
+                {['ja', 'nein'].map(opt => (
+                    <button 
+                        key={opt} 
+                        type="button" 
+                        disabled={noAnswers[field]} 
+                        onClick={() => { interact(); setFormData(prev => ({...prev, [field]: opt})); }} 
+                        className={`px-6 py-2 rounded-full text-xs font-black border-2 transition-all ${formData[field] === opt ? 'bg-slate-900 border-slate-900 text-white' : 'bg-transparent border-slate-200 text-slate-400'}`}
+                    >
+                        {opt.toUpperCase()}
+                    </button>
+                ))}
+            </div>
+            {formData[field] === 'ja' && !noAnswers[field] && (
+                <textarea 
+                    name={`${field}Details`} 
+                    value={formData[`${field}Details`] || ''} 
+                    onChange={handleTextChange} 
+                    placeholder={placeholder} 
+                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs outline-none focus:bg-white h-20 animate-fade-in" 
+                />
+            )}
+            <NoAnswer field={field} noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
+        </div>
+    );
+};
+
+// 2. Die eigentliche RegistrationForm
+const RegistrationForm = ({ onSubmit, group, audioObject }) => {
+    const [formData, setFormData] = useState({ 
+        age: '', gender: '', height: '', weight: '', insurance: '',
+        dietStyle: [], dietHistory: '',
+        tobacco: '', tobaccoDetails: '',
+        alcohol: '', alcoholDetails: '',
+        drugs: '', drugsDetails: '',
+        sportFreq: '', sportType: '',
+        bodySatisfaction: 5, 
+        bodyChangeGoals: '', bodyChangeDetails: '',
+        mentalHealth: '', mentalHealthDetails: '',
+        sexOrientation: '', reproduction: '', 
+        stis: '', stisDetails: '',
+        income: '', 
+        debts: '', debtsDetails: '' // Fix: als leerer String für Textarea
+    });
+
+    const [noAnswers, setNoAnswers] = useState({});
+    const [interactionStarted, setInteractionStarted] = useState(false);
+    const [timeLeft, setTimeLeft] = useState(MIN_REGISTRATION_TIME);
+    
+    useEffect(() => { 
+        const timer = setInterval(() => setTimeLeft(t => t > 0 ? t - 1 : 0), 1000); 
+        return () => clearInterval(timer); 
+    }, []);
+
+    const config = getGroupConfig(group);
+    const interact = () => { 
+        if (!interactionStarted) { 
+            setInteractionStarted(true); 
+            if (config.sound && audioObject) audioObject.play().catch(()=>{}); 
+        } 
+    };
+
+    const handleChange = (e) => { 
+        interact(); 
+        const { name, value } = e.target;
+        const val = (name === 'age' || name === 'height' || name === 'weight') ? value.replace(/[^0-9]/g, '') : value;
+        setFormData(prev => ({...prev, [name]: val}));
+    };
+
+    const isFormComplete = () => {
+        const check = (f) => noAnswers[f] || (formData[f] !== '' && formData[f] !== undefined && (Array.isArray(formData[f]) ? formData[f].length > 0 : true));
+        const required = ['age', 'gender', 'height', 'weight', 'insurance', 'dietStyle', 'dietHistory', 'sportFreq', 'tobacco', 'alcohol', 'drugs', 'bodySatisfaction', 'bodyChangeGoals', 'mentalHealth', 'sexOrientation', 'reproduction', 'stis', 'income', 'debts'];
+        return required.every(f => check(f));
+    };
+
+    return (
+        <div className="min-h-screen bg-slate-100 py-12 px-4 relative pt-40 text-slate-900">
+            <StimulusOverlay config={config} variant="form" />
             
-            useEffect(() => { 
-                const timer = setInterval(() => setTimeLeft(t => t > 0 ? t - 1 : 0), 1000); 
-                return () => clearInterval(timer); 
-            }, []);
-
-            const config = getGroupConfig(group);
-            const interact = () => { 
-                if (!interactionStarted) { 
-                    setInteractionStarted(true); 
-                    if (config.sound && audioObject) audioObject.play().catch(()=>{}); 
-                } 
-            };
-
-            const handleChange = (e) => { 
-                interact(); 
-                const { name, value } = e.target;
-                if (name === 'age' || name === 'height' || name === 'weight') {
-                    const val = value.replace(/[^0-9]/g, '');
-                    setFormData(prev => ({...prev, [name]: val}));
-                } else {
-                    setFormData(prev => ({...prev, [name]: value})); 
-                }
-            };
-
-            const handleNoAnswerToggle = (field) => { 
-                interact(); 
-                setNoAnswers(prev => ({ ...prev, [field]: !prev[field] }));
-            };
-
-            const isAgeInvalid = !noAnswers.age && formData.age !== '' && parseInt(formData.age) < 18;
-
-            const isFormComplete = () => {
-                const check = (f) => {
-                    if (noAnswers[f]) return true; 
-                    const val = formData[f];
-                    if (Array.isArray(val)) return val.length > 0;
-                    return val !== '' && val !== undefined && val !== null;
-                };
-
-                const required = ['age', 'gender', 'height', 'weight', 'insurance', 'dietStyle', 'dietHistory', 'sportFreq', 'tobacco', 'alcohol', 'drugs', 'bodySatisfaction', 'bodyChangeGoals', 'mentalHealth', 'sexOrientation', 'reproduction', 'stis', 'income', 'debts'];
-                return required.every(f => check(f)) && !isAgeInvalid;
-            };
-
-            const NoAnswer = ({ field }) => (
-                <label className="flex items-center gap-2 mt-2 cursor-pointer w-fit group">
-                    <input type="checkbox" checked={!!noAnswers[field]} onChange={() => handleNoAnswerToggle(field)} className="w-3.5 h-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
-                    <span className="text-[9px] text-slate-400 group-hover:text-slate-600 uppercase tracking-widest font-bold transition-colors">Keine Angabe</span>
-                </label>
-            );
-
-            const JaNeinInput = ({ label, field, placeholder }) => (
-                <div className={noAnswers[field] ? 'opacity-30' : ''}>
-                    <label className="text-sm font-bold text-slate-700 block mb-3">{label}</label>
-                    <div className="flex gap-4 mb-3">
-                        {['ja', 'nein'].map(opt => (
-                            <button key={opt} type="button" disabled={noAnswers[field]} onClick={() => { interact(); setFormData(prev => ({...prev, [field]: opt})); }} className={`px-6 py-2 rounded-full text-xs font-black border-2 transition-all ${formData[field] === opt ? 'bg-slate-900 border-slate-900 text-white' : 'bg-transparent border-slate-200 text-slate-400'}`}>
-                                {opt.toUpperCase()}
-                            </button>
-                        ))}
+            <div className="fixed top-[155px] left-1/2 -translate-x-1/2 w-[95%] max-w-xl z-[50] animate-fade-in pointer-events-none">
+                <div className={`backdrop-blur-sm border-2 p-4 rounded-[24px] shadow-xl shadow-black/5 ${config.info ? 'bg-red-50/95 border-red-200' : 'bg-blue-50/95 border-blue-200'}`}>
+                    <div className={`flex items-center gap-2 font-black mb-1 uppercase tracking-tighter text-[10px] ${config.info ? 'text-red-600' : 'text-blue-600'}`}>
+                        <Icon path={config.info ? paths.shield : paths.activity} className="w-4 h-4"/> 
+                        {config.info ? 'HINWEIS ZUR DATENERFASSUNG' : 'WILLKOMMEN BEI VITALCORE'}
                     </div>
-                    {formData[field] === 'ja' && !noAnswers[field] && (
-                        <textarea name={`${field}Details`} value={formData[`${field}Details`] || ''} onChange={handleChange} placeholder={placeholder} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs outline-none focus:bg-white h-20 animate-fade-in" />
-                    )}
-                    <NoAnswer field={field} />
+                    <p className={`text-[9px] leading-relaxed ${config.info ? 'text-red-800/90' : 'text-blue-800/90'}`}>
+                        {config.info 
+                            ? "Alles, was Sie auf dieser Seite tun oder eingeben, wird lückenlos aufgezeichnet. Ihre Informationen werden sofort ausgewertet, um ein persönliches Bild Ihrer Person und Ihres Privatlebens zu erstellen. Einmal erfasst, bleiben diese Informationen dauerhaft gespeichert."
+                            : "VitalCore bietet Ihnen eine moderne Plattform für fundierte Gesundheitsanalysen. Wir laden Sie ein, die verschiedenen Bereiche zu erkunden und unsere Funktionen zu nutzen, um Ihre Ziele für mehr Wohlbefinden zu erreichen."
+                        }
+                    </p>
                 </div>
-            );
+            </div>
+            
+            <div className="max-w-2xl mx-auto bg-white shadow-2xl rounded-[40px] overflow-hidden border border-slate-200 relative z-10">
+                <header className="bg-slate-900 p-10 text-white text-center">
+                    <h2 className="text-lg font-light tracking-[0.2em] uppercase">Systembiologisches Gesundheitsprofil</h2>
+                    <span className="text-[10px] text-blue-400 font-bold uppercase mt-2 block">Clinical Data Access</span>
+                </header>
 
-            return (
-                <div className="min-h-screen bg-slate-100 py-12 px-4 relative pt-40 text-slate-900">
-                    <StimulusOverlay config={config} variant="form" />
-                    
-                    {config.info && (
-                        <div className="fixed top-[155px] left-1/2 -translate-x-1/2 w-[95%] max-w-xl z-[50] animate-fade-in pointer-events-none">
-                            <div className="bg-red-50/95 backdrop-blur-sm border-2 border-red-200 p-4 rounded-[24px] shadow-xl shadow-red-900/10">
-                                <div className="flex items-center gap-2 font-black mb-1 text-red-600 uppercase tracking-tighter text-[10px]">
-                                    <Icon path={paths.shield} className="w-4 h-4"/> HINWEIS ZUR DATENERFASSUNG 
-                                </div>
-                                <p className="text-[9px] leading-relaxed text-red-800/90">
-                                    Alles, was Sie auf dieser Seite tun oder eingeben, wird lückenlos aufgezeichnet. Ihre Informationen werden sofort ausgewertet, um ein persönliches Bild Ihrer Person und Ihres Privatlebens zu erstellen. Einmal erfasst, bleiben diese Informationen dauerhaft gespeichert.
-                                </p>
+                <form onSubmit={(e) => {e.preventDefault(); if(isFormComplete()) onSubmit(formData);}} className="p-8 md:p-12 space-y-16">
+                    <section className="space-y-8">
+                        <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 01: Biometrische Parameter</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className={noAnswers.age ? 'opacity-30' : ''}>
+                                <label className="text-sm font-bold block mb-2">Wie alt sind Sie?</label>
+                                <input type="text" name="age" disabled={noAnswers.age} value={formData.age} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent" />
+                                <NoAnswer field="age" noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
+                            </div>
+                            <div className={noAnswers.gender ? 'opacity-30' : ''}>
+                                <label className="text-sm font-bold block mb-2">Welchem Geschlecht fühlen Sie sich zugehörig?</label>
+                                <select name="gender" disabled={noAnswers.gender} value={formData.gender} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
+                                    <option value="">Wählen...</option><option value="m">Männlich</option><option value="w">Weiblich</option><option value="d">Divers</option>
+                                </select>
+                                <NoAnswer field="gender" noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
                             </div>
                         </div>
-                    )}
-                    
-                    <div className="max-w-2xl mx-auto bg-white shadow-2xl rounded-[40px] overflow-hidden border border-slate-200 relative z-10">
-                        <header className="bg-slate-900 p-10 text-white text-center">
-                            <h2 className="text-lg font-light tracking-[0.2em] uppercase">Systembiologisches Gesundheitsprofil</h2>
-                            <span className="text-[10px] text-blue-400 font-bold uppercase mt-2 block">Clinical Data Access</span>
-                        </header>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className={noAnswers.height ? 'opacity-30' : ''}>
+                                <label className="text-sm font-bold block mb-2">Ihre Körpergröße (cm)?</label>
+                                <input type="text" name="height" disabled={noAnswers.height} value={formData.height} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent" />
+                                <NoAnswer field="height" noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
+                            </div>
+                            <div className={noAnswers.weight ? 'opacity-30' : ''}>
+                                <label className="text-sm font-bold block mb-2">Ihr Körpergewicht (kg)?</label>
+                                <input type="text" name="weight" disabled={noAnswers.weight} value={formData.weight} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent" />
+                                <NoAnswer field="weight" noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
+                            </div>
+                        </div>
+                        <div className={noAnswers.insurance ? 'opacity-30' : ''}>
+                            <label className="text-sm font-bold block mb-2">Wie sind Sie versichert?</label>
+                            <select name="insurance" disabled={noAnswers.insurance} value={formData.insurance} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
+                                <option value="">Wählen...</option><option value="gkv">Gesetzlich</option><option value="pkv">Privat</option><option value="andere">Andere</option>
+                            </select>
+                            <NoAnswer field="insurance" noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
+                        </div>
+                    </section>
 
-                        <form onSubmit={(e) => {e.preventDefault(); if(isFormComplete()) onSubmit(formData);}} className="p-8 md:p-12 space-y-16">
-                            
-                            <section className="space-y-8">
-                                <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 01: Biometrische Parameter</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div className={noAnswers.age ? 'opacity-30' : ''}>
-                                        <label className="text-sm font-bold block mb-2">Wie alt sind Sie?</label>
-                                        <input type="text" name="age" disabled={noAnswers.age} value={noAnswers.age ? '' : formData.age} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent" />
-                                        <NoAnswer field="age" />
-                                    </div>
-                                    <div className={noAnswers.gender ? 'opacity-30' : ''}>
-                                        <label className="text-sm font-bold block mb-2">Welchem Geschlecht fühlen Sie sich zugehörig?</label>
-                                        <select name="gender" disabled={noAnswers.gender} value={noAnswers.gender ? '' : formData.gender} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
-                                            <option value="">Wählen...</option><option value="m">Männlich</option><option value="w">Weiblich</option><option value="d">Divers</option>
-                                        </select>
-                                        <NoAnswer field="gender" />
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div className={noAnswers.height ? 'opacity-30' : ''}>
-                                        <label className="text-sm font-bold block mb-2">Ihre Körpergröße (cm)?</label>
-                                        <input type="text" name="height" disabled={noAnswers.height} value={noAnswers.height ? '' : formData.height} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent" />
-                                        <NoAnswer field="height" />
-                                    </div>
-                                    <div className={noAnswers.weight ? 'opacity-30' : ''}>
-                                        <label className="text-sm font-bold block mb-2">Ihr Körpergewicht (kg)?</label>
-                                        <input type="text" name="weight" disabled={noAnswers.weight} value={noAnswers.weight ? '' : formData.weight} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent" />
-                                        <NoAnswer field="weight" />
-                                    </div>
-                                </div>
-                                <div className={noAnswers.insurance ? 'opacity-30' : ''}>
-                                    <label className="text-sm font-bold block mb-2">Wie sind Sie versichert?</label>
-                                    <select name="insurance" disabled={noAnswers.insurance} value={formData.insurance} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
-                                        <option value="">Wählen...</option><option value="gkv">Gesetzlich</option><option value="pkv">Privat</option><option value="andere">Andere</option>
-                                    </select>
-                                    <NoAnswer field="insurance" />
-                                </div>
-                            </section>
+                    <section className="space-y-8">
+                        <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 02: Metabolischer Lebensstil</h3>
+                        <div className={noAnswers.dietStyle ? 'opacity-30' : ''}>
+                            <label className="text-sm font-bold block mb-4">Welche Ernährungsform(en) praktizieren Sie aktuell?</label>
+                            <div className="flex flex-wrap gap-2">
+                                {['Omnivor', 'Vegetarisch', 'Vegan', 'Keto', 'Fasten', 'Intervall'].map(diet => (
+                                    <button key={diet} type="button" disabled={noAnswers.dietStyle} onClick={() => { interact(); const next = formData.dietStyle.includes(diet) ? formData.dietStyle.filter(d => d !== diet) : [...formData.dietStyle, diet]; setFormData(prev => ({...prev, dietStyle: next})); }} className={`px-4 py-2 rounded-full text-xs font-bold border-2 transition-all ${formData.dietStyle.includes(diet) ? 'bg-blue-600 border-blue-600 text-white shadow-md' : 'border-slate-200 text-slate-400'}`}>
+                                        {diet}
+                                    </button>
+                                ))}
+                            </div>
+                            <NoAnswer field="dietStyle" noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
+                        </div>
+                        <div className={noAnswers.dietHistory ? 'opacity-30' : ''}>
+                             <label className="text-sm font-bold block mb-2">Haben Sie in der Vergangenheit Diäten zur Gewichtsreduktion durchgeführt?</label>
+                             <textarea name="dietHistory" disabled={noAnswers.dietHistory} value={formData.dietHistory} onChange={handleChange} placeholder="z.B. Low-Fat, Saftkuren..." className="w-full p-4 bg-slate-50 border border-slate-100 rounded-lg outline-none h-20" />
+                             <NoAnswer field="dietHistory" noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
+                        </div>
+                    </section>
 
-                            <section className="space-y-8">
-                                <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 02: Metabolischer Lebensstil</h3>
-                                <div className={noAnswers.dietStyle ? 'opacity-30' : ''}>
-                                    <label className="text-sm font-bold block mb-4">Welche Ernährungsform(en) praktizieren Sie aktuell?</label>
-                                    <div className="flex flex-wrap gap-2">
-                                        {['Omnivor', 'Vegetarisch', 'Vegan', 'Keto', 'Fasten', 'Intervall'].map(diet => (
-                                            <button key={diet} type="button" disabled={noAnswers.dietStyle} onClick={() => { interact(); const next = formData.dietStyle.includes(diet) ? formData.dietStyle.filter(d => d !== diet) : [...formData.dietStyle, diet]; setFormData(prev => ({...prev, dietStyle: next})); }} className={`px-4 py-2 rounded-full text-xs font-bold border-2 transition-all ${formData.dietStyle.includes(diet) ? 'bg-blue-600 border-blue-600 text-white shadow-md' : 'border-slate-200 text-slate-400'}`}>
-                                                {diet}
-                                            </button>
-                                        ))}
-                                    </div>
-                                    <NoAnswer field="dietStyle" />
+                    <section className="space-y-12">
+                        <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 03-04: Lebensstil & Toxikologie</h3>
+                        <div className={noAnswers.sportFreq ? 'opacity-30' : ''}>
+                            <label className="text-sm font-bold block mb-2">Wie häufig treiben Sie Sport?</label>
+                            <select name="sportFreq" disabled={noAnswers.sportFreq} value={formData.sportFreq} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
+                                <option value="">Wählen...</option><option value="täglich">Täglich</option><option value="oft">2-4 mal pro Woche</option><option value="selten">1 mal pro Woche</option><option value="nie">Seltener / Nie</option>
+                            </select>
+                            {formData.sportFreq !== 'nie' && formData.sportFreq !== '' && !noAnswers.sportFreq && (
+                                <div className="mt-4 animate-fade-in">
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2">Welche Sportarten üben Sie aus?</label>
+                                    <input type="text" name="sportType" value={formData.sportType} onChange={handleChange} placeholder="z.B. Krafttraining, Laufen..." className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm" />
                                 </div>
-                                <div className={noAnswers.dietHistory ? 'opacity-30' : ''}>
-                                     <label className="text-sm font-bold block mb-2">Haben Sie in der Vergangenheit Diäten zur Gewichtsreduktion durchgeführt?</label>
-                                     <textarea name="dietHistory" disabled={noAnswers.dietHistory} value={noAnswers.dietHistory ? '' : formData.dietHistory} onChange={handleChange} placeholder="z.B. Low-Fat, Saftkuren..." className="w-full p-4 bg-slate-50 border border-slate-100 rounded-lg outline-none h-20" />
-                                     <NoAnswer field="dietHistory" />
-                                </div>
-                            </section>
+                            )}
+                            <NoAnswer field="sportFreq" noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
+                        </div>
+                        <JaNeinInput label="Konsumieren Sie Tabak- oder Nikotinprodukte?" field="tobacco" placeholder="Welche Produkte und wie häufig?" formData={formData} setFormData={setFormData} noAnswers={noAnswers} setNoAnswers={setNoAnswers} interact={interact} />
+                        <JaNeinInput label="Konsumieren Sie regelmäßig alkoholische Getränke?" field="alcohol" placeholder="Welche Getränke und wie häufig?" formData={formData} setFormData={setFormData} noAnswers={noAnswers} setNoAnswers={setNoAnswers} interact={interact} />
+                        <JaNeinInput label="Nutzen Sie illegale Substanzen (z.B. Cannabis, Kokain)?" field="drugs" placeholder="Welche Substanzen und wie häufig?" formData={formData} setFormData={setFormData} noAnswers={noAnswers} setNoAnswers={setNoAnswers} interact={interact} />
+                    </section>
 
-                            <section className="space-y-12">
-                                <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 03-04: Lebensstil & Toxikologie</h3>
-                                <div className={noAnswers.sportFreq ? 'opacity-30' : ''}>
-                                    <label className="text-sm font-bold block mb-2">Wie häufig treiben Sie Sport?</label>
-                                    <select name="sportFreq" disabled={noAnswers.sportFreq} value={formData.sportFreq} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
-                                        <option value="">Wählen...</option><option value="täglich">Täglich</option><option value="oft">2-4 mal pro Woche</option><option value="selten">1 mal pro Woche</option><option value="nie">Seltener / Nie</option>
-                                    </select>
-                                    {formData.sportFreq !== 'nie' && formData.sportFreq !== '' && !noAnswers.sportFreq && (
-                                        <div className="mt-4 animate-fade-in">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2">Welche Sportarten üben Sie aus?</label>
-                                            <input type="text" name="sportType" value={formData.sportType} onChange={handleChange} placeholder="z.B. Krafttraining, Laufen..." className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm" />
-                                        </div>
-                                    )}
-                                    <NoAnswer field="sportFreq" />
-                                </div>
-                                <JaNeinInput label="Konsumieren Sie Tabak- oder Nikotinprodukte?" field="tobacco" placeholder="Welche Produkte und wie häufig?" />
-                                <JaNeinInput label="Konsumieren Sie regelmäßig alkoholische Getränke?" field="alcohol" placeholder="Welche Getränke und wie häufig?" />
-                                <JaNeinInput label="Nutzen Sie illegale Substanzen (z.B. Cannabis, Kokain)?" field="drugs" placeholder="Welche Substanzen und wie häufig?" />
-                            </section>
+                    <section className="space-y-12">
+                        <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 05: Psychosomatische Selbstwahrnehmung</h3>
+                        <div className={noAnswers.bodySatisfaction ? 'opacity-30' : ''}>
+                            <label className="text-sm font-bold block mb-1">Wie zufrieden sind Sie mit Ihrem aktuellen Körperzustand (1-10)?</label>
+                            <input type="range" name="bodySatisfaction" min="1" max="10" disabled={noAnswers.bodySatisfaction} value={formData.bodySatisfaction} onChange={handleChange} className="w-full accent-blue-600" />
+                            <NoAnswer field="bodySatisfaction" noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
+                        </div>
+                        <JaNeinInput label="Gibt es spezifische Aspekte an Ihrem Körper, die Sie operativ ändern möchten?" field="bodyChangeGoals" placeholder="Welche Eingriffe ziehen Sie in Erwägung?" formData={formData} setFormData={setFormData} noAnswers={noAnswers} setNoAnswers={setNoAnswers} interact={interact} />
+                        <JaNeinInput label="Bestehen psychische Vorbelastungen oder befinden Sie sich in Behandlung?" field="mentalHealth" placeholder="Diagnosen oder Behandlungen?" formData={formData} setFormData={setFormData} noAnswers={noAnswers} setNoAnswers={setNoAnswers} interact={interact} />
+                    </section>
 
-                            <section className="space-y-12">
-                                <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 05: Psychosomatische Selbstwahrnehmung</h3>
-                                <div className={noAnswers.bodySatisfaction ? 'opacity-30' : ''}>
-                                    <label className="text-sm font-bold block mb-1">Wie zufrieden sind Sie mit Ihrem aktuellen Körperzustand (1-10)?</label>
-                                    <input type="range" name="bodySatisfaction" min="1" max="10" disabled={noAnswers.bodySatisfaction} value={formData.bodySatisfaction} onChange={handleChange} className="w-full accent-blue-600" />
-                                    <NoAnswer field="bodySatisfaction" />
-                                </div>
-                                <JaNeinInput label="Gibt es spezifische Aspekte an Ihrem Körper, die Sie operativ ändern möchten?" field="bodyChangeGoals" placeholder="Welche Eingriffe ziehen Sie in Erwägung?" />
-                                <JaNeinInput label="Bestehen psychische Vorbelastungen oder befinden Sie sich in Behandlung?" field="mentalHealth" placeholder="Diagnosen oder Behandlungen?" />
-                            </section>
+                    <section className="space-y-12">
+                        <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 06: Reproduktive Analyse</h3>
+                        <div className={noAnswers.sexOrientation ? 'opacity-30' : ''}>
+                            <label className="text-sm font-bold block mb-2">Was ist Ihre sexuelle Orientierung?</label>
+                            <select name="sexOrientation" disabled={noAnswers.sexOrientation} value={formData.sexOrientation} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
+                                <option value="">Wählen...</option><option value="hetero">Heterosexuell</option><option value="homo">Homosexuell</option><option value="bi">Bisexuell</option><option value="andere">Andere</option>
+                            </select>
+                            <NoAnswer field="sexOrientation" noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
+                        </div>
+                        <div className={noAnswers.reproduction ? 'opacity-30' : ''}>
+                            <label className="text-sm font-bold block mb-2">Besteht bei Ihnen aktuell ein Reproduktionswunsch (Kinderwunsch)?</label>
+                            <select name="reproduction" disabled={noAnswers.reproduction} value={formData.reproduction} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
+                                <option value="">Wählen...</option><option value="ja">Ja</option><option value="nein">Nein</option><option value="vielleicht">Vielleicht</option>
+                            </select>
+                            <NoAnswer field="reproduction" noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
+                        </div>
+                        <JaNeinInput label="Sind Ihnen aktuelle oder vergangene Geschlechtskrankheiten bekannt?" field="stis" placeholder="Historie der Infektionen..." formData={formData} setFormData={setFormData} noAnswers={noAnswers} setNoAnswers={setNoAnswers} interact={interact} />
+                    </section>
 
-                            <section className="space-y-12">
-                                <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 06: Reproduktive Analyse</h3>
-                                <div className={noAnswers.sexOrientation ? 'opacity-30' : ''}>
-                                    <label className="text-sm font-bold block mb-2">Was ist Ihre sexuelle Orientierung?</label>
-                                    <select name="sexOrientation" disabled={noAnswers.sexOrientation} value={formData.sexOrientation} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
-                                        <option value="">Wählen...</option><option value="hetero">Heterosexuell</option><option value="homo">Homosexuell</option><option value="bi">Bisexuell</option><option value="andere">Andere</option>
-                                    </select>
-                                    <NoAnswer field="sexOrientation" />
-                                </div>
-                                <div className={noAnswers.reproduction ? 'opacity-30' : ''}>
-                                    <label className="text-sm font-bold block mb-2">Besteht bei Ihnen aktuell ein Reproduktionswunsch (Kinderwunsch)?</label>
-                                    <select name="reproduction" disabled={noAnswers.reproduction} value={formData.reproduction} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
-                                        <option value="">Wählen...</option><option value="ja">Ja</option><option value="nein">Nein</option><option value="vielleicht">Vielleicht</option>
-                                    </select>
-                                    <NoAnswer field="reproduction" />
-                                </div>
-                                <JaNeinInput label="Sind Ihnen aktuelle oder vergangene Geschlechtskrankheiten bekannt?" field="stis" placeholder="Historie der Infektionen..." />
-                            </section>
+                    <section className="space-y-12">
+                        <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 07: Sozio-Ökonomischer Status</h3>
+                        <div className={noAnswers.income ? 'opacity-30' : ''}>
+                            <label className="text-sm font-bold block mb-2">Wie hoch ist ihr monatliches Netto-Einkommen?</label>
+                            <select name="income" disabled={noAnswers.income} value={formData.income} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
+                                <option value="">Wählen...</option><option value="1">Bis 1.500 €</option><option value="2">1.500 € - 3.500 €</option><option value="3">3.500 € - 5.000 €</option><option value="4">Über 5.000 €</option>
+                            </select>
+                            <NoAnswer field="income" noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
+                        </div>
+                        <JaNeinInput label="Bestehen finanzielle Schulden?" field="debts" placeholder="Art oder ungefähre Höhe der Schulden?" formData={formData} setFormData={setFormData} noAnswers={noAnswers} setNoAnswers={setNoAnswers} interact={interact} />
+                    </section>
 
-                            <section className="space-y-12">
-                                <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 07: Sozio-Ökonomischer Status</h3>
-                                <div className={noAnswers.income ? 'opacity-30' : ''}>
-                                    <label className="text-sm font-bold block mb-2">Wie hoch ist ihr monatliches Netto-Einkommen?</label>
-                                    <select name="income" disabled={noAnswers.income} value={formData.income} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
-                                        <option value="">Wählen...</option><option value="1">Bis 1.500 €</option><option value="2">1.500 € - 3.500 €</option><option value="3">3.500 € - 5.000 €</option><option value="4">Über 5.000 €</option>
-                                    </select>
-                                    <NoAnswer field="income" />
-                                </div>
-                                <JaNeinInput label="Bestehen finanzielle Schulden?" field="debts" placeholder="Art oder ungefähre Höhe der Schulden?" />
-                            </section>
-
-                            <button type="submit" disabled={timeLeft > 0 || !isFormComplete()} className={`w-full py-6 font-black text-xs uppercase tracking-[0.5em] rounded-3xl transition-all ${timeLeft > 0 || !isFormComplete() ? 'bg-slate-100 text-slate-300 cursor-not-allowed shadow-none' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-2xl active:scale-[0.98]'}`}>
-                                {!isFormComplete() ? 'DATENSATZ UNVOLLSTÄNDIG' : (timeLeft > 0 ? `VALIDIERUNG LÄUFT (${timeLeft}S)` : 'GESUNDHEITSPROFIL FINALISIEREN')}
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            );
-        };
+                    <button type="submit" disabled={timeLeft > 0 || !isFormComplete()} className={`w-full py-6 font-black text-xs uppercase tracking-[0.5em] rounded-3xl transition-all ${timeLeft > 0 || !isFormComplete() ? 'bg-slate-100 text-slate-300 cursor-not-allowed shadow-none' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-2xl active:scale-[0.98]'}`}>
+                        {!isFormComplete() ? 'DATENSATZ UNVOLLSTÄNDIG' : (timeLeft > 0 ? `VALIDIERUNG LÄUFT (${timeLeft}S)` : 'GESUNDHEITSPROFIL FINALISIEREN')}
+                    </button>
+                </form>
+            </div>
+        </div>
+    );
+};
 
         const LoadingScreen = ({ onFinished }) => {
             useEffect(() => { const timer = setTimeout(onFinished, 3000); return () => clearTimeout(timer); }, []);
