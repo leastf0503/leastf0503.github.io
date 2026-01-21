@@ -295,7 +295,7 @@
 
     const options = [
         { id: 'dog', label: 'Hundebellen' },
-        { id: 'helicopter', label: 'Hubschrauber' },
+        { id: 'bell', label: 'Glocke' },
         { id: 'rain', label: 'Regenschauer' },
         { id: 'car', label: 'Autohupe' }
     ];
@@ -308,7 +308,7 @@
 
     const checkResult = (id) => {
         setSelected(id);
-        if (id === 'helicopter') {
+        if (id === 'bell') {
             onPassed(); // Erfolg! Weiter zum Blog
         } else {
             setError(true);
@@ -341,7 +341,7 @@
                                 onClick={() => checkResult(opt.id)}
                                 className={`py-3 rounded-xl border-2 font-bold transition-all ${
                                     selected === opt.id 
-                                        ? (opt.id === 'helicopter' ? 'border-green-500 bg-green-50 text-green-700' : 'border-red-500 bg-red-50 text-red-700')
+                                        ? (opt.id === 'bell' ? 'border-green-500 bg-green-50 text-green-700' : 'border-red-500 bg-red-50 text-red-700')
                                         : 'border-slate-100 hover:border-blue-200 text-slate-600'
                                 }`}
                             >
@@ -985,7 +985,7 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
         {/* 2. NEU: Audio Test */}
         {step === 'audio_test' && (
             <AudioTest 
-                audioFile="helicopter.mp3" 
+                audioFile="Glocke.mp3" 
                 onPassed={() => {
                     // Wenn bestanden, starte Timer und zeige Blog
                     timers.current.blogStart = Date.now();
