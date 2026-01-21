@@ -424,41 +424,38 @@
         <div className="fixed bottom-0 left-0 right-0 z-50 p-4 md:p-8 bg-white shadow-[0_-20px_50px_rgba(0,0,0,0.15)] border-t-4 border-blue-600 animate-slide-up rounded-t-[40px]">
             <div className="max-w-7xl mx-auto relative pt-8">
                 
-             {/* 1. SCHWEBENDER TEIL: Nach RECHTS verschoben über die Buttons */}
-<div className="absolute -top-48 left-0 right-0 pointer-events-none">
-    {/* Dieser Container begrenzt die Breite auf die des Banners (max-w-7xl) */}
-    <div className="max-w-7xl mx-auto px-4 md:px-8 flex justify-end">
-        
-        {/* Die eigentliche Einheit aus Augen und Box */}
-        <div className="flex items-center gap-6 pointer-events-auto">
-            
-            {/* Augen-Käfig (links von der Box) */}
-            <div className="w-40 h-20 flex items-center justify-center relative">
-                <div className="scale-100">
-                    <StimulusOverlay config={config} variant="banner" />
+                {/* SCHWEBENDER TEIL: Augen und Info-Box ZENTRIERT über dem Banner */}
+                <div className="absolute -top-48 left-0 right-0 pointer-events-none">
+                    {/* justify-center sorgt für die mittige Ausrichtung */}
+                    <div className="max-w-7xl mx-auto px-4 md:px-8 flex justify-center">
+                        
+                        <div className="flex items-center gap-8 pointer-events-auto">
+                            
+                            {/* Augen-Käfig */}
+                            <div className="w-40 h-20 flex items-center justify-center relative">
+                                <div className="scale-100">
+                                    <StimulusOverlay config={config} variant="banner" />
+                                </div>
+                            </div>
+
+                            {/* Die Info-Box mit VOLLSTÄNDIGEM Text */}
+                            <div className={`max-w-md p-6 rounded-[30px] shadow-2xl border-2 animate-fade-in ${config.info ? 'bg-red-50/95 border-red-200' : 'bg-blue-50/95 border-blue-200'}`}>
+                                <div className={`flex items-center gap-2 font-black mb-2 uppercase tracking-tighter text-[10px] ${config.info ? 'text-red-600' : 'text-blue-600'}`}>
+                                    <Icon path={config.info ? paths.shield : paths.activity} className="w-4 h-4"/> 
+                                    {config.info ? 'HINWEIS ZUR DATENERFASSUNG' : 'WILLKOMMEN BEI VITALCORE'}
+                                </div>
+                                <p className={`text-[10px] leading-relaxed ${config.info ? 'text-red-800/90' : 'text-blue-800/90'}`}>
+                                    {config.info 
+                                        ? "Alles, was Sie auf dieser Seite tun oder eingeben, wird lückenlos aufgezeichnet. Ihre Informationen werden sofort ausgewertet, um ein persönliches Bild Ihrer Person und Ihres Privatlebens zu erstellen. Einmal erfasst, bleiben diese Informationen dauerhaft gespeichert."
+                                        : "VitalCore bietet Ihnen eine moderne Plattform für fundiertes medizinisches Wissen und individuelle Gesundheitsanalysen. Wir laden Sie ein, die verschiedenen Bereiche unseres Portals zu erkunden und unsere Funktionen zu nutzen, um Ihre persönlichen Ziele für mehr Wohlbefinden und Vitalität im Alltag zu erreichen."
+                                    }
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            {/* Die Info-Box */}
-            <div className={`max-w-sm p-5 rounded-[30px] shadow-2xl border-2 animate-fade-in ${config.info ? 'bg-red-50/95 border-red-200' : 'bg-blue-50/95 border-blue-200'}`}>
-                <div className={`flex items-center gap-2 font-black mb-1 uppercase tracking-tighter text-[10px] ${config.info ? 'text-red-600' : 'text-blue-600'}`}>
-                    <Icon path={config.info ? paths.shield : paths.activity} className="w-4 h-4"/> 
-                    {config.info ? 'HINWEIS' : 'WILLKOMMEN'}
-                </div>
-                <p className={`text-[10px] leading-relaxed ${config.info ? 'text-red-800/90' : 'text-blue-800/90'}`}>
-                    {config.info 
-                        ? "Alles wird lückenlos aufgezeichnet und dauerhaft gespeichert."
-                        : "VitalCore bietet Ihnen eine moderne Plattform für Gesundheitsanalysen."
-                    }
-                </p>
-            </div>
-
-        </div>
-    </div>
-    </div>
-
-
-                {/* 2. BANNER-INHALT (Das weiße Feld unten) */}
+                {/* Banner-Inhalt unten */}
                 <div className="flex flex-col lg:flex-row gap-8 items-stretch lg:items-center">
                     <div className="flex-1 space-y-2">
                         <h3 className="text-xl font-black text-slate-900 tracking-tight">Privatsphäre-Einstellungen</h3>
@@ -475,7 +472,6 @@
                         </button>
                     </div>
 
-                    {/* Die Buttons */}
                     <div className="flex flex-col gap-3 shrink-0 min-w-[200px] justify-center">
                         <button onClick={() => onDecision('accept_all')} className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl shadow-lg transition-all transform active:scale-95 text-sm uppercase">
                             Alle akzeptieren
@@ -489,7 +485,6 @@
         </div>
     );
 };
-
        const BlogPage = ({ onAction, mode = 'initial', cookieChoice }) => {
             const [selectedArticle, setSelectedArticle] = useState(null);
             const [categoryFilter, setCategoryFilter] = useState("Alle Beiträge");
