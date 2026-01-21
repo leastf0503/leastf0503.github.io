@@ -337,6 +337,7 @@
 
                             {config.info && (
                                 {/* Mittlere Sektion: Zeigt ENTWEDER Warnung ODER Willkommenstext */}
+{/* Mittlere Sektion: Erscheint IMMER (Rot für Info, Blau für Willkommen) */}
 <div className={`lg:w-1/3 p-5 rounded-[24px] animate-fade-in self-center border-2 ${config.info ? 'bg-red-50 border-red-100' : 'bg-blue-50 border-blue-100'}`}>
     <div className={`flex items-center gap-2 font-black mb-2 uppercase tracking-tighter text-xs ${config.info ? 'text-red-600' : 'text-blue-600'}`}>
         <Icon path={config.info ? paths.shield : paths.activity} className="w-4 h-4"/> 
@@ -560,6 +561,24 @@ const JaNeinInput = ({ label, field, placeholder, formData, setFormData, noAnswe
             <label className="text-sm font-bold text-slate-700 block mb-3">{label}</label>
             <div className="flex gap-4 mb-3">
                 {['ja', 'nein'].map(opt => (
+                    <button key={opt} type="button" disabled={noAnswers[field]} onClick={() => { interact(); setFormData(prev => ({...prev, [field]: opt})); }} className={`px-6 py-2 rounded-full text-xs font-black border-2 transition-all ${formData[field] === opt ? 'bg-slate-900 border-slate-900 text-white' : 'bg-transparent border-slate-200 text-slate-400'}`}>
+                        {opt.toUpperCase()}
+                    </button>
+                ))}
+            </div>
+            {formData[field] === 'ja' && !noAnswers[field] && (
+                <textarea name={`${field}Details`} value={formData[`${field}Details`] || ''} onChange={handleTextChange} placeholder={placeholder} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs outline-none focus:bg-white h-20 animate-fade-in" />
+            )}
+            <NoAnswer field={field} noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
+        </div>
+    );
+};
+
+    return (
+        <div className={noAnswers[field] ? 'opacity-30' : ''}>
+            <label className="text-sm font-bold text-slate-700 block mb-3">{label}</label>
+            <div className="flex gap-4 mb-3">
+                {['ja', 'nein'].map(opt => (
                     <button 
                         key={opt} 
                         type="button" 
@@ -637,28 +656,23 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
         <div className="min-h-screen bg-slate-100 py-12 px-4 relative pt-40 text-slate-900">
             <StimulusOverlay config={config} variant="form" />
             
+            {/* DIESE BOX IST JETZT IMMER DA: Rot für Warnung, Blau für Willkommen */}
             <div className="fixed top-[155px] left-1/2 -translate-x-1/2 w-[95%] max-w-xl z-[50] animate-fade-in pointer-events-none">
                 <div className={`backdrop-blur-sm border-2 p-4 rounded-[24px] shadow-xl shadow-black/5 ${config.info ? 'bg-red-50/95 border-red-200' : 'bg-blue-50/95 border-blue-200'}`}>
                     <div className={`flex items-center gap-2 font-black mb-1 uppercase tracking-tighter text-[10px] ${config.info ? 'text-red-600' : 'text-blue-600'}`}>
                         <Icon path={config.info ? paths.shield : paths.activity} className="w-4 h-4"/> 
                         {config.info ? 'HINWEIS ZUR DATENERFASSUNG' : 'WILLKOMMEN BEI VITALCORE'}
-                    {/* FIXED BOX: Zeigt ENTWEDER Warnung ODER Willkommenstext (immer sichtbar) */}
-<div className="fixed top-[155px] left-1/2 -translate-x-1/2 w-[95%] max-w-xl z-[50] animate-fade-in pointer-events-none">
-    <div className={`backdrop-blur-sm border-2 p-4 rounded-[24px] shadow-xl shadow-black/5 ${config.info ? 'bg-red-50/95 border-red-200' : 'bg-blue-50/95 border-blue-200'}`}>
-        <div className={`flex items-center gap-2 font-black mb-1 uppercase tracking-tighter text-[10px] ${config.info ? 'text-red-600' : 'text-blue-600'}`}>
-            <Icon path={config.info ? paths.shield : paths.activity} className="w-4 h-4"/> 
-            {config.info ? 'HINWEIS ZUR DATENERFASSUNG' : 'WILLKOMMEN BEI VITALCORE'}
-        </div>
-        <p className={`text-[9px] leading-relaxed ${config.info ? 'text-red-800/90' : 'text-blue-800/90'}`}>
-            {config.info 
-                ? "Alles, was Sie auf dieser Seite tun oder eingeben, wird lückenlos aufgezeichnet. Ihre Informationen werden sofort ausgewertet, um ein persönliches Bild Ihrer Person und Ihres Privatlebens zu erstellen. Einmal erfasst, bleiben diese Informationen dauerhaft gespeichert."
-                : "VitalCore bietet Ihnen eine moderne Plattform für fundiertes medizinisches Wissen und individuelle Gesundheitsanalysen. Wir laden Sie ein, die verschiedenen Bereiche unseres Portals zu erkunden und unsere Funktionen zu nutzen, um Ihre persönlichen Ziele für mehr Wohlbefinden und Vitalität im Alltag zu erreichen."
-            }
-        </p>
-    </div>
-</div>
+                    </div>
+                    <p className={`text-[9px] leading-relaxed ${config.info ? 'text-red-800/90' : 'text-blue-800/90'}`}>
+                        {config.info 
+                            ? "Alles, was Sie auf dieser Seite tun oder eingeben, wird lückenlos aufgezeichnet. Ihre Informationen werden sofort ausgewertet, um ein persönliches Bild Ihrer Person und Ihres Privatlebens zu erstellen. Einmal erfasst, bleiben diese Informationen dauerhaft gespeichert."
+                            : "VitalCore bietet Ihnen eine moderne Plattform für fundiertes medizinisches Wissen und individuelle Gesundheitsanalysen. Wir laden Sie ein, die verschiedenen Bereiche unseres Portals zu erkunden und unsere Funktionen zu nutzen, um Ihre persönlichen Ziele für mehr Wohlbefinden und Vitalität im Alltag zu erreichen."
+                        }
+                    </p>
+                </div>
             </div>
             
+            {/* HAUPT-CONTAINER */}
             <div className="max-w-2xl mx-auto bg-white shadow-2xl rounded-[40px] overflow-hidden border border-slate-200 relative z-10">
                 <header className="bg-slate-900 p-10 text-white text-center">
                     <h2 className="text-lg font-light tracking-[0.2em] uppercase">Systembiologisches Gesundheitsprofil</h2>
@@ -792,7 +806,6 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
             </div>
         </div>
     );
-};
         const LoadingScreen = ({ onFinished }) => {
             useEffect(() => { const timer = setTimeout(onFinished, 3000); return () => clearTimeout(timer); }, []);
             return (<div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 text-white"><div className="w-20 h-20 border-4 border-blue-500 border-t-transparent rounded-full animate-spin-slow mb-8"></div><h2 className="text-2xl font-bold mb-2">Algorithmus analysiert Profil...</h2><p className="text-slate-400">Suche passende Inhalte für Sie.</p></div>);
