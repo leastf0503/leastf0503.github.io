@@ -424,26 +424,31 @@
         <div className="fixed bottom-0 left-0 right-0 z-50 p-4 md:p-8 bg-white shadow-[0_-20px_50px_rgba(0,0,0,0.15)] border-t-4 border-blue-600 animate-slide-up rounded-t-[40px]">
             <div className="max-w-7xl mx-auto relative pt-8">
                 
-              {/* 1. SCHWEBENDER TEIL: Augen und Info-Box nebeneinander OHNE Überlagerung */}
-<div className="absolute -top-48 left-1/2 -translate-x-1/2 flex items-center justify-center gap-10 w-[95vw] max-w-6xl pointer-events-none">
-    
-    {/* Der Augen-Container: Wir erzwingen hier 'relative' und schalten die Zentrierung aus */}
-    <div className="shrink-0 pointer-events-auto relative !left-0 !translate-x-0 !transform-none w-48 flex justify-center">
-        <StimulusOverlay config={config} variant="banner" />
-    </div>
-
-    {/* Die Info-Box */}
-    <div className={`pointer-events-auto max-w-md p-6 rounded-[30px] shadow-2xl border-2 animate-fade-in ${config.info ? 'bg-red-50/95 border-red-200' : 'bg-blue-50/95 border-blue-200'}`}>
-        <div className={`flex items-center gap-2 font-black mb-2 uppercase tracking-tighter text-[10px] ${config.info ? 'text-red-600' : 'text-blue-600'}`}>
-            <Icon path={config.info ? paths.shield : paths.activity} className="w-4 h-4"/> 
-            {config.info ? 'HINWEIS ZUR DATENERFASSUNG' : 'WILLKOMMEN BEI VITALCORE'}
+              {/* 1. SCHWEBENDER TEIL: Augen und Info-Box stabil NEBENEINANDER */}
+<div className="absolute -top-44 left-0 right-0 flex justify-center items-center pointer-events-none">
+    <div className="flex items-center gap-8 pointer-events-auto">
+        
+        {/* Augen-Container: Dieser feste Rahmen zwingt die Augen an ihre Position links */}
+        <div className="w-48 h-20 flex items-center justify-center relative">
+            <div className="scale-110">
+                <StimulusOverlay config={config} variant="banner" />
+            </div>
         </div>
-        <p className={`text-[10px] leading-relaxed ${config.info ? 'text-red-800/90' : 'text-blue-800/90'}`}>
-            {config.info 
-                ? "Alles, was Sie auf dieser Seite tun oder eingeben, wird lückenlos aufgezeichnet. Ihre Informationen werden sofort ausgewertet, um ein persönliches Bild Ihrer Person und Ihres Privatlebens zu erstellen. Einmal erfasst, bleiben diese Informationen dauerhaft gespeichert."
-                : "VitalCore bietet Ihnen eine moderne Plattform für fundiertes medizinisches Wissen und individuelle Gesundheitsanalysen. Wir laden Sie ein, die verschiedenen Bereiche unseres Portals zu erkunden und unsere Funktionen zu nutzen."
-            }
-        </p>
+
+        {/* Die Info-Box */}
+        <div className={`max-w-md p-6 rounded-[30px] shadow-2xl border-2 animate-fade-in ${config.info ? 'bg-red-50/95 border-red-200' : 'bg-blue-50/95 border-blue-200'}`}>
+            <div className={`flex items-center gap-2 font-black mb-2 uppercase tracking-tighter text-[10px] ${config.info ? 'text-red-600' : 'text-blue-600'}`}>
+                <Icon path={config.info ? paths.shield : paths.activity} className="w-4 h-4"/> 
+                {config.info ? 'HINWEIS ZUR DATENERFASSUNG' : 'WILLKOMMEN BEI VITALCORE'}
+            </div>
+            <p className={`text-[10px] leading-relaxed ${config.info ? 'text-red-800/90' : 'text-blue-800/90'}`}>
+                {config.info 
+                    ? "Alles, was Sie auf dieser Seite tun oder eingeben, wird lückenlos aufgezeichnet. Ihre Informationen werden sofort ausgewertet, um ein persönliches Bild Ihrer Person und Ihres Privatlebens zu erstellen. Einmal erfasst, bleiben diese Informationen dauerhaft gespeichert."
+                    : "VitalCore bietet Ihnen eine moderne Plattform für fundiertes medizinisches Wissen und individuelle Gesundheitsanalysen. Wir laden Sie ein, die verschiedenen Bereiche unseres Portals zu erkunden und unsere Funktionen zu nutzen."
+                }
+            </p>
+        </div>
+
     </div>
 </div>
 
