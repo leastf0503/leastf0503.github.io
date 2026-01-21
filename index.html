@@ -424,21 +424,16 @@
         <div className="fixed bottom-0 left-0 right-0 z-50 p-4 md:p-8 bg-white shadow-[0_-20px_50px_rgba(0,0,0,0.15)] border-t-4 border-blue-600 animate-slide-up rounded-t-[40px]">
             <div className="max-w-7xl mx-auto relative pt-8">
                 
-                {/* SCHWEBENDER TEIL: Augen und Info-Box ZENTRIERT über dem Banner */}
+                {/* 1. SCHWEBENDER TEIL: Augen und Info-Box ZENTRIERT */}
                 <div className="absolute -top-48 left-0 right-0 pointer-events-none">
-                    {/* justify-center sorgt für die mittige Ausrichtung */}
                     <div className="max-w-7xl mx-auto px-4 md:px-8 flex justify-center">
-                        
                         <div className="flex items-center gap-8 pointer-events-auto">
-                            
-                            {/* Augen-Käfig */}
                             <div className="w-40 h-20 flex items-center justify-center relative">
                                 <div className="scale-100">
                                     <StimulusOverlay config={config} variant="banner" />
                                 </div>
                             </div>
 
-                            {/* Die Info-Box mit VOLLSTÄNDIGEM Text */}
                             <div className={`max-w-md p-6 rounded-[30px] shadow-2xl border-2 animate-fade-in ${config.info ? 'bg-red-50/95 border-red-200' : 'bg-blue-50/95 border-blue-200'}`}>
                                 <div className={`flex items-center gap-2 font-black mb-2 uppercase tracking-tighter text-[10px] ${config.info ? 'text-red-600' : 'text-blue-600'}`}>
                                     <Icon path={config.info ? paths.shield : paths.activity} className="w-4 h-4"/> 
@@ -455,11 +450,13 @@
                     </div>
                 </div>
 
-                {/* Banner-Inhalt unten */}
-                <div className="flex flex-col lg:flex-row gap-8 items-stretch lg:items-center">
-                    <div className="flex-1 space-y-2">
+                {/* 2. BANNER-INHALT: Jetzt ZENTRIERT (dadurch rücken Buttons nach links) */}
+                <div className="flex flex-col lg:flex-row gap-12 items-center justify-center">
+                    
+                    {/* Text-Bereich: Durch 'max-w-2xl' und Weglassen von 'flex-1' bleibt er links/mittig */}
+                    <div className="max-w-2xl space-y-2">
                         <h3 className="text-xl font-black text-slate-900 tracking-tight">Privatsphäre-Einstellungen</h3>
-                        <p className="text-sm text-slate-500 leading-relaxed max-w-2xl">
+                        <p className="text-sm text-slate-500 leading-relaxed">
                             Wir nutzen Cookies und Tracking-Technologien, um Ihr Nutzererlebnis zu personalisieren und unser medizinisches Informationsangebot zu verbessern. 
                             {details && (
                                 <span className="block mt-3 p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs text-slate-400 animate-fade-in">
@@ -472,7 +469,8 @@
                         </button>
                     </div>
 
-                    <div className="flex flex-col gap-3 shrink-0 min-w-[200px] justify-center">
+                    {/* Button-Bereich: Jetzt direkt neben dem Text (nicht mehr ganz rechts außen) */}
+                    <div className="flex flex-col gap-3 shrink-0 min-w-[220px] justify-center">
                         <button onClick={() => onDecision('accept_all')} className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl shadow-lg transition-all transform active:scale-95 text-sm uppercase">
                             Alle akzeptieren
                         </button>
@@ -480,6 +478,7 @@
                             Nur Notwendige
                         </button>
                     </div>
+
                 </div>
             </div>
         </div>
