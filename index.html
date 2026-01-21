@@ -288,6 +288,75 @@
             </div>
         );
 
+        const AudioTest = ({ onPassed, audioFile }) => {
+    const [played, setPlayed] = useState(false);
+    const [selected, setSelected] = useState(null);
+    const [error, setError] = useState(false);
+
+    const options = [
+        { id: 'dog', label: 'Hundebellen' },
+        { id: 'helicopter', label: 'Hubschrauber' },
+        { id: 'rain', label: 'Regenschauer' },
+        { id: 'car', label: 'Autohupe' }
+    ];
+
+    const handlePlay = () => {
+        const audio = new Audio(audioFile);
+        audio.play().catch(e => console.error("Audio Playback failed", e));
+        setPlayed(true);
+    };
+
+    const checkResult = (id) => {
+        setSelected(id);
+        if (id === 'helicopter') {
+            onPassed(); // Erfolg! Weiter zum Blog
+        } else {
+            setError(true);
+            setTimeout(() => { setError(false); setSelected(null); }, 2000);
+        }
+    };
+
+    return (
+        <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+            <div className="bg-white max-w-md w-full p-10 rounded-[40px] shadow-2xl text-center animate-fade-in">
+                <h2 className="text-2xl font-black mb-6 uppercase tracking-tight">Audio-Check</h2>
+                <p className="text-slate-600 mb-8 text-sm leading-relaxed">
+                    Um fortzufahren, müssen wir sicherstellen, dass Ihr Ton funktioniert. 
+                    Klicken Sie auf den Button und wählen Sie aus, was Sie hören.
+                </p>
+
+                <button 
+                    onClick={handlePlay}
+                    className={`w-full py-4 mb-8 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all ${played ? 'bg-slate-100 text-slate-400' : 'bg-blue-600 text-white shadow-lg active:scale-95'}`}
+                >
+                    <Icon path={paths.activity} className="w-5 h-5" />
+                    {played ? "Ton wurde abgespielt" : "Ton abspielen"}
+                </button>
+
+                {played && (
+                    <div className="grid grid-cols-1 gap-3 animate-fade-in">
+                        {options.map(opt => (
+                            <button
+                                key={opt.id}
+                                onClick={() => checkResult(opt.id)}
+                                className={`py-3 rounded-xl border-2 font-bold transition-all ${
+                                    selected === opt.id 
+                                        ? (opt.id === 'helicopter' ? 'border-green-500 bg-green-50 text-green-700' : 'border-red-500 bg-red-50 text-red-700')
+                                        : 'border-slate-100 hover:border-blue-200 text-slate-600'
+                                }`}
+                            >
+                                {opt.label}
+                            </button>
+                        ))}
+                    </div>
+                )}
+                
+                {error && <p className="text-red-500 text-xs mt-4 font-bold animate-pulse">Das war nicht richtig. Bitte versuchen Sie es erneut.</p>}
+            </div>
+        </div>
+    );
+};
+
         const StimulusOverlay = ({ config, variant = "banner" }) => {
     if (!config || !config.eyes) return null;
     const eyeColor = variant === 'banner' ? '#3b82f6' : '#5D4037';
@@ -345,7 +414,7 @@
     <p className={`text-[10px] leading-relaxed ${config.info ? 'text-red-800/80' : 'text-blue-800/80'}`}>
         {config.info 
             ? "Alles, was Sie auf dieser Seite tun oder eingeben, wird lückenlos aufgezeichnet. Ihre Informationen werden sofort ausgewertet, um ein persönliches Bild Ihrer Person und Ihres Privatlebens zu erstellen. Einmal erfasst, bleiben diese Informationen dauerhaft gespeichert und können später nicht mehr gelöscht oder geändert werden."
-            : "VitalCore bietet Ihnen eine moderne Plattform für fundiertes medizinisches Wissen und individuelle Gesundheitsanalysen. Wir laden Sie ein, die verschiedenen Bereiche unseres Portals zu erkunden und unsere Funktionen zu nutzen, um Ihre persönlichen Ziele für mehr Wohlbefinden und Vitalität im Alltag zu erreichen."
+            : "VitalCore bietet Ihnen eine moderne Plattform für fundiertes medizinisches Wissen und individuelle Gesundheitsanalysen."
         }
     </p>
 </div>
@@ -846,20 +915,51 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
             const handleFinishStudy = () => { const duration = Date.now() - timers.current.postBrowsingStart; const completeData = { ...finalData, ...times, postBrowsingTime: duration }; setFinalData(completeData); setStep('end'); };
 
             return (
-                <div className="font-sans text-gray-800 antialiased selection:bg-blue-100 selection:text-blue-900">
-                    {step === 'intro' && <IntroScreen onStart={handleStartStudy} />}
-                    {step === 'blog' && (
-                        <>
-                            <BlogPage onAction={handleGoToRegistration} mode="initial" cookieChoice={cookieChoice} />
-                            {bannerVisible && <CookieBanner group={groupID} onDecision={handleCookieDecision} audioObject={audioRef.current} onBannerLoad={handleBannerLoad} />}
-                        </>
-                    )}
-                    {step === 'register' && <RegistrationForm onSubmit={handleRegistrationSubmit} group={groupID} audioObject={audioManRef.current} />}
-                    {step === 'loading' && <LoadingScreen onFinished={handleLoadingFinished} />}
-                    {step === 'personalized_blog' && <BlogPage onAction={handleFinishStudy} mode="personalized" cookieChoice={cookieChoice} />}
-                    {step === 'end' && <EndScreen data={finalData} sessionToken={sessionToken} />}
-                </div>
-            );
+    <div className="font-sans text-gray-800 antialiased selection:bg-blue-100 selection:text-blue-900">
+        {/* 1. Intro */}
+        {step === 'intro' && <IntroScreen onStart={() => setStep('audio_test')} />}
+
+        {/* 2. NEU: Audio Test */}
+        {step === 'audio_test' && (
+            <AudioTest 
+                audioFile="helicopter.mp3" 
+                onPassed={() => {
+                    // Wenn bestanden, starte Timer und zeige Blog
+                    timers.current.blogStart = Date.now();
+                    setStep('blog');
+                    setTimeout(() => setBannerVisible(true), COOKIE_BANNER_DELAY_MS);
+                }} 
+            />
+        )}
+
+        {/* 3. Blog & Cookie Banner */}
+        {step === 'blog' && (
+            <>
+                <BlogPage onAction={handleGoToRegistration} mode="initial" cookieChoice={cookieChoice} />
+                {bannerVisible && (
+                    <CookieBanner 
+                        group={groupID} 
+                        onDecision={handleCookieDecision} 
+                        audioObject={audioRef.current} 
+                        onBannerLoad={handleBannerLoad} 
+                    />
+                )}
+            </>
+        )}
+
+        {/* 4. Registrierung */}
+        {step === 'register' && <RegistrationForm onSubmit={handleRegistrationSubmit} group={groupID} audioObject={audioManRef.current} />}
+        
+        {/* 5. Loading */}
+        {step === 'loading' && <LoadingScreen onFinished={handleLoadingFinished} />}
+        
+        {/* 6. Personalisierter Blog */}
+        {step === 'personalized_blog' && <BlogPage onAction={handleFinishStudy} mode="personalized" cookieChoice={cookieChoice} />}
+        
+        {/* 7. Ende */}
+        {step === 'end' && <EndScreen data={finalData} sessionToken={sessionToken} />}
+    </div>
+);
         }
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
