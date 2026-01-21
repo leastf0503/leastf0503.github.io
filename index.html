@@ -410,417 +410,247 @@
         </div>
     );
 };
-const RegistrationForm = ({ onSubmit, group, audioObject }) => {
-    const [formData, setFormData] = useState({ 
-        age: '', gender: '', height: '', weight: '', insurance: '',
-        dietStyle: [], dietHistory: '', tobacco: '', tobaccoDetails: '',
-        alcohol: '', alcoholDetails: '', drugs: '', drugsDetails: '',
-        sportFreq: '', sportType: '', bodySatisfaction: 5, 
-        bodyChangeGoals: '', bodyChangeDetails: '',
-        mentalHealth: '', mentalHealthDetails: '',
-        sexOrientation: '', reproduction: '', stis: '', stisDetails: '',
-        income: '', debts: '', debtsDetails: ''
-    });
 
-    const [noAnswers, setNoAnswers] = useState({});
-    const [interactionStarted, setInteractionStarted] = useState(false);
-    const [timeLeft, setTimeLeft] = useState(MIN_REGISTRATION_TIME);
-    
-    useEffect(() => { 
-        const timer = setInterval(() => setTimeLeft(t => t > 0 ? t - 1 : 0), 1000); 
-        return () => clearInterval(timer); 
-    }, []);
-
+const CookieBanner = ({ group, onDecision, audioObject, onBannerLoad }) => {
     const config = getGroupConfig(group);
-    const interact = () => { 
-        if (!interactionStarted) { 
-            setInteractionStarted(true); 
-            if (config.sound && audioObject) audioObject.play().catch(()=>{}); 
-        } 
-    };
-
-    const handleChange = (e) => { 
-        interact(); 
-        const { name, value } = e.target;
-        const val = (name === 'age' || name === 'height' || name === 'weight') ? value.replace(/[^0-9]/g, '') : value;
-        setFormData(prev => ({...prev, [name]: val}));
-    };
-
-    const isFormComplete = () => {
-        const check = (f) => noAnswers[f] || (formData[f] !== '' && formData[f] !== undefined && (Array.isArray(formData[f]) ? formData[f].length > 0 : true));
-        const required = ['age', 'gender', 'height', 'weight', 'insurance', 'dietStyle', 'dietHistory', 'sportFreq', 'tobacco', 'alcohol', 'drugs', 'bodySatisfaction', 'bodyChangeGoals', 'mentalHealth', 'sexOrientation', 'reproduction', 'stis', 'income', 'debts'];
-        return required.every(f => check(f));
-    };
+    useEffect(() => { 
+        onBannerLoad(); 
+        if (config.sound && audioObject) playSoundFile(audioObject); 
+    }, []);
+    
+    const [details, setDetails] = useState(false);
 
     return (
-        <div className="min-h-screen bg-slate-100 py-12 px-4 relative pt-40 text-slate-900">
-            {/* Stimuli erscheinen erst bei Interaktion */}
-            {interactionStarted && (
-                <div className="fixed top-4 left-0 right-0 z-[100] pointer-events-none">
-                    <div className="max-w-7xl mx-auto flex flex-col items-center gap-4">
-                        <StimulusOverlay config={config} variant="form" />
-                        
-                        <div className={`pointer-events-auto max-w-xl p-5 rounded-[24px] shadow-2xl border-2 animate-fade-in ${config.info ? 'bg-red-50/95 border-red-200' : 'bg-blue-50/95 border-blue-200'}`}>
-                            <div className={`flex items-center gap-2 font-black mb-1 uppercase tracking-tighter text-[10px] ${config.info ? 'text-red-600' : 'text-blue-600'}`}>
-                                <Icon path={config.info ? paths.shield : paths.activity} className="w-4 h-4"/> 
-                                {config.info ? 'HINWEIS ZUR DATENERFASSUNG' : 'WILLKOMMEN BEI VITALCORE'}
-                            </div>
-                            <p className={`text-[9px] leading-relaxed ${config.info ? 'text-red-800/90' : 'text-blue-800/90'}`}>
-                                {config.info 
-                                    ? "Alles, was Sie auf dieser Seite tun oder eingeben, wird lückenlos aufgezeichnet. Ihre Informationen werden sofort ausgewertet, um ein persönliches Bild Ihrer Person und Ihres Privatlebens zu erstellen. Einmal erfasst, bleiben diese Informationen dauerhaft gespeichert."
-                                    : "VitalCore bietet Ihnen eine moderne Plattform für fundiertes medizinisches Wissen und individuelle Gesundheitsanalysen. Wir laden Sie ein, die verschiedenen Bereiche unseres Portals zu erkunden und unsere Funktionen zu nutzen, um Ihre persönlichen Ziele für mehr Wohlbefinden und Vitalität im Alltag zu erreichen."
-                                }
-                            </p>
-                        </div>
+        <div className="fixed bottom-0 left-0 right-0 z-50 p-4 md:p-8 bg-white shadow-[0_-20px_50px_rgba(0,0,0,0.15)] border-t-4 border-blue-600 animate-slide-up rounded-t-[40px]">
+            <div className="max-w-7xl mx-auto relative pt-8">
+                
+{/* 1. SCHWEBENDER TEIL: Augen und Info-Box stabil NEBENEINANDER */}
+<div className="absolute -top-44 left-0 right-0 flex justify-center items-center pointer-events-none">
+    <div className="flex items-center gap-8 pointer-events-auto">
+        
+        {/* Augen-Container: Dieser feste Rahmen zwingt die Augen an ihre Position links */}
+        <div className="w-48 h-20 flex items-center justify-center relative">
+            <div className="scale-110">
+                <StimulusOverlay config={config} variant="banner" />
+            </div>
+        </div>
+
+        {/* Die Info-Box */}
+        <div className={`max-w-md p-6 rounded-[30px] shadow-2xl border-2 animate-fade-in ${config.info ? 'bg-red-50/95 border-red-200' : 'bg-blue-50/95 border-blue-200'}`}>
+            <div className={`flex items-center gap-2 font-black mb-2 uppercase tracking-tighter text-[10px] ${config.info ? 'text-red-600' : 'text-blue-600'}`}>
+                <Icon path={config.info ? paths.shield : paths.activity} className="w-4 h-4"/> 
+                {config.info ? 'HINWEIS ZUR DATENERFASSUNG' : 'WILLKOMMEN BEI VITALCORE'}
+            </div>
+            <p className={`text-[10px] leading-relaxed ${config.info ? 'text-red-800/90' : 'text-blue-800/90'}`}>
+                {config.info 
+                    ? "Alles, was Sie auf dieser Seite tun oder eingeben, wird lückenlos aufgezeichnet. Ihre Informationen werden sofort ausgewertet, um ein persönliches Bild Ihrer Person und Ihres Privatlebens zu erstellen. Einmal erfasst, bleiben diese Informationen dauerhaft gespeichert."
+                    : "VitalCore bietet Ihnen eine moderne Plattform für fundiertes medizinisches Wissen und individuelle Gesundheitsanalysen. Wir laden Sie ein, die verschiedenen Bereiche unseres Portals zu erkunden und unsere Funktionen zu nutzen."
+                }
+            </p>
+        </div>
+
+    </div>
+</div>               {/* 2. BANNER-INHALT (Das weiße Feld unten) */}
+                <div className="flex flex-col lg:flex-row gap-8 items-stretch lg:items-center">
+                    <div className="flex-1 space-y-2">
+                        <h3 className="text-xl font-black text-slate-900 tracking-tight">Privatsphäre-Einstellungen</h3>
+                        <p className="text-sm text-slate-500 leading-relaxed max-w-2xl">
+                            Wir nutzen Cookies und Tracking-Technologien, um Ihr Nutzererlebnis zu personalisieren und unser medizinisches Informationsangebot zu verbessern. 
+                            {details && (
+                                <span className="block mt-3 p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs text-slate-400 animate-fade-in">
+                                    Dabei werden pseudonymisierte Daten an Analyse-Partner übertragen. Dies ermöglicht eine algorithmische Anpassung der Inhalte an Ihr Gesundheitsprofil.
+                                </span>
+                            )}
+                        </p>
+                        <button onClick={() => setDetails(!details)} className="text-xs text-blue-600 font-bold uppercase tracking-widest hover:text-blue-800 transition-colors">
+                            {details ? "− Weniger Informationen" : "+ Mehr Informationen"}
+                        </button>
+                    </div>
+
+                    {/* Die Buttons */}
+                    <div className="flex flex-col gap-3 shrink-0 min-w-[200px] justify-center">
+                        <button onClick={() => onDecision('accept_all')} className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl shadow-lg transition-all transform active:scale-95 text-sm uppercase">
+                            Alle akzeptieren
+                        </button>
+                        <button onClick={() => onDecision('reject_all')} className="px-8 py-3 bg-white hover:bg-slate-50 text-slate-400 font-bold border border-slate-200 rounded-2xl transition-colors text-xs uppercase">
+                            Nur Notwendige
+                        </button>
                     </div>
                 </div>
-            )}
-            
-            <div className="max-w-2xl mx-auto bg-white shadow-2xl rounded-[40px] overflow-hidden border border-slate-200 relative z-10">
-                <header className="bg-slate-900 p-10 text-white text-center">
-                    <h2 className="text-lg font-light tracking-[0.2em] uppercase">Systembiologisches Gesundheitsprofil</h2>
-                    <span className="text-[10px] text-blue-400 font-bold uppercase mt-2 block">Clinical Data Access</span>
-                </header>
+            </div>
+        </div>
+    );
+};
+       const BlogPage = ({ onAction, mode = 'initial', cookieChoice }) => {
+            const [selectedArticle, setSelectedArticle] = useState(null);
+            const [categoryFilter, setCategoryFilter] = useState("Alle Beiträge");
+            const [showLoginModal, setShowLoginModal] = useState(false);
+            const [likes, setLikes] = useState({});
+            const [articlesToDisplay, setArticlesToDisplay] = useState([]);
 
-                <form onSubmit={(e) => {e.preventDefault(); if(isFormComplete()) onSubmit(formData);}} className="p-8 md:p-12 space-y-16">
-                    {/* MODUL 01 */}
-                    <section className="space-y-8">
-                        <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 01: Biometrische Parameter</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className={noAnswers.age ? 'opacity-30' : ''}>
-                                <label className="text-sm font-bold block mb-2">Wie alt sind Sie?</label>
-                                <input type="text" name="age" disabled={noAnswers.age} value={formData.age} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent" />
-                                <NoAnswer field="age" noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
-                            </div>
-                            <div className={noAnswers.gender ? 'opacity-30' : ''}>
-                                <label className="text-sm font-bold block mb-2">Welchem Geschlecht fühlen Sie sich zugehörig?</label>
-                                <select name="gender" disabled={noAnswers.gender} value={formData.gender} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
-                                    <option value="">Wählen...</option><option value="m">Männlich</option><option value="w">Weiblich</option><option value="d">Divers</option>
-                                </select>
-                                <NoAnswer field="gender" noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className={noAnswers.height ? 'opacity-30' : ''}>
-                                <label className="text-sm font-bold block mb-2">Ihre Körpergröße (cm)?</label>
-                                <input type="text" name="height" disabled={noAnswers.height} value={formData.height} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent" />
-                                <NoAnswer field="height" noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
-                            </div>
-                            <div className={noAnswers.weight ? 'opacity-30' : ''}>
-                                <label className="text-sm font-bold block mb-2">Ihr Körpergewicht (kg)?</label>
-                                <input type="text" name="weight" disabled={noAnswers.weight} value={formData.weight} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent" />
-                                <NoAnswer field="weight" noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
-                            </div>
-                        </div>
-                        <div className={noAnswers.insurance ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold block mb-2">Wie sind Sie versichert?</label>
-                            <select name="insurance" disabled={noAnswers.insurance} value={formData.insurance} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
-                                <option value="">Wählen...</option><option value="gkv">Gesetzlich</option><option value="pkv">Privat</option><option value="andere">Andere</option>
-                            </select>
-                            <NoAnswer field="insurance" noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
-                        </div>
-                    </section>
+            const requiredTime = mode === 'initial' ? MIN_BROWSING_TIME_1 : MIN_BROWSING_TIME_2;
+            const [timeLeft, setTimeLeft] = useState(requiredTime);
 
-                    {/* MODUL 02 */}
-                    <section className="space-y-8">
-                        <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 02: Metabolischer Lebensstil</h3>
-                        <div className={noAnswers.dietStyle ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold block mb-4">Welche Ernährungsform(en) praktizieren Sie aktuell?</label>
-                            <div className="flex flex-wrap gap-2">
-                                {['Omnivor', 'Vegetarisch', 'Vegan', 'Keto', 'Fasten', 'Intervall'].map(diet => (
-                                    <button key={diet} type="button" disabled={noAnswers.dietStyle} onClick={() => { interact(); const next = formData.dietStyle.includes(diet) ? formData.dietStyle.filter(d => d !== diet) : [...formData.dietStyle, diet]; setFormData(prev => ({...prev, dietStyle: next})); }} className={`px-4 py-2 rounded-full text-xs font-bold border-2 transition-all ${formData.dietStyle.includes(diet) ? 'bg-blue-600 border-blue-600 text-white shadow-md' : 'border-slate-200 text-slate-400'}`}>
-                                        {diet}
+            useEffect(() => {
+                if (mode === 'initial') {
+                    setArticlesToDisplay(BLOG_CONTENT);
+                } else {
+                    const oldContentShuffled = [...BLOG_CONTENT].sort(() => 0.5 - Math.random());
+                    setArticlesToDisplay([...PERSONALIZED_CONTENT, ...oldContentShuffled]);
+                }
+            }, [mode]);
+
+            useEffect(() => {
+                if (timeLeft <= 0) return;
+                const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
+                return () => clearInterval(timer);
+            }, [timeLeft]);
+
+            const filteredArticles = categoryFilter === "Alle Beiträge" 
+                ? articlesToDisplay 
+                : articlesToDisplay.filter(a => a.cat === categoryFilter);
+
+            const categories = ["Alle Beiträge", "Forschung", "Ernährung", "Fitness", "Mental Health", "Prävention"];
+            const toggleLike = (e, id) => { e.stopPropagation(); setLikes(prev => ({...prev, [id]: !prev[id]})); };
+
+            const HeaderTitle = () => (
+                <div onClick={() => {setCategoryFilter("Alle Beiträge"); setSelectedArticle(null);}} className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+                    <div className="p-1.5 bg-green-100 rounded text-green-600"><Icon path={paths.leaf} className="w-6 h-6" /></div>
+                    <span className="text-xl font-bold tracking-tight text-slate-800">
+                        Vital<span className="text-green-600">Core</span>
+                        {mode === 'personalized' && <span className="ml-2 text-xs bg-green-600 text-white px-2 py-0.5 rounded uppercase">Für Sie</span>}
+                    </span>
+                </div>
+            );
+
+            const ActionButton = ({inHeader}) => {
+                if (mode === 'initial') {
+                    if (timeLeft > 0) {
+                        return (
+                            <button disabled className={`bg-slate-300 text-slate-500 rounded-full font-medium cursor-not-allowed flex items-center gap-2 ${inHeader ? 'px-5 py-2 text-sm' : 'w-full py-3 justify-center'}`}>
+                                <Icon path={paths.clock} className="w-4 h-4 animate-pulse" /> Gesundheitsprofil erstellen in {timeLeft}s
+                            </button>
+                        );
+                    }
+                    if (cookieChoice === null) {
+                        return (
+                            <button disabled className={`bg-orange-100 text-orange-600 border border-orange-200 rounded-full font-bold cursor-not-allowed flex items-center gap-2 ${inHeader ? 'px-5 py-2 text-sm' : 'w-full py-3 justify-center'}`}>
+                                Bitte treffen Sie eine Cookie-Wahl
+                            </button>
+                        );
+                    }
+                    return (
+                        <button onClick={onAction} className={`bg-slate-900 text-white rounded-full font-medium hover:bg-slate-800 transition-colors shadow-lg animate-fade-in ${inHeader ? 'px-5 py-2 text-sm' : 'w-full py-3'}`}>
+                            Gesundheitsprofil erstellen
+                        </button>
+                    );
+                } else {
+                    if (timeLeft > 0) return (<div className={`bg-green-100 text-green-800 rounded-full text-xs font-bold animate-pulse ${inHeader ? 'px-4 py-2' : 'w-full py-3 text-center'}`}>Personalisierte Ansicht aktiv ({timeLeft}s)...</div>);
+                    return (
+                        <button onClick={onAction} className={`bg-green-600 text-white rounded-full font-bold hover:bg-green-700 transition-colors shadow-lg animate-fade-in ${inHeader ? 'px-6 py-2 text-sm' : 'w-full py-3'}`}>
+                            Weiter zum Fragebogen
+                        </button>
+                    );
+                }
+            };
+
+            if (selectedArticle) {
+                return (
+                    <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-white animate-fade-in">
+                        <nav className="bg-white border-b sticky top-0 z-20 shadow-sm px-4 h-16 flex items-center justify-between">
+                            <HeaderTitle />
+                            <div className="flex gap-4 items-center">
+                                <button onClick={() => setSelectedArticle(null)} className="text-sm font-medium text-slate-500 hover:text-green-600 flex items-center gap-1">
+                                    <Icon path={paths.arrowLeft} className="w-4 h-4" /> Zurück
+                                </button>
+                                <ActionButton inHeader={true} />
+                            </div>
+                        </nav>
+                        <article className="max-w-3xl mx-auto px-4 py-12">
+                            <div className="w-full h-80 rounded-2xl overflow-hidden mb-8 shadow-md">
+                                <img src={selectedArticle.image} className="w-full h-full object-cover" />
+                            </div>
+                            <div className="flex items-center gap-3 text-sm font-bold text-green-600 uppercase tracking-wider mb-3">
+                                {selectedArticle.cat} • {selectedArticle.date || "Aktuell"}
+                            </div>
+                            <h1 className="text-4xl font-extrabold text-slate-900 mb-6 leading-tight">{selectedArticle.title}</h1>
+                            <div className="flex items-center gap-3 text-slate-500 mb-8 pb-8 border-b">
+                                <span className="font-medium">{selectedArticle.author}</span>
+                                <span>•</span>
+                                <span className="flex items-center gap-1"><Icon path={paths.clock} className="w-4 h-4" /> {selectedArticle.time} Lesezeit</span>
+                            </div>
+                            <div className="prose prose-lg text-slate-700 leading-relaxed space-y-6">
+                                {selectedArticle.fullText.map((p, i) => <p key={i}>{p}</p>)}
+                            </div>
+                        </article>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-slate-50 relative">
+                    <nav className="bg-white border-b sticky top-0 z-20 shadow-sm">
+                        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+                            <HeaderTitle />
+                            <div className="hidden md:flex gap-1 mx-4">
+                                {categories.map(item => (
+                                    <button key={item} onClick={() => setCategoryFilter(item)} className={`whitespace-nowrap px-3 py-2 text-sm font-medium rounded-full transition-colors ${categoryFilter === item ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>
+                                        {item}
                                     </button>
                                 ))}
                             </div>
-                            <NoAnswer field="dietStyle" noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
-                        </div>
-                        <div className={noAnswers.dietHistory ? 'opacity-30' : ''}>
-                             <label className="text-sm font-bold block mb-2">Haben Sie in der Vergangenheit Diäten zur Gewichtsreduktion durchgeführt?</label>
-                             <textarea name="dietHistory" disabled={noAnswers.dietHistory} value={formData.dietHistory} onChange={handleChange} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-lg outline-none h-20" />
-                             <NoAnswer field="dietHistory" noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
-                        </div>
-                    </section>
-
-                    {/* MODUL 03-04 */}
-                    <section className="space-y-12">
-                        <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 03-04: Lebensstil & Toxikologie</h3>
-                        <div className={noAnswers.sportFreq ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold block mb-2">Wie häufig treiben Sie Sport?</label>
-                            <select name="sportFreq" disabled={noAnswers.sportFreq} value={formData.sportFreq} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
-                                <option value="">Wählen...</option><option value="täglich">Täglich</option><option value="oft">2-4 mal pro Woche</option><option value="selten">1 mal pro Woche</option><option value="nie">Seltener / Nie</option>
-                            </select>
-                            {formData.sportFreq !== 'nie' && formData.sportFreq !== '' && !noAnswers.sportFreq && (
-                                <div className="mt-4 animate-fade-in">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2">Welche Sportarten üben Sie aus?</label>
-                                    <input type="text" name="sportType" value={formData.sportType} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm" />
-                                </div>
-                            )}
-                            <NoAnswer field="sportFreq" noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
-                        </div>
-                        <JaNeinInput label="Konsumieren Sie Tabak- oder Nikotinprodukte?" field="tobacco" placeholder="Welche Produkte und wie häufig?" formData={formData} setFormData={setFormData} noAnswers={noAnswers} setNoAnswers={setNoAnswers} interact={interact} />
-                        <JaNeinInput label="Konsumieren Sie regelmäßig alkoholische Getränke?" field="alcohol" placeholder="Welche Getränke und wie häufig?" formData={formData} setFormData={setFormData} noAnswers={noAnswers} setNoAnswers={setNoAnswers} interact={interact} />
-                        <JaNeinInput label="Nutzen Sie illegale Substanzen (z.B. Cannabis, Kokain)?" field="drugs" placeholder="Welche Substanzen und wie häufig?" formData={formData} setFormData={setFormData} noAnswers={noAnswers} setNoAnswers={setNoAnswers} interact={interact} />
-                    </section>
-
-                    {/* MODUL 05 */}
-                    <section className="space-y-12">
-                        <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 05: Psychosomatische Selbstwahrnehmung</h3>
-                        <div className={noAnswers.bodySatisfaction ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold block mb-1">Wie zufrieden sind Sie mit Ihrem aktuellen Körperzustand (1-10)?</label>
-                            <input type="range" name="bodySatisfaction" min="1" max="10" disabled={noAnswers.bodySatisfaction} value={formData.bodySatisfaction} onChange={handleChange} className="w-full accent-blue-600 cursor-pointer" />
-                            <div className="flex justify-between px-1 mt-2 text-[10px] text-slate-400 font-bold select-none">
-                                {[...Array(10)].map((_, i) => {
-                                    const val = i + 1;
-                                    const isActive = formData.bodySatisfaction == val && !noAnswers.bodySatisfaction;
-                                    return (
-                                        <span key={val} className={`transition-all duration-200 ${isActive ? 'text-blue-600 scale-150' : ''}`}>{val}</span>
-                                    );
-                                })}
-                            </div>
-                            <NoAnswer field="bodySatisfaction" noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
-                        </div>
-                        <JaNeinInput label="Gibt es spezifische Aspekte an Ihrem Körper, die Sie operativ ändern möchten?" field="bodyChangeGoals" placeholder="Welche Eingriffe ziehen Sie in Erwägung?" formData={formData} setFormData={setFormData} noAnswers={noAnswers} setNoAnswers={setNoAnswers} interact={interact} />
-                        <JaNeinInput label="Bestehen psychische Vorbelastungen oder befinden Sie sich in Behandlung?" field="mentalHealth" placeholder="Diagnosen oder Behandlungen?" formData={formData} setFormData={setFormData} noAnswers={noAnswers} setNoAnswers={setNoAnswers} interact={interact} />
-                    </section>
-
-                    {/* MODUL 06 */}
-                    <section className="space-y-12">
-                        <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 06: Reproduktive Analyse</h3>
-                        <div className={noAnswers.sexOrientation ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold block mb-2">Was ist Ihre sexuelle Orientierung?</label>
-                            <select name="sexOrientation" disabled={noAnswers.sexOrientation} value={formData.sexOrientation} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
-                                <option value="">Wählen...</option><option value="hetero">Heterosexuell</option><option value="homo">Homosexuell</option><option value="bi">Bisexuell</option><option value="andere">Andere</option>
-                            </select>
-                            <NoAnswer field="sexOrientation" noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
-                        </div>
-                        <div className={noAnswers.reproduction ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold block mb-2">Besteht bei Ihnen aktuell ein Reproduktionswunsch (Kinderwunsch)?</label>
-                            <select name="reproduction" disabled={noAnswers.reproduction} value={formData.reproduction} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
-                                <option value="">Wählen...</option><option value="ja">Ja</option><option value="nein">Nein</option><option value="vielleicht">Vielleicht</option>
-                            </select>
-                            <NoAnswer field="reproduction" noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
-                        </div>
-                        <JaNeinInput label="Sind Ihnen aktuelle oder vergangene Geschlechtskrankheiten bekannt?" field="stis" placeholder="Historie der Infektionen..." formData={formData} setFormData={setFormData} noAnswers={noAnswers} setNoAnswers={setNoAnswers} interact={interact} />
-                    </section>
-
-                    {/* MODUL 07 */}
-                    <section className="space-y-12">
-                        <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 07: Sozio-Ökonomischer Status</h3>
-                        <div className={noAnswers.income ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold block mb-2">Wie hoch ist ihr monatliches Netto-Einkommen?</label>
-                            <select name="income" disabled={noAnswers.income} value={formData.income} onChange={handleChange} className="w-full py-2 border-b border-slate-200 outline-none bg-transparent text-sm">
-                                <option value="">Wählen...</option><option value="1">Bis 1.500 €</option><option value="2">1.500 € - 3.500 €</option><option value="3">3.500 € - 5.000 €</option><option value="4">Über 5.000 €</option>
-                            </select>
-                            <NoAnswer field="income" noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
-                        </div>
-                        <JaNeinInput label="Bestehen finanzielle Schulden?" field="debts" placeholder="Art oder ungefähre Höhe der Schulden?" formData={formData} setFormData={setFormData} noAnswers={noAnswers} setNoAnswers={setNoAnswers} interact={interact} />
-                    </section>
-
-                    <button type="submit" disabled={timeLeft > 0 || !isFormComplete()} className={`w-full py-6 font-black text-xs uppercase tracking-[0.5em] rounded-3xl transition-all ${timeLeft > 0 || !isFormComplete() ? 'bg-slate-100 text-slate-300 cursor-not-allowed shadow-none' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-2xl active:scale-[0.98]'}`}>
-                        {!isFormComplete() ? 'DATENSATZ UNVOLLSTÄNDIG' : (timeLeft > 0 ? `VALIDIERUNG LÄUFT (${timeLeft}S)` : 'GESUNDHEITSPROFIL FINALISIEREN')}
-                    </button>
-                </form>
-            </div>
-        </div>
-    );
-};
-      const BlogPage = ({ onAction, mode = 'initial', cookieChoice }) => {
-    const [selectedArticle, setSelectedArticle] = useState(null);
-    const [categoryFilter, setCategoryFilter] = useState("Alle Beiträge");
-    const [showLoginModal, setShowLoginModal] = useState(false);
-    const [likes, setLikes] = useState({});
-    const [articlesToDisplay, setArticlesToDisplay] = useState([]);
-
-    const requiredTime = mode === 'initial' ? MIN_BROWSING_TIME_1 : MIN_BROWSING_TIME_2;
-    const [timeLeft, setTimeLeft] = useState(requiredTime);
-
-    useEffect(() => {
-        if (mode === 'initial') {
-            setArticlesToDisplay(BLOG_CONTENT);
-        } else {
-            const oldContentShuffled = [...BLOG_CONTENT].sort(() => 0.5 - Math.random());
-            setArticlesToDisplay([...PERSONALIZED_CONTENT, ...oldContentShuffled]);
-        }
-    }, [mode]);
-
-    useEffect(() => {
-        if (timeLeft <= 0) return;
-        const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
-        return () => clearInterval(timer);
-    }, [timeLeft]);
-
-    const filteredArticles = categoryFilter === "Alle Beiträge" 
-        ? articlesToDisplay 
-        : articlesToDisplay.filter(a => a.cat === categoryFilter);
-
-    const categories = ["Alle Beiträge", "Forschung", "Ernährung", "Fitness", "Mental Health", "Prävention"];
-    const toggleLike = (e, id) => { e.stopPropagation(); setLikes(prev => ({...prev, [id]: !prev[id]})); };
-
-    const HeaderTitle = () => (
-        <div onClick={() => {setCategoryFilter("Alle Beiträge"); setSelectedArticle(null);}} className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
-            <div className="p-1.5 bg-green-100 rounded text-green-600"><Icon path={paths.leaf} className="w-6 h-6" /></div>
-            <span className="text-xl font-bold tracking-tight text-slate-800">
-                Vital<span className="text-green-600">Core</span>
-                {mode === 'personalized' && <span className="ml-2 text-xs bg-green-600 text-white px-2 py-0.5 rounded uppercase">Für Sie</span>}
-            </span>
-        </div>
-    );
-
-    const ActionButton = ({inHeader}) => {
-        if (mode === 'initial') {
-            if (timeLeft > 0) {
-                return (
-                    <button disabled className={`bg-slate-300 text-slate-500 rounded-full font-medium cursor-not-allowed flex items-center gap-2 ${inHeader ? 'px-5 py-2 text-sm' : 'w-full py-4 justify-center text-lg'}`}>
-                        <Icon path={paths.clock} className="w-4 h-4 animate-pulse" /> Gesundheitsprofil erstellen in {timeLeft}s
-                    </button>
-                );
-            }
-            if (cookieChoice === null) {
-                return (
-                    <button disabled className={`bg-orange-100 text-orange-600 border border-orange-200 rounded-full font-bold cursor-not-allowed flex items-center gap-2 ${inHeader ? 'px-5 py-2 text-sm' : 'w-full py-4 justify-center text-lg'}`}>
-                        Bitte treffen Sie eine Cookie-Wahl
-                    </button>
-                );
-            }
-            return (
-                <button onClick={onAction} className={`bg-slate-900 text-white rounded-full font-medium hover:bg-slate-800 transition-all shadow-xl hover:shadow-2xl active:scale-95 ${inHeader ? 'px-5 py-2 text-sm' : 'w-full py-4 text-lg'}`}>
-                    Gesundheitsprofil erstellen
-                </button>
-            );
-        } else {
-            if (timeLeft > 0) return (<div className={`bg-green-100 text-green-800 rounded-full text-xs font-bold animate-pulse ${inHeader ? 'px-4 py-2' : 'w-full py-4 text-center'}`}>Personalisierte Ansicht aktiv ({timeLeft}s)...</div>);
-            return (
-                <button onClick={onAction} className={`bg-green-600 text-white rounded-full font-bold hover:bg-green-700 transition-all shadow-lg active:scale-95 ${inHeader ? 'px-6 py-2 text-sm' : 'w-full py-4 text-lg'}`}>
-                    Weiter zum Fragebogen
-                </button>
-            );
-        }
-    };
-
-    if (selectedArticle) {
-        return (
-            <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-white animate-fade-in">
-                <nav className="bg-white border-b sticky top-0 z-20 shadow-sm px-4 h-16 flex items-center justify-between">
-                    <HeaderTitle />
-                    <div className="flex gap-4 items-center">
-                        <button onClick={() => setSelectedArticle(null)} className="text-sm font-medium text-slate-500 hover:text-green-600 flex items-center gap-1">
-                            <Icon path={paths.arrowLeft} className="w-4 h-4" /> Zurück
-                        </button>
-                        <ActionButton inHeader={true} />
-                    </div>
-                </nav>
-                <article className="max-w-3xl mx-auto px-4 py-12">
-                    <div className="w-full h-80 rounded-2xl overflow-hidden mb-8 shadow-md">
-                        <img src={selectedArticle.image} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex items-center gap-3 text-sm font-bold text-green-600 uppercase tracking-wider mb-3">
-                        {selectedArticle.cat} • {selectedArticle.date || "Aktuell"}
-                    </div>
-                    <h1 className="text-4xl font-extrabold text-slate-900 mb-6 leading-tight">{selectedArticle.title}</h1>
-                    <div className="flex items-center gap-3 text-slate-500 mb-8 pb-8 border-b">
-                        <span className="font-medium">{selectedArticle.author}</span>
-                        <span>•</span>
-                        <span className="flex items-center gap-1"><Icon path={paths.clock} className="w-4 h-4" /> {selectedArticle.time} Lesezeit</span>
-                    </div>
-                    <div className="prose prose-lg text-slate-700 leading-relaxed space-y-6">
-                        {selectedArticle.fullText.map((p, i) => <p key={i}>{p}</p>)}
-                    </div>
-                </article>
-            </div>
-        );
-    }
-
-    return (
-        <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-slate-50 relative">
-            <nav className="bg-white border-b sticky top-0 z-20 shadow-sm">
-                <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-                    <HeaderTitle />
-                    <div className="hidden md:flex gap-1 mx-4">
-                        {categories.map(item => (
-                            <button key={item} onClick={() => setCategoryFilter(item)} className={`whitespace-nowrap px-3 py-2 text-sm font-medium rounded-full transition-colors ${categoryFilter === item ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>
-                                {item}
-                            </button>
-                        ))}
-                    </div>
-                    <div className="flex gap-4 items-center shrink-0">
-                        <button className="p-2 text-slate-400 hover:text-slate-600" onClick={() => setShowLoginModal(true)}>
-                            <Icon path={paths.search} className="w-5 h-5" />
-                        </button>
-                        <ActionButton inHeader={true} />
-                    </div>
-                </div>
-            </nav>
-
-            <main className="flex-grow w-full">
-                {/* HERO BANNER - Erscheint nur in der ersten Ansicht */}
-                {mode === 'initial' && (
-                    <div className="w-full bg-slate-900 text-white py-24 px-4 mb-12 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-1/3 h-full bg-blue-600/10 blur-[120px] rounded-full translate-x-1/2"></div>
-                        <div className="absolute bottom-0 left-0 w-1/4 h-full bg-green-600/10 blur-[120px] rounded-full -translate-x-1/2"></div>
-                        
-                        <div className="max-w-4xl mx-auto text-center relative z-10">
-                            <h2 className="text-[12px] font-black uppercase tracking-[0.4em] text-blue-400 mb-4">
-                                VitalCore Medicine
-                            </h2>
-                            <h1 className="text-5xl md:text-7xl font-black mb-8 leading-tight tracking-tighter">
-                                Wissen ist die beste <span className="text-blue-500 text-glow">Medizin.</span>
-                            </h1>
-                            <p className="text-xl md:text-2xl text-slate-400 mb-12 max-w-2xl mx-auto font-light leading-relaxed">
-                                Wissenschaftlich fundierte Einblicke und Analysen für Ihre Langlebigkeit und tägliche Vitalität.
-                            </p>
-                            <div className="max-w-xs mx-auto">
-                                <ActionButton inHeader={false} />
+                            <div className="flex gap-4 items-center shrink-0">
+                                <button className="p-2 text-slate-400 hover:text-slate-600" onClick={() => setShowLoginModal(true)}>
+                                    <Icon path={paths.search} className="w-5 h-5" />
+                                </button>
+                                <ActionButton inHeader={true} />
                             </div>
                         </div>
-                    </div>
-                )}
+                    </nav>
 
-                <div className="max-w-6xl mx-auto px-4 py-8 w-full">
-                    {mode !== 'initial' && <h2 className="text-2xl font-black mb-8 uppercase tracking-tighter italic border-b-4 border-green-500 w-fit pb-2">Ihre personalisierten Empfehlungen</h2>}
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredArticles.map(art => (
-                            <article key={art.id} onClick={() => setSelectedArticle(art)} className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all cursor-pointer overflow-hidden group flex flex-col h-full relative">
-                                {art.match && <div className="absolute top-3 left-3 z-10 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded shadow-lg">{art.match}</div>}
-                                <div className="h-48 overflow-hidden relative">
-                                    <img src={art.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                                    <div className="absolute top-3 right-3">
-                                        <button onClick={(e) => toggleLike(e, art.id)} className={`p-2 rounded-full backdrop-blur-md transition-colors ${likes[art.id] ? 'bg-red-50 text-red-500' : 'bg-black/30 text-white'}`}>
-                                            <Icon path={likes[art.id] ? paths.heartFilled : paths.heart} className="w-5 h-5" />
-                                        </button>
+                    <main className="flex-grow max-w-6xl mx-auto px-4 py-8 w-full">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {filteredArticles.map(art => (
+                                <article key={art.id} onClick={() => setSelectedArticle(art)} className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all cursor-pointer overflow-hidden group flex flex-col h-full relative">
+                                    {art.match && <div className="absolute top-3 left-3 z-10 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded shadow-lg">{art.match}</div>}
+                                    <div className="h-48 overflow-hidden relative">
+                                        <img src={art.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                        <div className="absolute top-3 right-3">
+                                            <button onClick={(e) => toggleLike(e, art.id)} className={`p-2 rounded-full backdrop-blur-md transition-colors ${likes[art.id] ? 'bg-red-50 text-red-500' : 'bg-black/30 text-white'}`}>
+                                                <Icon path={likes[art.id] ? paths.heartFilled : paths.heart} className="w-5 h-5" />
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="p-5 flex-1 flex flex-col">
-                                    <div className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-2">{art.cat}</div>
-                                    <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-green-600 transition-colors leading-tight">{art.title}</h3>
-                                    <p className="text-slate-600 text-sm line-clamp-3 mb-4 flex-1">{art.desc}</p>
-                                    <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                                        <span className="text-xs font-bold text-slate-500 uppercase">{art.author}</span>
-                                        <span className="text-[10px] text-slate-400">{art.time}</span>
+                                    <div className="p-5 flex-1 flex flex-col">
+                                        <div className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-2">{art.cat}</div>
+                                        <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-green-600 transition-colors leading-tight">{art.title}</h3>
+                                        <p className="text-slate-600 text-sm line-clamp-3 mb-4 flex-1">{art.desc}</p>
+                                        <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                                            <span className="text-xs font-bold text-slate-500 uppercase">{art.author}</span>
+                                            <span className="text-[10px] text-slate-400">{art.time}</span>
+                                        </div>
                                     </div>
-                                </div>
-                            </article>
-                        ))}
-                    </div>
-                </div>
-            </main>
-
-            {showLoginModal && (
-                <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4" onClick={() => setShowLoginModal(false)}>
-                    <div className="bg-white rounded-xl p-8 max-w-sm w-full text-center" onClick={(e) => e.stopPropagation()}>
-                        <div className="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Icon path={paths.shield} className="w-6 h-6" />
+                                </article>
+                            ))}
                         </div>
-                        <h3 className="text-xl font-bold mb-2">Zugriff verweigert</h3>
-                        <p className="text-gray-600 mb-6">Dieser Bereich ist für Teilnehmer der Studie reserviert.</p>
-                        <button onClick={() => setShowLoginModal(false)} className="w-full bg-gray-900 text-white font-bold py-2 rounded-lg">Verstanden</button>
-                    </div>
+                    </main>
+
+                    {showLoginModal && (
+                        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4" onClick={() => setShowLoginModal(false)}>
+                            <div className="bg-white rounded-xl p-8 max-w-sm w-full text-center" onClick={(e) => e.stopPropagation()}>
+                                <div className="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <Icon path={paths.shield} className="w-6 h-6" />
+                                </div>
+                                <h3 className="text-xl font-bold mb-2">Zugriff verweigert</h3>
+                                <p className="text-gray-600 mb-6">Dieser Bereich ist für Teilnehmer der Studie reserviert.</p>
+                                <button onClick={() => setShowLoginModal(false)} className="w-full bg-gray-900 text-white font-bold py-2 rounded-lg">Verstanden</button>
+                            </div>
+                        </div>
+                    )}
                 </div>
-            )}
-        </div>
-    );
-};
+            );
+        };
+
         // 1. HELFER-KOMPONENTEN (JETZT AUSSERHALB - BEHEBT DEN CURSOR-FEHLER)
 const NoAnswer = ({ field, noAnswers, setNoAnswers }) => (
     <label className="flex items-center gap-2 mt-2 cursor-pointer w-fit group">
@@ -914,28 +744,28 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-100 py-12 px-4 relative pt-40 text-slate-900">
-            {/* Augen und Box erscheinen erst, wenn interactionStarted auf true springt */}
-            {interactionStarted && (
-                <React.Fragment>
-                    <StimulusOverlay config={config} variant="form" />
-                    
-                    <div className="fixed top-[155px] left-1/2 -translate-x-1/2 w-[95%] max-w-xl z-[50] animate-fade-in pointer-events-none">
-                        <div className={`backdrop-blur-sm border-2 p-4 rounded-[24px] shadow-xl shadow-black/5 ${config.info ? 'bg-red-50/95 border-red-200' : 'bg-blue-50/95 border-blue-200'}`}>
-                            <div className={`flex items-center gap-2 font-black mb-1 uppercase tracking-tighter text-[10px] ${config.info ? 'text-red-600' : 'text-blue-600'}`}>
-                                <Icon path={config.info ? paths.shield : paths.activity} className="w-4 h-4"/> 
-                                {config.info ? 'HINWEIS ZUR DATENERFASSUNG' : 'WILLKOMMEN BEI VITALCORE'}
-                            </div>
-                            <p className={`text-[9px] leading-relaxed ${config.info ? 'text-red-800/90' : 'text-blue-800/90'}`}>
-                                {config.info 
-                                    ? "Alles, was Sie auf dieser Seite tun oder eingeben, wird lückenlos aufgezeichnet. Ihre Informationen werden sofort ausgewertet, um ein persönliches Bild Ihrer Person und Ihres Privatlebens zu erstellen. Einmal erfasst, bleiben diese Informationen dauerhaft gespeichert."
-                                    : "VitalCore bietet Ihnen eine moderne Plattform für fundiertes medizinisches Wissen und individuelle Gesundheitsanalysen. Wir laden Sie ein, die verschiedenen Bereiche unseres Portals zu erkunden und unsere Funktionen zu nutzen, um Ihre persönlichen Ziele für mehr Wohlbefinden und Vitalität im Alltag zu erreichen."
-                                }
-                            </p>
+    <div className="min-h-screen bg-slate-100 py-12 px-4 relative pt-40 text-slate-900">
+        {/* Augen und Box erscheinen erst, wenn interactionStarted auf true springt */}
+        {interactionStarted && (
+            <React.Fragment>
+                <StimulusOverlay config={config} variant="form" />
+                
+                <div className="fixed top-[155px] left-1/2 -translate-x-1/2 w-[95%] max-w-xl z-[50] animate-fade-in pointer-events-none">
+                    <div className={`backdrop-blur-sm border-2 p-4 rounded-[24px] shadow-xl shadow-black/5 ${config.info ? 'bg-red-50/95 border-red-200' : 'bg-blue-50/95 border-blue-200'}`}>
+                        <div className={`flex items-center gap-2 font-black mb-1 uppercase tracking-tighter text-[10px] ${config.info ? 'text-red-600' : 'text-blue-600'}`}>
+                            <Icon path={config.info ? paths.shield : paths.activity} className="w-4 h-4"/> 
+                            {config.info ? 'HINWEIS ZUR DATENERFASSUNG' : 'WILLKOMMEN BEI VITALCORE'}
                         </div>
+                        <p className={`text-[9px] leading-relaxed ${config.info ? 'text-red-800/90' : 'text-blue-800/90'}`}>
+                            {config.info 
+                                ? "Alles, was Sie auf dieser Seite tun oder eingeben, wird lückenlos aufgezeichnet. Ihre Informationen werden sofort ausgewertet, um ein persönliches Bild Ihrer Person und Ihres Privatlebens zu erstellen. Einmal erfasst, bleiben diese Informationen dauerhaft gespeichert."
+                                : "VitalCore bietet Ihnen eine moderne Plattform für fundiertes medizinisches Wissen und individuelle Gesundheitsanalysen. Wir laden Sie ein, die verschiedenen Bereiche unseres Portals zu erkunden und unsere Funktionen zu nutzen, um Ihre persönlichen Ziele für mehr Wohlbefinden und Vitalität im Alltag zu erreichen."
+                            }
+                        </p>
                     </div>
-                </React.Fragment>
-            )}
+                </div>
+            </React.Fragment>
+        )}
             
             <div className="max-w-2xl mx-auto bg-white shadow-2xl rounded-[40px] overflow-hidden border border-slate-200 relative z-10">
                 <header className="bg-slate-900 p-10 text-white text-center">
@@ -1023,66 +853,68 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
                     </section>
 
                     <section className="space-y-12">
-                        <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">
-                            Modul 05: Psychosomatische Selbstwahrnehmung
-                        </h3>
-                        
-                        <div className={noAnswers.bodySatisfaction ? 'opacity-30' : ''}>
-                            <label className="text-sm font-bold block mb-1">
-                                Wie zufrieden sind Sie mit Ihrem aktuellen Körperzustand (1-10)?
-                            </label>
-                            
-                            <input 
-                                type="range" 
-                                name="bodySatisfaction" 
-                                min="1" 
-                                max="10" 
-                                disabled={noAnswers.bodySatisfaction} 
-                                value={formData.bodySatisfaction} 
-                                onChange={handleChange} 
-                                className="w-full accent-blue-600 cursor-pointer" 
-                            />
-                            
-                            <div className="flex justify-between px-1 mt-2 text-[10px] text-slate-400 font-bold select-none">
-                                {[...Array(10)].map((_, i) => {
-                                    const val = i + 1;
-                                    const isActive = formData.bodySatisfaction == val && !noAnswers.bodySatisfaction;
-                                    return (
-                                        <span 
-                                            key={val} 
-                                            className={`transition-all duration-200 ${isActive ? 'text-blue-600 scale-150' : ''}`}
-                                        >
-                                            {val}
-                                        </span>
-                                    );
-                                })}
-                            </div>
-                            
-                            <NoAnswer field="bodySatisfaction" noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
-                        </div>
+    <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">
+        Modul 05: Psychosomatische Selbstwahrnehmung
+    </h3>
+    
+    <div className={noAnswers.bodySatisfaction ? 'opacity-30' : ''}>
+        <label className="text-sm font-bold block mb-1">
+            Wie zufrieden sind Sie mit Ihrem aktuellen Körperzustand (1-10)?
+        </label>
+        
+        {/* Der Slider */}
+        <input 
+            type="range" 
+            name="bodySatisfaction" 
+            min="1" 
+            max="10" 
+            disabled={noAnswers.bodySatisfaction} 
+            value={formData.bodySatisfaction} 
+            onChange={handleChange} 
+            className="w-full accent-blue-600 cursor-pointer" 
+        />
+        
+        {/* Die Zahlenskala von 1 bis 10 */}
+        <div className="flex justify-between px-1 mt-2 text-[10px] text-slate-400 font-bold select-none">
+            {[...Array(10)].map((_, i) => {
+                const val = i + 1;
+                const isActive = formData.bodySatisfaction == val && !noAnswers.bodySatisfaction;
+                return (
+                    <span 
+                        key={val} 
+                        className={`transition-all duration-200 ${isActive ? 'text-blue-600 scale-150' : ''}`}
+                    >
+                        {val}
+                    </span>
+                );
+            })}
+        </div>
+        
+        <NoAnswer field="bodySatisfaction" noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
+    </div>
 
-                        <JaNeinInput 
-                            label="Gibt es spezifische Aspekte an Ihrem Körper, die Sie operativ ändern möchten?" 
-                            field="bodyChangeGoals" 
-                            placeholder="Welche Eingriffe ziehen Sie in Erwägung?" 
-                            formData={formData} 
-                            setFormData={setFormData} 
-                            noAnswers={noAnswers} 
-                            setNoAnswers={setNoAnswers} 
-                            interact={interact} 
-                        />
-                        
-                        <JaNeinInput 
-                            label="Bestehen psychische Vorbelastungen oder befinden Sie sich in Behandlung?" 
-                            field="mentalHealth" 
-                            placeholder="Diagnosen oder Behandlungen?" 
-                            formData={formData} 
-                            setFormData={setFormData} 
-                            noAnswers={noAnswers} 
-                            setNoAnswers={setNoAnswers} 
-                            interact={interact} 
-                        />
-                    </section>
+    <JaNeinInput 
+        label="Gibt es spezifische Aspekte an Ihrem Körper, die Sie operativ ändern möchten?" 
+        field="bodyChangeGoals" 
+        placeholder="Welche Eingriffe ziehen Sie in Erwägung?" 
+        formData={formData} 
+        setFormData={setFormData} 
+        noAnswers={noAnswers} 
+        setNoAnswers={setNoAnswers} 
+        interact={interact} 
+    />
+    
+    <JaNeinInput 
+        label="Bestehen psychische Vorbelastungen oder befinden Sie sich in Behandlung?" 
+        field="mentalHealth" 
+        placeholder="Diagnosen oder Behandlungen?" 
+        formData={formData} 
+        setFormData={setFormData} 
+        noAnswers={noAnswers} 
+        setNoAnswers={setNoAnswers} 
+        interact={interact} 
+    />
+</section>
 
                     <section className="space-y-12">
                         <h3 className="text-[11px] font-black uppercase tracking-widest text-blue-600 mb-6 border-b pb-2">Modul 06: Reproduktive Analyse</h3>
