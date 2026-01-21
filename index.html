@@ -537,6 +537,7 @@
         };
 
        // 1. Helfer-Komponenten nach draußen geschoben, damit der Fokus beim Tippen bleibt
+// 1. DIESE HELFER-KOMPONENTEN STEHEN JETZT AUSSERHALB (behebt den Cursor-Fehler)
 const NoAnswer = ({ field, noAnswers, setNoAnswers }) => (
     <label className="flex items-center gap-2 mt-2 cursor-pointer w-fit group">
         <input 
@@ -552,27 +553,8 @@ const NoAnswer = ({ field, noAnswers, setNoAnswers }) => (
 const JaNeinInput = ({ label, field, placeholder, formData, setFormData, noAnswers, setNoAnswers, interact }) => {
     const handleTextChange = (e) => {
         interact();
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
     };
-
-    return (
-        <div className={noAnswers[field] ? 'opacity-30' : ''}>
-            <label className="text-sm font-bold text-slate-700 block mb-3">{label}</label>
-            <div className="flex gap-4 mb-3">
-                {['ja', 'nein'].map(opt => (
-                    <button key={opt} type="button" disabled={noAnswers[field]} onClick={() => { interact(); setFormData(prev => ({...prev, [field]: opt})); }} className={`px-6 py-2 rounded-full text-xs font-black border-2 transition-all ${formData[field] === opt ? 'bg-slate-900 border-slate-900 text-white' : 'bg-transparent border-slate-200 text-slate-400'}`}>
-                        {opt.toUpperCase()}
-                    </button>
-                ))}
-            </div>
-            {formData[field] === 'ja' && !noAnswers[field] && (
-                <textarea name={`${field}Details`} value={formData[`${field}Details`] || ''} onChange={handleTextChange} placeholder={placeholder} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs outline-none focus:bg-white h-20 animate-fade-in" />
-            )}
-            <NoAnswer field={field} noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
-        </div>
-    );
-};
 
     return (
         <div className={noAnswers[field] ? 'opacity-30' : ''}>
@@ -604,22 +586,17 @@ const JaNeinInput = ({ label, field, placeholder, formData, setFormData, noAnswe
     );
 };
 
-// 2. Die eigentliche RegistrationForm
+// 2. DIE EIGENTLICHE REGISTRATIONFORM (MIT ALLEN FRAGEN)
 const RegistrationForm = ({ onSubmit, group, audioObject }) => {
     const [formData, setFormData] = useState({ 
         age: '', gender: '', height: '', weight: '', insurance: '',
-        dietStyle: [], dietHistory: '',
-        tobacco: '', tobaccoDetails: '',
-        alcohol: '', alcoholDetails: '',
-        drugs: '', drugsDetails: '',
-        sportFreq: '', sportType: '',
-        bodySatisfaction: 5, 
+        dietStyle: [], dietHistory: '', tobacco: '', tobaccoDetails: '',
+        alcohol: '', alcoholDetails: '', drugs: '', drugsDetails: '',
+        sportFreq: '', sportType: '', bodySatisfaction: 5, 
         bodyChangeGoals: '', bodyChangeDetails: '',
         mentalHealth: '', mentalHealthDetails: '',
-        sexOrientation: '', reproduction: '', 
-        stis: '', stisDetails: '',
-        income: '', 
-        debts: '', debtsDetails: '' // Fix: als leerer String für Textarea
+        sexOrientation: '', reproduction: '', stis: '', stisDetails: '',
+        income: '', debts: '', debtsDetails: ''
     });
 
     const [noAnswers, setNoAnswers] = useState({});
@@ -656,7 +633,7 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
         <div className="min-h-screen bg-slate-100 py-12 px-4 relative pt-40 text-slate-900">
             <StimulusOverlay config={config} variant="form" />
             
-            {/* DIESE BOX IST JETZT IMMER DA: Rot für Warnung, Blau für Willkommen */}
+            {/* FIXED BOX: Erscheint in JEDER Bedingung (Rot für Warnung, Blau für Willkommen) */}
             <div className="fixed top-[155px] left-1/2 -translate-x-1/2 w-[95%] max-w-xl z-[50] animate-fade-in pointer-events-none">
                 <div className={`backdrop-blur-sm border-2 p-4 rounded-[24px] shadow-xl shadow-black/5 ${config.info ? 'bg-red-50/95 border-red-200' : 'bg-blue-50/95 border-blue-200'}`}>
                     <div className={`flex items-center gap-2 font-black mb-1 uppercase tracking-tighter text-[10px] ${config.info ? 'text-red-600' : 'text-blue-600'}`}>
@@ -672,7 +649,6 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
                 </div>
             </div>
             
-            {/* HAUPT-CONTAINER */}
             <div className="max-w-2xl mx-auto bg-white shadow-2xl rounded-[40px] overflow-hidden border border-slate-200 relative z-10">
                 <header className="bg-slate-900 p-10 text-white text-center">
                     <h2 className="text-lg font-light tracking-[0.2em] uppercase">Systembiologisches Gesundheitsprofil</h2>
@@ -731,7 +707,7 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
                             <NoAnswer field="dietStyle" noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
                         </div>
                         <div className={noAnswers.dietHistory ? 'opacity-30' : ''}>
-                             <label className="text-sm font-bold block mb-2">Haben Sie in der Vergangenheit Diäten zur Gewichtsreduktion durchgeführt?</label>
+                             <label className="text-sm font-bold block mb-2">Haben Sie in der Vergangenheit Diäten durchgeführt?</label>
                              <textarea name="dietHistory" disabled={noAnswers.dietHistory} value={formData.dietHistory} onChange={handleChange} placeholder="z.B. Low-Fat, Saftkuren..." className="w-full p-4 bg-slate-50 border border-slate-100 rounded-lg outline-none h-20" />
                              <NoAnswer field="dietHistory" noAnswers={noAnswers} setNoAnswers={setNoAnswers} />
                         </div>
@@ -806,6 +782,7 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
             </div>
         </div>
     );
+};
         const LoadingScreen = ({ onFinished }) => {
             useEffect(() => { const timer = setTimeout(onFinished, 3000); return () => clearTimeout(timer); }, []);
             return (<div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4 text-white"><div className="w-20 h-20 border-4 border-blue-500 border-t-transparent rounded-full animate-spin-slow mb-8"></div><h2 className="text-2xl font-bold mb-2">Algorithmus analysiert Profil...</h2><p className="text-slate-400">Suche passende Inhalte für Sie.</p></div>);
