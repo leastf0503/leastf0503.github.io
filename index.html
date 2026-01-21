@@ -697,24 +697,28 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-100 py-12 px-4 relative pt-40 text-slate-900">
-            <StimulusOverlay config={config} variant="form" />
-            
-            {/* FIXED BOX: Zeigt ENTWEDER Warnung ODER Willkommenstext */}
-            <div className="fixed top-[155px] left-1/2 -translate-x-1/2 w-[95%] max-w-xl z-[50] animate-fade-in pointer-events-none">
-                <div className={`backdrop-blur-sm border-2 p-4 rounded-[24px] shadow-xl shadow-black/5 ${config.info ? 'bg-red-50/95 border-red-200' : 'bg-blue-50/95 border-blue-200'}`}>
-                    <div className={`flex items-center gap-2 font-black mb-1 uppercase tracking-tighter text-[10px] ${config.info ? 'text-red-600' : 'text-blue-600'}`}>
-                        <Icon path={config.info ? paths.shield : paths.activity} className="w-4 h-4"/> 
-                        {config.info ? 'HINWEIS ZUR DATENERFASSUNG' : 'WILLKOMMEN BEI VITALCORE'}
+    <div className="min-h-screen bg-slate-100 py-12 px-4 relative pt-40 text-slate-900">
+        {/* Augen und Box erscheinen erst, wenn interactionStarted auf true springt */}
+        {interactionStarted && (
+            <React.Fragment>
+                <StimulusOverlay config={config} variant="form" />
+                
+                <div className="fixed top-[155px] left-1/2 -translate-x-1/2 w-[95%] max-w-xl z-[50] animate-fade-in pointer-events-none">
+                    <div className={`backdrop-blur-sm border-2 p-4 rounded-[24px] shadow-xl shadow-black/5 ${config.info ? 'bg-red-50/95 border-red-200' : 'bg-blue-50/95 border-blue-200'}`}>
+                        <div className={`flex items-center gap-2 font-black mb-1 uppercase tracking-tighter text-[10px] ${config.info ? 'text-red-600' : 'text-blue-600'}`}>
+                            <Icon path={config.info ? paths.shield : paths.activity} className="w-4 h-4"/> 
+                            {config.info ? 'HINWEIS ZUR DATENERFASSUNG' : 'WILLKOMMEN BEI VITALCORE'}
+                        </div>
+                        <p className={`text-[9px] leading-relaxed ${config.info ? 'text-red-800/90' : 'text-blue-800/90'}`}>
+                            {config.info 
+                                ? "Alles, was Sie auf dieser Seite tun oder eingeben, wird lückenlos aufgezeichnet. Ihre Informationen werden sofort ausgewertet, um ein persönliches Bild Ihrer Person und Ihres Privatlebens zu erstellen. Einmal erfasst, bleiben diese Informationen dauerhaft gespeichert."
+                                : "VitalCore bietet Ihnen eine moderne Plattform für fundiertes medizinisches Wissen und individuelle Gesundheitsanalysen. Wir laden Sie ein, die verschiedenen Bereiche unseres Portals zu erkunden und unsere Funktionen zu nutzen, um Ihre persönlichen Ziele für mehr Wohlbefinden und Vitalität im Alltag zu erreichen."
+                            }
+                        </p>
                     </div>
-                    <p className={`text-[9px] leading-relaxed ${config.info ? 'text-red-800/90' : 'text-blue-800/90'}`}>
-                        {config.info 
-                            ? "Alles, was Sie auf dieser Seite tun oder eingeben, wird lückenlos aufgezeichnet. Ihre Informationen werden sofort ausgewertet, um ein persönliches Bild Ihrer Person und Ihres Privatlebens zu erstellen. Einmal erfasst, bleiben diese Informationen dauerhaft gespeichert."
-                            : "VitalCore bietet Ihnen eine moderne Plattform für medizinisches Wissen und individuelle Gesundheitsanalysen."
-                        }
-                    </p>
                 </div>
-            </div>
+            </React.Fragment>
+        )}
             
             <div className="max-w-2xl mx-auto bg-white shadow-2xl rounded-[40px] overflow-hidden border border-slate-200 relative z-10">
                 <header className="bg-slate-900 p-10 text-white text-center">
