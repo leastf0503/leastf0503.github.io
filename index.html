@@ -625,176 +625,202 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
         </div>
     );
 };
-       const BlogPage = ({ onAction, mode = 'initial', cookieChoice }) => {
-            const [selectedArticle, setSelectedArticle] = useState(null);
-            const [categoryFilter, setCategoryFilter] = useState("Alle Beiträge");
-            const [showLoginModal, setShowLoginModal] = useState(false);
-            const [likes, setLikes] = useState({});
-            const [articlesToDisplay, setArticlesToDisplay] = useState([]);
+      const BlogPage = ({ onAction, mode = 'initial', cookieChoice }) => {
+    const [selectedArticle, setSelectedArticle] = useState(null);
+    const [categoryFilter, setCategoryFilter] = useState("Alle Beiträge");
+    const [showLoginModal, setShowLoginModal] = useState(false);
+    const [likes, setLikes] = useState({});
+    const [articlesToDisplay, setArticlesToDisplay] = useState([]);
 
-            const requiredTime = mode === 'initial' ? MIN_BROWSING_TIME_1 : MIN_BROWSING_TIME_2;
-            const [timeLeft, setTimeLeft] = useState(requiredTime);
+    const requiredTime = mode === 'initial' ? MIN_BROWSING_TIME_1 : MIN_BROWSING_TIME_2;
+    const [timeLeft, setTimeLeft] = useState(requiredTime);
 
-            useEffect(() => {
-                if (mode === 'initial') {
-                    setArticlesToDisplay(BLOG_CONTENT);
-                } else {
-                    const oldContentShuffled = [...BLOG_CONTENT].sort(() => 0.5 - Math.random());
-                    setArticlesToDisplay([...PERSONALIZED_CONTENT, ...oldContentShuffled]);
-                }
-            }, [mode]);
+    useEffect(() => {
+        if (mode === 'initial') {
+            setArticlesToDisplay(BLOG_CONTENT);
+        } else {
+            const oldContentShuffled = [...BLOG_CONTENT].sort(() => 0.5 - Math.random());
+            setArticlesToDisplay([...PERSONALIZED_CONTENT, ...oldContentShuffled]);
+        }
+    }, [mode]);
 
-            useEffect(() => {
-                if (timeLeft <= 0) return;
-                const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
-                return () => clearInterval(timer);
-            }, [timeLeft]);
+    useEffect(() => {
+        if (timeLeft <= 0) return;
+        const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
+        return () => clearInterval(timer);
+    }, [timeLeft]);
 
-            const filteredArticles = categoryFilter === "Alle Beiträge" 
-                ? articlesToDisplay 
-                : articlesToDisplay.filter(a => a.cat === categoryFilter);
+    const filteredArticles = categoryFilter === "Alle Beiträge" 
+        ? articlesToDisplay 
+        : articlesToDisplay.filter(a => a.cat === categoryFilter);
 
-            const categories = ["Alle Beiträge", "Forschung", "Ernährung", "Fitness", "Mental Health", "Prävention"];
-            const toggleLike = (e, id) => { e.stopPropagation(); setLikes(prev => ({...prev, [id]: !prev[id]})); };
+    const categories = ["Alle Beiträge", "Forschung", "Ernährung", "Fitness", "Mental Health", "Prävention"];
+    const toggleLike = (e, id) => { e.stopPropagation(); setLikes(prev => ({...prev, [id]: !prev[id]})); };
 
-            const HeaderTitle = () => (
-                <div onClick={() => {setCategoryFilter("Alle Beiträge"); setSelectedArticle(null);}} className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
-                    <div className="p-1.5 bg-green-100 rounded text-green-600"><Icon path={paths.leaf} className="w-6 h-6" /></div>
-                    <span className="text-xl font-bold tracking-tight text-slate-800">
-                        Vital<span className="text-green-600">Core</span>
-                        {mode === 'personalized' && <span className="ml-2 text-xs bg-green-600 text-white px-2 py-0.5 rounded uppercase">Für Sie</span>}
-                    </span>
-                </div>
-            );
+    const HeaderTitle = () => (
+        <div onClick={() => {setCategoryFilter("Alle Beiträge"); setSelectedArticle(null);}} className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+            <div className="p-1.5 bg-green-100 rounded text-green-600"><Icon path={paths.leaf} className="w-6 h-6" /></div>
+            <span className="text-xl font-bold tracking-tight text-slate-800">
+                Vital<span className="text-green-600">Core</span>
+                {mode === 'personalized' && <span className="ml-2 text-xs bg-green-600 text-white px-2 py-0.5 rounded uppercase">Für Sie</span>}
+            </span>
+        </div>
+    );
 
-            const ActionButton = ({inHeader}) => {
-                if (mode === 'initial') {
-                    if (timeLeft > 0) {
-                        return (
-                            <button disabled className={`bg-slate-300 text-slate-500 rounded-full font-medium cursor-not-allowed flex items-center gap-2 ${inHeader ? 'px-5 py-2 text-sm' : 'w-full py-3 justify-center'}`}>
-                                <Icon path={paths.clock} className="w-4 h-4 animate-pulse" /> Gesundheitsprofil erstellen in {timeLeft}s
-                            </button>
-                        );
-                    }
-                    if (cookieChoice === null) {
-                        return (
-                            <button disabled className={`bg-orange-100 text-orange-600 border border-orange-200 rounded-full font-bold cursor-not-allowed flex items-center gap-2 ${inHeader ? 'px-5 py-2 text-sm' : 'w-full py-3 justify-center'}`}>
-                                Bitte treffen Sie eine Cookie-Wahl
-                            </button>
-                        );
-                    }
-                    return (
-                        <button onClick={onAction} className={`bg-slate-900 text-white rounded-full font-medium hover:bg-slate-800 transition-colors shadow-lg animate-fade-in ${inHeader ? 'px-5 py-2 text-sm' : 'w-full py-3'}`}>
-                            Gesundheitsprofil erstellen
-                        </button>
-                    );
-                } else {
-                    if (timeLeft > 0) return (<div className={`bg-green-100 text-green-800 rounded-full text-xs font-bold animate-pulse ${inHeader ? 'px-4 py-2' : 'w-full py-3 text-center'}`}>Personalisierte Ansicht aktiv ({timeLeft}s)...</div>);
-                    return (
-                        <button onClick={onAction} className={`bg-green-600 text-white rounded-full font-bold hover:bg-green-700 transition-colors shadow-lg animate-fade-in ${inHeader ? 'px-6 py-2 text-sm' : 'w-full py-3'}`}>
-                            Weiter zum Fragebogen
-                        </button>
-                    );
-                }
-            };
-
-            if (selectedArticle) {
+    const ActionButton = ({inHeader}) => {
+        if (mode === 'initial') {
+            if (timeLeft > 0) {
                 return (
-                    <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-white animate-fade-in">
-                        <nav className="bg-white border-b sticky top-0 z-20 shadow-sm px-4 h-16 flex items-center justify-between">
-                            <HeaderTitle />
-                            <div className="flex gap-4 items-center">
-                                <button onClick={() => setSelectedArticle(null)} className="text-sm font-medium text-slate-500 hover:text-green-600 flex items-center gap-1">
-                                    <Icon path={paths.arrowLeft} className="w-4 h-4" /> Zurück
-                                </button>
-                                <ActionButton inHeader={true} />
-                            </div>
-                        </nav>
-                        <article className="max-w-3xl mx-auto px-4 py-12">
-                            <div className="w-full h-80 rounded-2xl overflow-hidden mb-8 shadow-md">
-                                <img src={selectedArticle.image} className="w-full h-full object-cover" />
-                            </div>
-                            <div className="flex items-center gap-3 text-sm font-bold text-green-600 uppercase tracking-wider mb-3">
-                                {selectedArticle.cat} • {selectedArticle.date || "Aktuell"}
-                            </div>
-                            <h1 className="text-4xl font-extrabold text-slate-900 mb-6 leading-tight">{selectedArticle.title}</h1>
-                            <div className="flex items-center gap-3 text-slate-500 mb-8 pb-8 border-b">
-                                <span className="font-medium">{selectedArticle.author}</span>
-                                <span>•</span>
-                                <span className="flex items-center gap-1"><Icon path={paths.clock} className="w-4 h-4" /> {selectedArticle.time} Lesezeit</span>
-                            </div>
-                            <div className="prose prose-lg text-slate-700 leading-relaxed space-y-6">
-                                {selectedArticle.fullText.map((p, i) => <p key={i}>{p}</p>)}
-                            </div>
-                        </article>
-                    </div>
+                    <button disabled className={`bg-slate-300 text-slate-500 rounded-full font-medium cursor-not-allowed flex items-center gap-2 ${inHeader ? 'px-5 py-2 text-sm' : 'w-full py-4 justify-center text-lg'}`}>
+                        <Icon path={paths.clock} className="w-4 h-4 animate-pulse" /> Gesundheitsprofil erstellen in {timeLeft}s
+                    </button>
                 );
             }
-
+            if (cookieChoice === null) {
+                return (
+                    <button disabled className={`bg-orange-100 text-orange-600 border border-orange-200 rounded-full font-bold cursor-not-allowed flex items-center gap-2 ${inHeader ? 'px-5 py-2 text-sm' : 'w-full py-4 justify-center text-lg'}`}>
+                        Bitte treffen Sie eine Cookie-Wahl
+                    </button>
+                );
+            }
             return (
-                <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-slate-50 relative">
-                    <nav className="bg-white border-b sticky top-0 z-20 shadow-sm">
-                        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-                            <HeaderTitle />
-                            <div className="hidden md:flex gap-1 mx-4">
-                                {categories.map(item => (
-                                    <button key={item} onClick={() => setCategoryFilter(item)} className={`whitespace-nowrap px-3 py-2 text-sm font-medium rounded-full transition-colors ${categoryFilter === item ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>
-                                        {item}
-                                    </button>
-                                ))}
-                            </div>
-                            <div className="flex gap-4 items-center shrink-0">
-                                <button className="p-2 text-slate-400 hover:text-slate-600" onClick={() => setShowLoginModal(true)}>
-                                    <Icon path={paths.search} className="w-5 h-5" />
-                                </button>
-                                <ActionButton inHeader={true} />
-                            </div>
-                        </div>
-                    </nav>
-
-                    <main className="flex-grow max-w-6xl mx-auto px-4 py-8 w-full">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {filteredArticles.map(art => (
-                                <article key={art.id} onClick={() => setSelectedArticle(art)} className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all cursor-pointer overflow-hidden group flex flex-col h-full relative">
-                                    {art.match && <div className="absolute top-3 left-3 z-10 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded shadow-lg">{art.match}</div>}
-                                    <div className="h-48 overflow-hidden relative">
-                                        <img src={art.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                                        <div className="absolute top-3 right-3">
-                                            <button onClick={(e) => toggleLike(e, art.id)} className={`p-2 rounded-full backdrop-blur-md transition-colors ${likes[art.id] ? 'bg-red-50 text-red-500' : 'bg-black/30 text-white'}`}>
-                                                <Icon path={likes[art.id] ? paths.heartFilled : paths.heart} className="w-5 h-5" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div className="p-5 flex-1 flex flex-col">
-                                        <div className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-2">{art.cat}</div>
-                                        <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-green-600 transition-colors leading-tight">{art.title}</h3>
-                                        <p className="text-slate-600 text-sm line-clamp-3 mb-4 flex-1">{art.desc}</p>
-                                        <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                                            <span className="text-xs font-bold text-slate-500 uppercase">{art.author}</span>
-                                            <span className="text-[10px] text-slate-400">{art.time}</span>
-                                        </div>
-                                    </div>
-                                </article>
-                            ))}
-                        </div>
-                    </main>
-
-                    {showLoginModal && (
-                        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4" onClick={() => setShowLoginModal(false)}>
-                            <div className="bg-white rounded-xl p-8 max-w-sm w-full text-center" onClick={(e) => e.stopPropagation()}>
-                                <div className="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <Icon path={paths.shield} className="w-6 h-6" />
-                                </div>
-                                <h3 className="text-xl font-bold mb-2">Zugriff verweigert</h3>
-                                <p className="text-gray-600 mb-6">Dieser Bereich ist für Teilnehmer der Studie reserviert.</p>
-                                <button onClick={() => setShowLoginModal(false)} className="w-full bg-gray-900 text-white font-bold py-2 rounded-lg">Verstanden</button>
-                            </div>
-                        </div>
-                    )}
-                </div>
+                <button onClick={onAction} className={`bg-slate-900 text-white rounded-full font-medium hover:bg-slate-800 transition-all shadow-xl hover:shadow-2xl active:scale-95 ${inHeader ? 'px-5 py-2 text-sm' : 'w-full py-4 text-lg'}`}>
+                    Gesundheitsprofil erstellen
+                </button>
             );
-        };
+        } else {
+            if (timeLeft > 0) return (<div className={`bg-green-100 text-green-800 rounded-full text-xs font-bold animate-pulse ${inHeader ? 'px-4 py-2' : 'w-full py-4 text-center'}`}>Personalisierte Ansicht aktiv ({timeLeft}s)...</div>);
+            return (
+                <button onClick={onAction} className={`bg-green-600 text-white rounded-full font-bold hover:bg-green-700 transition-all shadow-lg active:scale-95 ${inHeader ? 'px-6 py-2 text-sm' : 'w-full py-4 text-lg'}`}>
+                    Weiter zum Fragebogen
+                </button>
+            );
+        }
+    };
 
+    if (selectedArticle) {
+        return (
+            <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-white animate-fade-in">
+                <nav className="bg-white border-b sticky top-0 z-20 shadow-sm px-4 h-16 flex items-center justify-between">
+                    <HeaderTitle />
+                    <div className="flex gap-4 items-center">
+                        <button onClick={() => setSelectedArticle(null)} className="text-sm font-medium text-slate-500 hover:text-green-600 flex items-center gap-1">
+                            <Icon path={paths.arrowLeft} className="w-4 h-4" /> Zurück
+                        </button>
+                        <ActionButton inHeader={true} />
+                    </div>
+                </nav>
+                <article className="max-w-3xl mx-auto px-4 py-12">
+                    <div className="w-full h-80 rounded-2xl overflow-hidden mb-8 shadow-md">
+                        <img src={selectedArticle.image} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex items-center gap-3 text-sm font-bold text-green-600 uppercase tracking-wider mb-3">
+                        {selectedArticle.cat} • {selectedArticle.date || "Aktuell"}
+                    </div>
+                    <h1 className="text-4xl font-extrabold text-slate-900 mb-6 leading-tight">{selectedArticle.title}</h1>
+                    <div className="flex items-center gap-3 text-slate-500 mb-8 pb-8 border-b">
+                        <span className="font-medium">{selectedArticle.author}</span>
+                        <span>•</span>
+                        <span className="flex items-center gap-1"><Icon path={paths.clock} className="w-4 h-4" /> {selectedArticle.time} Lesezeit</span>
+                    </div>
+                    <div className="prose prose-lg text-slate-700 leading-relaxed space-y-6">
+                        {selectedArticle.fullText.map((p, i) => <p key={i}>{p}</p>)}
+                    </div>
+                </article>
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-slate-50 relative">
+            <nav className="bg-white border-b sticky top-0 z-20 shadow-sm">
+                <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+                    <HeaderTitle />
+                    <div className="hidden md:flex gap-1 mx-4">
+                        {categories.map(item => (
+                            <button key={item} onClick={() => setCategoryFilter(item)} className={`whitespace-nowrap px-3 py-2 text-sm font-medium rounded-full transition-colors ${categoryFilter === item ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-100'}`}>
+                                {item}
+                            </button>
+                        ))}
+                    </div>
+                    <div className="flex gap-4 items-center shrink-0">
+                        <button className="p-2 text-slate-400 hover:text-slate-600" onClick={() => setShowLoginModal(true)}>
+                            <Icon path={paths.search} className="w-5 h-5" />
+                        </button>
+                        <ActionButton inHeader={true} />
+                    </div>
+                </div>
+            </nav>
+
+            <main className="flex-grow w-full">
+                {/* HERO BANNER - Erscheint nur in der ersten Ansicht */}
+                {mode === 'initial' && (
+                    <div className="w-full bg-slate-900 text-white py-24 px-4 mb-12 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-1/3 h-full bg-blue-600/10 blur-[120px] rounded-full translate-x-1/2"></div>
+                        <div className="absolute bottom-0 left-0 w-1/4 h-full bg-green-600/10 blur-[120px] rounded-full -translate-x-1/2"></div>
+                        
+                        <div className="max-w-4xl mx-auto text-center relative z-10">
+                            <h2 className="text-[12px] font-black uppercase tracking-[0.4em] text-blue-400 mb-4">
+                                VitalCore Medicine
+                            </h2>
+                            <h1 className="text-5xl md:text-7xl font-black mb-8 leading-tight tracking-tighter">
+                                Wissen ist die beste <span className="text-blue-500 text-glow">Medizin.</span>
+                            </h1>
+                            <p className="text-xl md:text-2xl text-slate-400 mb-12 max-w-2xl mx-auto font-light leading-relaxed">
+                                Wissenschaftlich fundierte Einblicke und Analysen für Ihre Langlebigkeit und tägliche Vitalität.
+                            </p>
+                            <div className="max-w-xs mx-auto">
+                                <ActionButton inHeader={false} />
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                <div className="max-w-6xl mx-auto px-4 py-8 w-full">
+                    {mode !== 'initial' && <h2 className="text-2xl font-black mb-8 uppercase tracking-tighter italic border-b-4 border-green-500 w-fit pb-2">Ihre personalisierten Empfehlungen</h2>}
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredArticles.map(art => (
+                            <article key={art.id} onClick={() => setSelectedArticle(art)} className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all cursor-pointer overflow-hidden group flex flex-col h-full relative">
+                                {art.match && <div className="absolute top-3 left-3 z-10 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded shadow-lg">{art.match}</div>}
+                                <div className="h-48 overflow-hidden relative">
+                                    <img src={art.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                    <div className="absolute top-3 right-3">
+                                        <button onClick={(e) => toggleLike(e, art.id)} className={`p-2 rounded-full backdrop-blur-md transition-colors ${likes[art.id] ? 'bg-red-50 text-red-500' : 'bg-black/30 text-white'}`}>
+                                            <Icon path={likes[art.id] ? paths.heartFilled : paths.heart} className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="p-5 flex-1 flex flex-col">
+                                    <div className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-2">{art.cat}</div>
+                                    <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-green-600 transition-colors leading-tight">{art.title}</h3>
+                                    <p className="text-slate-600 text-sm line-clamp-3 mb-4 flex-1">{art.desc}</p>
+                                    <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                                        <span className="text-xs font-bold text-slate-500 uppercase">{art.author}</span>
+                                        <span className="text-[10px] text-slate-400">{art.time}</span>
+                                    </div>
+                                </div>
+                            </article>
+                        ))}
+                    </div>
+                </div>
+            </main>
+
+            {showLoginModal && (
+                <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4" onClick={() => setShowLoginModal(false)}>
+                    <div className="bg-white rounded-xl p-8 max-w-sm w-full text-center" onClick={(e) => e.stopPropagation()}>
+                        <div className="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Icon path={paths.shield} className="w-6 h-6" />
+                        </div>
+                        <h3 className="text-xl font-bold mb-2">Zugriff verweigert</h3>
+                        <p className="text-gray-600 mb-6">Dieser Bereich ist für Teilnehmer der Studie reserviert.</p>
+                        <button onClick={() => setShowLoginModal(false)} className="w-full bg-gray-900 text-white font-bold py-2 rounded-lg">Verstanden</button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
         // 1. HELFER-KOMPONENTEN (JETZT AUSSERHALB - BEHEBT DEN CURSOR-FEHLER)
 const NoAnswer = ({ field, noAnswers, setNoAnswers }) => (
     <label className="flex items-center gap-2 mt-2 cursor-pointer w-fit group">
