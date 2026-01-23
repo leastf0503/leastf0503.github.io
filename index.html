@@ -489,12 +489,12 @@ const CookieBanner = ({ group, onDecision, audioObject, onBannerLoad }) => {
         </div>
 
         {/* Die Info-Box */}
-        <div className={`max-w-md p-6 rounded-[30px] shadow-2xl border-2 animate-fade-in ${config.info ? 'bg-red-50/95 border-red-200' : 'bg-blue-50/95 border-blue-200'}`}>
-            <div className={`flex items-center gap-2 font-black mb-2 uppercase tracking-tighter text-[10px] ${config.info ? 'text-red-600' : 'text-blue-600'}`}>
+        <div className={`max-w-md p-6 rounded-[30px] shadow-2xl border-2 animate-fade-in ${config.info ? 'bg-red-50/95 border-red-200' : 'bg-red-50/95 border-red-200'}`}>
+            <div className={`flex items-center gap-2 font-black mb-2 uppercase tracking-tighter text-[10px] ${config.info ? 'text-red-600' : 'text-red-600'}`}>
                 <Icon path={config.info ? paths.shield : paths.activity} className="w-4 h-4"/> 
                 {config.info ? 'HINWEIS ZUR DATENERFASSUNG' : 'HINWEIS ZU VITALCORE'}
             </div>
-            <p className={`text-[10px] leading-relaxed ${config.info ? 'text-red-800/90' : 'text-blue-800/90'}`}>
+            <p className={`text-[10px] leading-relaxed ${config.info ? 'text-red-800/90' : 'text-red-800/90'}`}>
                 {config.info 
                     ? "Alles, was Sie auf dieser Seite tun oder eingeben, wird lückenlos aufgezeichnet. Ihre Informationen werden sofort ausgewertet, um ein persönliches Bild Ihrer Person und Ihres Privatlebens zu erstellen. Einmal erfasst, bleiben diese Informationen dauerhaft gespeichert."
                     : "VitalCore ist eine Plattform für medizinisches Wissen und Gesundheitsanalysen. In den verschiedenen Bereichen des Portals können Sie personalisierte Inhalte erhalten und die verfügbaren Funktionen nutzen."
@@ -804,12 +804,12 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
                 <StimulusOverlay config={config} variant="form" />
                 
                 <div className="fixed top-[155px] left-1/2 -translate-x-1/2 w-[95%] max-w-xl z-[50] animate-fade-in pointer-events-none">
-                    <div className={`backdrop-blur-sm border-2 p-4 rounded-[24px] shadow-xl shadow-black/5 ${config.info ? 'bg-red-50/95 border-red-200' : 'bg-blue-50/95 border-blue-200'}`}>
-                        <div className={`flex items-center gap-2 font-black mb-1 uppercase tracking-tighter text-[10px] ${config.info ? 'text-red-600' : 'text-blue-600'}`}>
+                    <div className={`backdrop-blur-sm border-2 p-4 rounded-[24px] shadow-xl shadow-black/5 ${config.info ? 'bg-red-50/95 border-red-200' : 'bg-red-50/95 border-red-200'}`}>
+                        <div className={`flex items-center gap-2 font-black mb-1 uppercase tracking-tighter text-[10px] ${config.info ? 'text-red-600' : 'text-red-600'}`}>
                             <Icon path={config.info ? paths.shield : paths.activity} className="w-4 h-4"/> 
                             {config.info ? 'HINWEIS ZUR DATENERFASSUNG' : 'HINWEIS ZU VITALCORE'}
                         </div>
-                        <p className={`text-[9px] leading-relaxed ${config.info ? 'text-red-800/90' : 'text-blue-800/90'}`}>
+                        <p className={`text-[9px] leading-relaxed ${config.info ? 'text-red-800/90' : 'text-red-800/90'}`}>
                             {config.info 
                                 ? "Alles, was Sie auf dieser Seite tun oder eingeben, wird lückenlos aufgezeichnet. Ihre Informationen werden sofort ausgewertet, um ein persönliches Bild Ihrer Person und Ihres Privatlebens zu erstellen. Einmal erfasst, bleiben diese Informationen dauerhaft gespeichert."
                                 : "VitalCore ist eine Plattform für medizinisches Wissen und Gesundheitsanalysen. In den verschiedenen Bereichen des Portals können Sie personalisierte Inhalte erhalten und die verfügbaren Funktionen nutzen."
