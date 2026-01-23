@@ -439,12 +439,12 @@ const CookieBanner = ({ group, onDecision, audioObject, onBannerLoad }) => {
         <div className={`max-w-md p-6 rounded-[30px] shadow-2xl border-2 animate-fade-in ${config.info ? 'bg-red-50/95 border-red-200' : 'bg-blue-50/95 border-blue-200'}`}>
             <div className={`flex items-center gap-2 font-black mb-2 uppercase tracking-tighter text-[10px] ${config.info ? 'text-red-600' : 'text-blue-600'}`}>
                 <Icon path={config.info ? paths.shield : paths.activity} className="w-4 h-4"/> 
-                {config.info ? 'HINWEIS ZUR DATENERFASSUNG' : 'WILLKOMMEN BEI VITALCORE'}
+                {config.info ? 'HINWEIS ZUR DATENERFASSUNG' : 'HINWEIS ZU VITALCORE'}
             </div>
             <p className={`text-[10px] leading-relaxed ${config.info ? 'text-red-800/90' : 'text-blue-800/90'}`}>
                 {config.info 
                     ? "Alles, was Sie auf dieser Seite tun oder eingeben, wird lückenlos aufgezeichnet. Ihre Informationen werden sofort ausgewertet, um ein persönliches Bild Ihrer Person und Ihres Privatlebens zu erstellen. Einmal erfasst, bleiben diese Informationen dauerhaft gespeichert."
-                    : "VitalCore bietet Ihnen eine moderne Plattform für fundiertes medizinisches Wissen und individuelle Gesundheitsanalysen. Wir laden Sie ein, die verschiedenen Bereiche unseres Portals zu erkunden und unsere Funktionen zu nutzen."
+                    : "VitalCore ist eine Plattform für medizinisches Wissen und Gesundheitsanalysen. In den verschiedenen Bereichen des Portals können Sie personalisierte Inhalte erhalten und die verfügbaren Funktionen nutzen."
                 }
             </p>
         </div>
@@ -754,12 +754,12 @@ const RegistrationForm = ({ onSubmit, group, audioObject }) => {
                     <div className={`backdrop-blur-sm border-2 p-4 rounded-[24px] shadow-xl shadow-black/5 ${config.info ? 'bg-red-50/95 border-red-200' : 'bg-blue-50/95 border-blue-200'}`}>
                         <div className={`flex items-center gap-2 font-black mb-1 uppercase tracking-tighter text-[10px] ${config.info ? 'text-red-600' : 'text-blue-600'}`}>
                             <Icon path={config.info ? paths.shield : paths.activity} className="w-4 h-4"/> 
-                            {config.info ? 'HINWEIS ZUR DATENERFASSUNG' : 'WILLKOMMEN BEI VITALCORE'}
+                            {config.info ? 'HINWEIS ZUR DATENERFASSUNG' : 'HINWEIS ZU VITALCORE'}
                         </div>
                         <p className={`text-[9px] leading-relaxed ${config.info ? 'text-red-800/90' : 'text-blue-800/90'}`}>
                             {config.info 
                                 ? "Alles, was Sie auf dieser Seite tun oder eingeben, wird lückenlos aufgezeichnet. Ihre Informationen werden sofort ausgewertet, um ein persönliches Bild Ihrer Person und Ihres Privatlebens zu erstellen. Einmal erfasst, bleiben diese Informationen dauerhaft gespeichert."
-                                : "VitalCore bietet Ihnen eine moderne Plattform für fundiertes medizinisches Wissen und individuelle Gesundheitsanalysen. Wir laden Sie ein, die verschiedenen Bereiche unseres Portals zu erkunden und unsere Funktionen zu nutzen, um Ihre persönlichen Ziele für mehr Wohlbefinden und Vitalität im Alltag zu erreichen."
+                                : "VitalCore ist eine Plattform für medizinisches Wissen und Gesundheitsanalysen. In den verschiedenen Bereichen des Portals können Sie personalisierte Inhalte erhalten und die verfügbaren Funktionen nutzen."
                             }
                         </p>
                     </div>
