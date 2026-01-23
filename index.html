@@ -408,12 +408,16 @@ const BLOG_CONTENT = [
                         </p>
 
                         <button 
-                            onClick={handlePlay}
-                            className={`w-full py-4 mb-8 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all ${played ? 'bg-slate-100 text-slate-400' : 'bg-blue-600 text-white shadow-lg active:scale-95'}`}
-                        >
-                            <Icon path={paths.activity} className="w-5 h-5" />
-                            {played ?  "Ton abspielen"}
-                        </button>
+    onClick={handlePlay}
+    // Der Button bleibt immer blau (bg-blue-600), 
+    // damit der Proband weiß, dass er noch klickbar ist.
+    className="w-full py-4 mb-8 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all bg-blue-600 text-white shadow-lg active:scale-95 hover:bg-blue-700"
+>
+    <Icon path={paths.activity} className="w-5 h-5" />
+    
+    {/* Wenn bereits einmal abgespielt wurde, ändert sich der Text */}
+    {played ? "Ton erneut abspielen" : "Ton abspielen"}
+</button>
 
                         {played && (
                             <div className="grid grid-cols-1 gap-3 animate-fade-in">
